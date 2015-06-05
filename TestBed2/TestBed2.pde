@@ -3,6 +3,10 @@ import java.util.*;
 import java.nio.*;
 
 ArmModel testModel;
+float lastMouseX, lastMouseY;
+float cameraTX = 0, cameraTY = 0, cameraTZ = 0;
+float cameraRX = 0, cameraRY = 0, cameraRZ = 0;
+boolean spacebarDown = false;
 
 void setup() {
   size(800, 600, P3D);
@@ -10,12 +14,44 @@ void setup() {
 }
 
 void draw() {
+  lastMouseX = mouseX;
+  lastMouseY = mouseY;
   background(255);
   stroke(100, 100, 255);
   pushMatrix();
-  translate(400, 700, -500);
+  translate(400 + cameraTX, 700 + cameraTY, -500 + cameraTZ);
+  rotateX(cameraRX);
+  rotateY(cameraRY);
   testModel.draw();
   popMatrix();
+}
+
+void keyPressed() {
+  if (key == ' ') spacebarDown = true;
+}
+
+void keyReleased() {
+  if (key == ' ') spacebarDown = false;
+}
+
+void mouseWheel(MouseEvent event) {
+  float e = event.getCount();
+  if (e < 0) cameraTZ += 25;
+  else if (e > 0) cameraTZ -= 25;
+}
+
+void mouseDragged() {
+  if (!spacebarDown) {
+    if (mouseX < lastMouseX) cameraRY -= 0.01;
+    else if (mouseX > lastMouseX) cameraRY += 0.01;
+    if (mouseY < lastMouseY) cameraRX -= 0.01;
+    else if (mouseY > lastMouseY) cameraRX += 0.01;
+  } else {
+    if (mouseX < lastMouseX) cameraTY -= 25;
+    else if (mouseX > lastMouseX) cameraTY += 25;
+    if (mouseY < lastMouseY) cameraTX -= 25;
+    else if (mouseY > lastMouseY) cameraTX += 25;
+  }
 }
 
 void drawModel(Model model) {
