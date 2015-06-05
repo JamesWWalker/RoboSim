@@ -2,17 +2,20 @@
 import java.util.*;
 import java.nio.*;
 
-Model testModel;
+ArmModel testModel;
 
 void setup() {
   size(800, 600, P3D);
-  testModel = loadSTLModel("Base.STL");
+  testModel = new ArmModel();
 }
 
 void draw() {
   background(255);
-  translate(400, 300);
-  drawModel(testModel);
+  stroke(100, 100, 255);
+  pushMatrix();
+  translate(400, 700, -500);
+  testModel.draw();
+  popMatrix();
 }
 
 void drawModel(Model model) {
@@ -31,6 +34,16 @@ Model loadSTLModel(String filename) {
   byte[] data = loadBytes(filename);
   Model model = new Model();
   int n = 84; // skip header and number of triangles
+  
+  // debug
+  /*float smallestX = Float.MAX_VALUE;
+  float biggestX = Float.MIN_VALUE;
+  float smallestY = Float.MAX_VALUE;
+  float biggestY = Float.MIN_VALUE;
+  float smallestZ = Float.MAX_VALUE;
+  float biggestZ = Float.MIN_VALUE; /* */
+  // end debug
+  
   while (n < data.length) {
     Triangle t = new Triangle();
     for (int m = 0; m < 4; m++) {
@@ -51,6 +64,16 @@ Model loadSTLModel(String filename) {
         ByteBuffer.wrap(bytesY).getFloat(),
         ByteBuffer.wrap(bytesZ).getFloat()
       );
+      // debug
+      /*if (m > 0) {
+        if (t.components[m].x > biggestX) biggestX = t.components[m].x;
+        if (t.components[m].x < smallestX) smallestX = t.components[m].x;
+        if (t.components[m].y > biggestY) biggestY = t.components[m].y;
+        if (t.components[m].y < smallestY) smallestY = t.components[m].y;
+        if (t.components[m].z > biggestZ) biggestZ = t.components[m].z;
+        if (t.components[m].z < smallestZ) smallestZ = t.components[m].z;
+      } /* */
+      // end debug
     }
     n += 2; // skip meaningless "attribute byte count"
     model.triangles.add(t);
@@ -69,6 +92,11 @@ Model loadSTLModel(String filename) {
     println("-----");
   } /* */
   // END DEBUG
+  // debug
+  /*println("Size X: " + (biggestX - smallestX));
+  println("Size Y: " + (biggestY - smallestY));
+  println("Size Z: " + (biggestZ - smallestZ)); /* */
+  // end debug
   return model;
 }
 
@@ -79,4 +107,34 @@ public class Triangle {
 
 public class Model {
   ArrayList<Triangle> triangles = new ArrayList<Triangle>();
+}
+
+public class ArmModel {
+  Model base;
+  Model link1;
+  Model link2;
+  Model link3;
+  
+  public ArmModel() {
+    base = loadSTLModel("Base.STL");
+    link1 = loadSTLModel("Link1.STL");
+    link2 = loadSTLModel("Link2.STL");
+    link3 = loadSTLModel("Link3.STL");
+  }
+  
+  public void draw() {
+    drawModel(base);
+    translate(0, -200, 0);
+    rotateZ(PI);
+    //rotateY(PI/2.0);
+    drawModel(link1);
+    rotateZ(-PI);
+    translate(-50, -260, 0);
+    rotateZ(PI);
+    drawModel(link2);
+    rotateZ(-PI);
+    translate(0, -240, 0);
+    rotateZ(PI);
+    drawModel(link3);
+  }
 }
