@@ -8,6 +8,12 @@ float edpx, edpy, edpz; // end effector desired position
 float etpx, etpy, etpz; // end effector position based on working joint rotations
 boolean calculatingArms = false, movingArms = false;
 
+int MODE_WHATEVER = 0;
+int MODE_LINEAR = 1;
+int currentMode = MODE_WHATEVER;
+
+PVector[] intermediatePos = new PVector[10];
+
 void setup() {
   size(800, 600, P3D);
   arms = new ArrayList<Arm>();
@@ -15,6 +21,8 @@ void setup() {
   arms.add(new Arm(100, PI/6.0, PI/6.0));
   arms.add(new Arm(100, PI/4.0, PI/8.0));
   calculateCurrentEndEffectorPosition();
+  for (int n = 0; n < intermediatePos.length; n++)
+    intermediatePos[n] = new PVector(0, 0, 0);
 }
 
 void draw() {
@@ -33,6 +41,11 @@ void draw() {
   }
   
   background(255);
+  
+  fill(0);
+  if (currentMode == MODE_WHATEVER) text("Current Mode: Whatever", 20, 20);
+  else if (currentMode == MODE_LINEAR) text("Current Mode: Linear", 20, 20);
+  
   noFill();
   
   // draw arms
@@ -84,6 +97,19 @@ void draw() {
   translate(etpx, etpy, etpz);
   sphere(15);
   popMatrix();
+  // draw intermediate positions
+  pushMatrix();
+  translate(400, 300, 0);
+  for (int n = 0; n < intermediatePos.length; n++) {
+    pushMatrix();
+    stroke(0, 255, 0);
+    translate(intermediatePos[n].x,
+              intermediatePos[n].y,
+              intermediatePos[n].z);
+    sphere(10);
+    popMatrix();
+  }
+  popMatrix();
 }
 
 int armIdx = -1;
@@ -95,7 +121,13 @@ void keyPressed() {
   else if (keyCode == DOWN) edpy += 5;
   else if (key == 'q') edpz += 5;
   else if (key == 'w') edpz -= 5;
-  else if (key == ' ') calculatingArms = true; /* */
+  else if (key == 'm') {
+    currentMode++;
+    if (currentMode > MODE_LINEAR) currentMode = MODE_WHATEVER;
+  } else if (key == ' ') {
+    if (currentMode == MODE_WHATEVER) calculatingArms = true;
+    else if (currentMode == MODE_LINEAR) calculateIntermediates();
+  }
   
 /*  if (keyCode == LEFT) armIdx--;
   else if (keyCode == RIGHT) armIdx++;
@@ -207,8 +239,8 @@ float ARM_ROTATION_SPEED = 0.01;
 
 boolean interpolateArms() {
   // DEBUG
-  println("GROUND: " + arms.get(0).angleGround + " / " + arms.get(0).angleGroundTarget);
-  println("AIR: " + arms.get(0).angleAir + " / " + arms.get(0).angleAirTarget);
+  //println("GROUND: " + arms.get(0).angleGround + " / " + arms.get(0).angleGroundTarget);
+  //println("AIR: " + arms.get(0).angleAir + " / " + arms.get(0).angleAirTarget);
    // END DEBUG
   boolean allDone = true;
   for (int a = 0; a < arms.size(); a++) {
@@ -224,6 +256,17 @@ boolean interpolateArms() {
     }
   }
   return allDone;
+}
+
+
+void calculateIntermediates() {
+  float mu = 0;
+  for (int n = 0; n < intermediatePos.length; n++) {
+    mu += 0.1;
+    intermediatePos[n].x = eepx*(1-mu)+(edpx*mu);
+    intermediatePos[n].y = eepy*(1-mu)+(edpy*mu);
+    intermediatePos[n].z = eepz*(1-mu)+(edpz*mu);
+  }
 }
 
 
