@@ -13,6 +13,7 @@ int MODE_LINEAR = 1;
 int currentMode = MODE_WHATEVER;
 
 PVector[] intermediatePos = new PVector[10];
+int interIdx = -1;
 
 void setup() {
   size(800, 600, P3D);
@@ -36,8 +37,17 @@ void draw() {
       if (allDone) {
         movingArms = false;
         calculatingArms = false;
+        if (interIdx >= 0) {
+          interIdx++;
+          if (interIdx >= intermediatePos.length) interIdx = -1;
+        }
       }
     }
+  } else if (interIdx >= 0) {
+    edpx = intermediatePos[interIdx].x;
+    edpy = intermediatePos[interIdx].y;
+    edpz = intermediatePos[interIdx].z;
+    calculatingArms = true;
   }
   
   background(255);
@@ -126,7 +136,10 @@ void keyPressed() {
     if (currentMode > MODE_LINEAR) currentMode = MODE_WHATEVER;
   } else if (key == ' ') {
     if (currentMode == MODE_WHATEVER) calculatingArms = true;
-    else if (currentMode == MODE_LINEAR) calculateIntermediates();
+    else if (currentMode == MODE_LINEAR) {
+      calculateIntermediates();
+      interIdx = 0;
+    }
   }
   
 /*  if (keyCode == LEFT) armIdx--;
