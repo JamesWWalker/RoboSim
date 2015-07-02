@@ -37,7 +37,7 @@ public void setup(){
   gui();
   for (int n = 0; n < registers.length; n++) registers[n] = new PVector();
   for (int n = 0; n < 6; n++) jointsMoving[n] = 0;
-  testModel = new ArmModel();
+  testModel = new ArmModel(ARM_TEST);
 }
 
 public void draw(){
@@ -46,6 +46,7 @@ public void draw(){
   hint(ENABLE_DEPTH_TEST);
   background(255);
   stroke(100, 100, 255);
+  noFill();
   pushMatrix();
   
   // camera controls
@@ -56,9 +57,23 @@ public void draw(){
   rotateX(myRotX); // for rotate button
   rotateY(myRotY); // for rotate button
   // end camera controls
-
+  
+  pushMatrix();
   testModel.draw();
   popMatrix();
+  
+  PVector eep = calculateEndEffectorPosition(testModel, false);
+  popMatrix();
+  
+  // start test
+  
+  pushMatrix();
+  translate(eep.x, eep.y, eep.z);
+  stroke(255, 0, 0);
+  sphere(25);
+  popMatrix();
+  // end test
+  
   hint(DISABLE_DEPTH_TEST);
 }
 
