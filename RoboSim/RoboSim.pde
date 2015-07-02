@@ -14,8 +14,9 @@ ControlP5 cp5;
 Textarea myTextarea;
 Accordion accordion;
 
-/* global variables for toolbar */
+ArrayList<Program> tasks = new ArrayList<Program>();
 
+/* global variables for toolbar */
 // for pan button
 int cursorMode = ARROW;
 int clickPan = 0;
@@ -30,6 +31,9 @@ float myRotY = 0.0;
 boolean doRotate = false;
 
 float myscale = 0.5;
+/*******************************/
+     
+
 
 public void setup(){
   size(1200, 800, P3D);
