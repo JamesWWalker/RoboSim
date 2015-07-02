@@ -1,3 +1,39 @@
+final int FRAME_JOINT = 0, 
+          FRAME_JGFRM = 1, 
+          FRAME_WORLD = 2, 
+          FRAME_TOOL = 3, 
+          FRAME_USER = 4;
+int frame = FRAME_JOINT;
+String displayFrame = "JOINT";
+
+final int OFF = 0, ON = 1;
+int shift = OFF; 
+
+int active_task = -1; // which program is active? Default: no program is active
+
+
+// for display
+    // The teaching pendant screen can display 15 lines, each line 
+    // can display 40 symbols.
+    String[] display = { "-BCKEDT-"+blank(10)+"LINE 0"+blank(5)+"AUTO ABORTED\n",
+                         "SETUP Frames"+blank(18)+displayFrame+blank(1)+"100% \n",
+                         " User Frame"+blank(8)+"Three Point"+blank(7)+"2/4\n",
+                         " Frame Number: 1\n",
+                         "\n",
+                         blank(3)+"X:"+blank(4)+"0.0"+blank(3)+"Y:"+blank(4)+"0.0"+blank(3)+"Z:"+blank(4)+"0.0\n",
+                         blank(3)+"W:"+blank(4)+"0.0"+blank(3)+"P:"+blank(4)+"0.0"+blank(3)+"R:"+blank(4)+"0.0\n",
+                         "\n",
+                         "  Comment:             UFrame1\n",
+                         "  Orient Origin Point   Recorded\n",
+                         "  X Direction Point :   UNINIT\n",
+                         "  Y Direction Point :   UNINIT\n",
+                         "\n",
+                         "Point Recorded\n",
+                         "\n",
+                         "\n",
+                         "[ TYPE ][METHOD] FRAME MOVE_TO RECORD\n"
+                      }; 
+
 void gui(){
    //cp5 = new ControlP5(this);
    
@@ -86,7 +122,27 @@ void gui(){
       .setColorForeground(color(0,0,0))
       .setBorderColor(color(255,0,0))
       .moveTo(g1);
-   myTextarea.setText("hello world");
+      
+    
+  
+   myTextarea.setText( display[0] 
+                       + display[1]
+                       + display[2]
+                       + display[3]
+                       + display[4]
+                       + display[5]
+                       + display[6]
+                       + display[7]
+                       + display[8]
+                       + display[9]
+                       + display[10]
+                       + display[11]
+                       + display[12]
+                       + display[13]
+                       + display[14]
+                       + display[15]
+                       + display[16]
+                      );
    
    
    // add 11 bangs to the left of display
@@ -194,6 +250,7 @@ void gui(){
     cp5.addButton("LSHIFT")
        .setPosition(62,365)
        .setSize(fnWidth+5, fnHeight+5)
+       .setCaptionLabel("SHIFT")
        .setColorBackground(color(0,0,255))
        .setColorCaptionLabel(color(255,255,255)) 
        .moveTo(g1);
@@ -201,6 +258,7 @@ void gui(){
     cp5.addButton("RSHIFT")
        .setPosition(343,365)
        .setSize(fnWidth+5, fnHeight+5)
+       .setCaptionLabel("SHIFT")
        .setColorBackground(color(0,0,255))
        .setColorCaptionLabel(color(255,255,255))  
        .moveTo(g1);   
@@ -660,6 +718,9 @@ void gui(){
    // change buttons' font size
    PFont pfont = createFont("Arial",20,true); // new font
    ControlFont font = new ControlFont(pfont, 12);  
+   ControlFont font2 = new ControlFont(pfont, 10);
+   ControlFont font3 = new ControlFont(pfont, 15); 
+   
    cp5.getController("Prev")
       .getCaptionLabel()
       .align(ControlP5.CENTER, ControlP5.CENTER)
@@ -695,7 +756,7 @@ void gui(){
       .align(ControlP5.CENTER, ControlP5.CENTER)
       .setFont(font);    
       
-   myTextarea.setFont(font);   
+   myTextarea.setFont(font3);   
    
    cp5.getController("LSHIFT")
       .getCaptionLabel()
@@ -707,7 +768,7 @@ void gui(){
       .align(ControlP5.CENTER, ControlP5.CENTER)
       .setFont(font);     
       
-   ControlFont font2 = new ControlFont(pfont, 10);   
+      
    cp5.getController("Menu")
       .getCaptionLabel()
       .align(ControlP5.CENTER, ControlP5.CENTER)
@@ -733,7 +794,7 @@ void gui(){
       .align(ControlP5.CENTER, ControlP5.CENTER)
       .setFont(font2); 
       
-   ControlFont font3 = new ControlFont(pfont, 15);    
+      
    cp5.getController("HOLD")
       .getCaptionLabel()
       .align(ControlP5.CENTER, ControlP5.CENTER)
@@ -1115,3 +1176,80 @@ public void j3_pos(int theValue) {
   else jointsMoving[2] = 1;
 }
 
+// the coordinate function key toggles between the different coordinate frames
+public void COORD(int theValue){
+   frame += 1;
+   frame = frame % 5;
+   switch (frame) {
+      case FRAME_JOINT:
+          displayFrame = "JOINT";
+          break;
+      case FRAME_JGFRM:
+          displayFrame = "JGFRM";
+          break;
+      case FRAME_WORLD:
+          displayFrame = "WORLD";
+          break;
+      case FRAME_TOOL:
+          displayFrame = "TOOL";
+          break;
+      case FRAME_USER:
+          displayFrame = "USER";
+          break;   
+   } 
+   display[1] = "SETUP Frames"+blank(18)+displayFrame+" 100% \n";
+   myTextarea.setText( display[0] 
+                       + display[1]
+                       + display[2]
+                       + display[3]
+                       + display[4]
+                       + display[5]
+                       + display[6]
+                       + display[7]
+                       + display[8]
+                       + display[9]
+                       + display[10]
+                       + display[11]
+                       + display[12]
+                       + display[13]
+                       + display[14]
+                       + display[15]
+                       + display[16]
+                      );                
+}
+
+public void LSHIFT(int theValue){
+    if (shift == OFF)
+       shift = ON;
+    else if (shift == ON)
+       shift = OFF;  
+}
+
+
+public void RSHIFT(int theValue){
+    if (shift == OFF)
+       shift = ON;
+    else if (shift == ON)
+       shift = OFF;  
+}
+
+public void F1(int theValue){
+    if (shift == ON){
+       if (active_task == -1 && tasks.size() <= 0 ){
+           // TODO: if no active task and there is no program so far, create a new program
+           //Program aProgram = new Program();
+           //aProgram.getInstruction().add() // TODO, incomplete
+           //tasks.add(new Program());
+       }
+    }
+}
+
+/**********UTILITY FUNCTIONS***********************/
+// return a string of n blanks 
+String blank(int n){
+   String blanks = "";
+   for(int i=0;i<n;i++){
+      blanks += " ";
+   }
+   return blanks;
+}
