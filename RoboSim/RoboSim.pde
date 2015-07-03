@@ -34,7 +34,7 @@ boolean doRotate = false;
 float myscale = 0.5;
 /*******************************/
 
-public void setup(){
+public void setup() {
   size(1200, 800, P3D);
   cp5 = new ControlP5(this);
   gui();
@@ -45,22 +45,43 @@ public void setup(){
 
 public void draw() {
   
-  /*
   // TESTING CODE
-  if (frameCount == 20) testModel.calculatingArms = true;
+  /*PVector testDest = new PVector();
+  if (frameCount == 20) {
+    pushMatrix();
+    applyCamera();
+    PVector start = calculateEndEffectorPosition(testModel, false);
+    popMatrix();
+    testModel.calculateIntermediatePositions(start, new PVector(575, 300, 50));
+    testModel.calculatingArms = true;
+  }
   // execute arm movement
   if (testModel.calculatingArms) {
     if (!testModel.movingArms) {
-      int result = calculateIK(testModel, new PVector(575, 300, 50), 720, 15);
+      int result = calculateIK(testModel,
+                               testModel.intermediatePositions.get(
+                                 testModel.interIdx),
+                               720, 15);
       if (result == EXEC_SUCCESS) testModel.movingArms = true;
     } else {
       boolean allDone = testModel.interpolateRotation();
       if (allDone) {
         testModel.movingArms = false;
         testModel.calculatingArms = false;
+        if (testModel.interIdx >= 0) {
+          testModel.interIdx++;
+          if (testModel.interIdx >= testModel.intermediatePositions.size())
+            testModel.interIdx = -1;
+        }
       }
     }
+  } else if (testModel.interIdx >= 0) {
+    testDest.x = testModel.intermediatePositions.get(testModel.interIdx).x;
+    testDest.y = testModel.intermediatePositions.get(testModel.interIdx).y;
+    testDest.z = testModel.intermediatePositions.get(testModel.interIdx).z;
+    testModel.calculatingArms = true;
   } /* */
+  // END TESTING CODE
   
   moveJoints(); // respond to manual movement from J button presses
   
@@ -79,6 +100,20 @@ public void draw() {
   
   //PVector eep = calculateEndEffectorPosition(testModel, false);
   popMatrix();
+  
+  // TESTING CODE: DRAW INTERMEDIATE POINTS
+  /*stroke(255, 0, 0);
+  pushMatrix();
+  if (testModel.intermediatePositions != null) {
+    for (PVector v : testModel.intermediatePositions) {
+      pushMatrix();
+      translate(v.x, v.y, v.z);
+      sphere(10);
+      popMatrix();
+    }
+  }
+  popMatrix(); /* */
+  // END TESTING CODE
   
   hint(DISABLE_DEPTH_TEST);
 }

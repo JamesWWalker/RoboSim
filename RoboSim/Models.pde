@@ -102,6 +102,8 @@ public class ArmModel {
   ArrayList<Model> segments = new ArrayList<Model>();
   int type;
   public boolean calculatingArms = false, movingArms = false;
+  ArrayList<PVector> intermediatePositions;
+  int interIdx = -1;
   
   public ArmModel(int in) {
     type = in;
@@ -169,6 +171,23 @@ public class ArmModel {
     } // end loop through arm segments
     return allDone;
   } // end interpolate rotation
+  
+  public void calculateIntermediatePositions(PVector start, PVector end) {
+    intermediatePositions = new ArrayList<PVector>();
+    float mu = 0;
+    float DISTANCE_BETWEEN = 10.0;
+    int numberOfPoints = (int)
+      (dist(start.x, start.y, start.z, end.x, end.y, end.z) / DISTANCE_BETWEEN);
+    float increment = 1.0 / (float)numberOfPoints;
+    for (int n = 0; n < numberOfPoints; n++) {
+      mu += increment;
+      intermediatePositions.add(new PVector(
+        start.x * (1 - mu) + (end.x * mu),
+        start.y * (1 - mu) + (end.y * mu),
+        start.z * (1 - mu) + (end.z * mu)));
+    }
+    interIdx = 0;
+  } // end calculate intermediate positions
   
 } // end ArmModel class
 
