@@ -2,22 +2,22 @@ void moveJoints() {
   testModel.segments.get(0).currentRotations[1] += 0.02 * jointsMoving[0];
   
   testModel.segments.get(1).currentRotations[2] += 0.02 * jointsMoving[1];
-  if (testModel.segments.get(1).currentRotations[2] > testModel.segments.get(1).rotationMaxConstraints[2]) {
+  /*if (testModel.segments.get(1).currentRotations[2] > testModel.segments.get(1).rotationMaxConstraints[2]) {
     jointsMoving[1] = 0;
     testModel.segments.get(1).currentRotations[2] = testModel.segments.get(1).rotationMaxConstraints[2];
   } else if (testModel.segments.get(1).currentRotations[2] < testModel.segments.get(1).rotationMinConstraints[2]) {
     jointsMoving[1] = 0;
     testModel.segments.get(1).currentRotations[2] = testModel.segments.get(1).rotationMinConstraints[2];
-  }
+  }*/
   
   testModel.segments.get(2).currentRotations[2] += 0.02 * jointsMoving[2];
-  if (testModel.segments.get(2).currentRotations[2] > testModel.segments.get(2).rotationMaxConstraints[2]) {
+  /*if (testModel.segments.get(2).currentRotations[2] > testModel.segments.get(2).rotationMaxConstraints[2]) {
     jointsMoving[2] = 0;
     testModel.segments.get(2).currentRotations[2] = testModel.segments.get(2).rotationMaxConstraints[2];
   } else if (testModel.segments.get(2).currentRotations[2] < testModel.segments.get(2).rotationMinConstraints[2]) {
     jointsMoving[2] = 0;
     testModel.segments.get(2).currentRotations[2] = testModel.segments.get(2).rotationMinConstraints[2];
-  }
+  }*/
 }
 
 void drawModel(Model model) {
@@ -108,12 +108,12 @@ public class ArmModel {
       base.rotations[1] = true;
       Model link1 = loadSTLModel("Link1.STL", 137);
       link1.rotations[2] = true;
-      link1.rotationMinConstraints[2] = -2.4;
-      link1.rotationMaxConstraints[2] = 2.4;
+      link1.rotationMinConstraints[2] = 0;
+      link1.rotationMaxConstraints[2] = 4.8;
       Model link2 = loadSTLModel("Link2.STL", 173);
       link2.rotations[2] = true;
-      link2.rotationMinConstraints[2] = -2;
-      link2.rotationMaxConstraints[2] = 2;
+      link2.rotationMinConstraints[2] = 0;
+      link2.rotationMaxConstraints[2] = 4;
       Model link3 = loadSTLModel("Link3.STL", 140);
       link3.rotations[0] = true;
       // end effector rotates around X and Y axes

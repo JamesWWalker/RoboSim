@@ -3,8 +3,8 @@
 
 /*
   Next on to-do list:
-  1 Hard-code some end effector target positions and add a temporary hot key
-    to activate the IK connection, then "teleport" to the new calculated angles.
+  1 Rewrite the angle constraints code. The current implementation doesn't
+    work with the IK at all.
   2 Port smooth movement
   3 Port linear motion
 */
@@ -48,19 +48,25 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
       if (segment.rotations[r]) {
         segment.testRotations[r] = segment.currentRotations[r];
         pushMatrix();
+        applyCamera();
         PVector eetp = calculateEndEffectorPosition(model, true);
         popMatrix();
         float closest = dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z);
         float bestAngle = segment.testRotations[r];
         for (int n = 0; n < slices; n++) {
           segment.testRotations[r] += checkAngle;
-          pushMatrix();
-          eetp = calculateEndEffectorPosition(model, true);
-          popMatrix();
-          if (dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z) < closest) {
-            closest = dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z);
-            bestAngle = segment.testRotations[r];
-          }
+          //if (segment.testRotations[r] < segment.rotationMaxConstraints[r] &&
+          //    segment.testRotations[r] > segment.rotationMinConstraints[r])
+          //{
+            pushMatrix();
+            applyCamera();
+            eetp = calculateEndEffectorPosition(model, true);
+            popMatrix();
+            if (dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z) < closest) {
+              closest = dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z);
+              bestAngle = segment.testRotations[r];
+            }
+          //}
         } // end loop through slices (try all the different angles)
         bestAngle = clampAngle(bestAngle);
         segment.testRotations[r] = segment.targetRotations[r] = bestAngle;
@@ -71,6 +77,7 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
   // figure out where the end of all the arms is and compare that
   // to where we want it to be
   pushMatrix();
+  applyCamera();
   PVector eetp = calculateEndEffectorPosition(model, true);
   popMatrix();
   if (dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z) < closeEnough) {
