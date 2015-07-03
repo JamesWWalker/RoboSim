@@ -61,20 +61,6 @@ public void draw(){
   PVector eep = calculateEndEffectorPosition(testModel, false);
   popMatrix();
   
-  // start test
-  pushMatrix();
-  translate(eep.x, eep.y, eep.z);
-  //println("pos: " + eep.x + ", " + eep.y + ", " + eep.z);
-  stroke(255, 0, 0);
-  sphere(25);
-  popMatrix();
-  pushMatrix();
-  translate(testDest.x, testDest.y, testDest.z);
-  stroke(0, 255, 0);
-  sphere(25);
-  popMatrix();
-  // end test
-  
   hint(DISABLE_DEPTH_TEST);
 }
 
