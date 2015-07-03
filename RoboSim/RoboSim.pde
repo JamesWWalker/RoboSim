@@ -43,8 +43,27 @@ public void setup(){
   testModel = new ArmModel(ARM_TEST);
 }
 
-public void draw(){
-  moveJoints();
+public void draw() {
+  
+  /*
+  // TESTING CODE
+  if (frameCount == 20) testModel.calculatingArms = true;
+  // execute arm movement
+  if (testModel.calculatingArms) {
+    if (!testModel.movingArms) {
+      int result = calculateIK(testModel, new PVector(575, 300, 50), 720, 15);
+      if (result == EXEC_SUCCESS) testModel.movingArms = true;
+    } else {
+      boolean allDone = testModel.interpolateRotation();
+      if (allDone) {
+        testModel.movingArms = false;
+        testModel.calculatingArms = false;
+      }
+    }
+  } /* */
+  
+  moveJoints(); // respond to manual movement from J button presses
+  
   cursor(cursorMode);
   hint(ENABLE_DEPTH_TEST);
   background(255);
@@ -58,7 +77,7 @@ public void draw(){
   testModel.draw();
   popMatrix();
   
-  PVector eep = calculateEndEffectorPosition(testModel, false);
+  //PVector eep = calculateEndEffectorPosition(testModel, false);
   popMatrix();
   
   hint(DISABLE_DEPTH_TEST);

@@ -28,9 +28,9 @@ void drawModel(Model model) {
   popMatrix();
 }
 
-Model loadSTLModel(String filename, int len) {
+Model loadSTLModel(String filename) {
   byte[] data = loadBytes(filename);
-  Model model = new Model(len);
+  Model model = new Model();
   int n = 84; // skip header and number of triangles
   
   while (n < data.length) {
@@ -71,18 +71,18 @@ public class Model {
   public ArrayList<PVector>[] jointRanges = (ArrayList<PVector>[])new ArrayList[3];
   public float[] currentRotations = new float[3]; // current rotation value
   public float[] testRotations = new float[3]; // used while performing IK
-  public float[] targetRotations = new float[3]; // we want to be rotated this way
+  public float[] targetRotations = new float[3]; // we want to be rotated to this value
   public int[] rotationDirections = new int[3]; // control rotation direction so we
                                                 // don't "take the long way around"
-  public int length;
+  public float[] rotationSpeeds = new float[3];
   
-  public Model(int in) {
+  public Model() {
     for (int n = 0; n < 3; n++) {
       rotations[n] = false;
       currentRotations[n] = 0;
       jointRanges[n] = new ArrayList<PVector>();
+      rotationSpeeds[n] = 0.01;
     }
-    length = in;
   }
   
   public boolean anglePermitted(int idx, float angle) {
@@ -101,22 +101,23 @@ public class ArmModel {
   
   ArrayList<Model> segments = new ArrayList<Model>();
   int type;
+  public boolean calculatingArms = false, movingArms = false;
   
   public ArmModel(int in) {
     type = in;
     if (type == ARM_TEST) {
-      Model base = loadSTLModel("Base.STL", 140);
+      Model base = loadSTLModel("Base.STL");
       base.rotations[1] = true;
       base.jointRanges[1].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model link1 = loadSTLModel("Link1.STL", 137);
+      Model link1 = loadSTLModel("Link1.STL");
       link1.rotations[2] = true;
       link1.jointRanges[2].add(new PVector(0, 2.4));
       link1.jointRanges[2].add(new PVector(3.88, PI*2));
-      Model link2 = loadSTLModel("Link2.STL", 173);
+      Model link2 = loadSTLModel("Link2.STL");
       link2.rotations[2] = true;
       link2.jointRanges[2].add(new PVector(0, 2));
       link2.jointRanges[2].add(new PVector(4.28, PI*2));
-      Model link3 = loadSTLModel("Link3.STL", 140);
+      Model link3 = loadSTLModel("Link3.STL");
       link3.rotations[0] = true;
       link3.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
       // end effector rotates around X and Y axes
@@ -143,13 +144,31 @@ public class ArmModel {
       rotateZ(PI);
       drawModel(segments.get(2));
       rotateZ(-PI);
-      translate(0, -120, 0);
+      translate(0, -120, 0); 
       rotateZ(segments.get(2).currentRotations[2]);
       translate(0, -120, 0);
       rotateZ(PI);
       drawModel(segments.get(3));
     }
   }// end draw arm model
+  
+  public boolean interpolateRotation() {
+    boolean allDone = true;
+    for (Model a : segments) {
+      for (int r = 0; r < 3; r++) {
+        if (a.rotations[r]) {
+          if (abs(a.currentRotations[r] - a.targetRotations[r]) >
+              a.rotationSpeeds[r])
+          {
+            allDone = false;
+            a.currentRotations[r] += a.rotationSpeeds[r] * a.rotationDirections[r];
+            a.currentRotations[r] = clampAngle(a.currentRotations[r]);
+          }
+        }
+      } // end loop through rotation axes
+    } // end loop through arm segments
+    return allDone;
+  } // end interpolate rotation
   
 } // end ArmModel class
 
