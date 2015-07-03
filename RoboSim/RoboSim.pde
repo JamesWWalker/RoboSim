@@ -17,6 +17,7 @@ Accordion accordion;
 ArrayList<Program> tasks = new ArrayList<Program>();
 
 /* global variables for toolbar */
+
 // for pan button
 int cursorMode = ARROW;
 int clickPan = 0;
@@ -32,8 +33,6 @@ boolean doRotate = false;
 
 float myscale = 0.5;
 /*******************************/
-     
-
 
 public void setup(){
   size(1200, 800, P3D);
@@ -53,14 +52,7 @@ public void draw(){
   noFill();
   pushMatrix();
   
-  // camera controls
-  translate(width/1.5,height/1.5);
-  translate(panX, panY); // for pan button
-  //rotateX(PI);
-  scale(myscale);
-  rotateX(myRotX); // for rotate button
-  rotateY(myRotY); // for rotate button
-  // end camera controls
+  applyCamera();
   
   pushMatrix();
   testModel.draw();
@@ -70,10 +62,15 @@ public void draw(){
   popMatrix();
   
   // start test
-  
   pushMatrix();
   translate(eep.x, eep.y, eep.z);
+  //println("pos: " + eep.x + ", " + eep.y + ", " + eep.z);
   stroke(255, 0, 0);
+  sphere(25);
+  popMatrix();
+  pushMatrix();
+  translate(testDest.x, testDest.y, testDest.z);
+  stroke(0, 255, 0);
   sphere(25);
   popMatrix();
   // end test
@@ -81,4 +78,11 @@ public void draw(){
   hint(DISABLE_DEPTH_TEST);
 }
 
+void applyCamera() {
+  translate(width/1.5,height/1.5);
+  translate(panX, panY); // for pan button
+  scale(myscale);
+  rotateX(myRotX); // for rotate button
+  rotateY(myRotY); // for rotate button
+}
 
