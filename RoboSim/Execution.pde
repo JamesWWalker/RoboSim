@@ -1,10 +1,6 @@
- 
-// TODO: Adapt IK implementation to work here
-
 /*
   Next on to-do list:
-  1 Port smooth movement
-  2 Port linear motion
+  1 Get linear motion working better
 */
 
 int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
