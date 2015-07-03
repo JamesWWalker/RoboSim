@@ -1,23 +1,19 @@
 void moveJoints() {
-  testModel.segments.get(0).currentRotations[1] += 0.02 * jointsMoving[0];
+
+  float trialAngle = testModel.segments.get(0).currentRotations[1] + 0.02 * jointsMoving[0];
+  trialAngle = clampAngle(trialAngle);
+  if (testModel.segments.get(0).anglePermitted(1, trialAngle))
+    testModel.segments.get(0).currentRotations[1] = trialAngle;
   
-  testModel.segments.get(1).currentRotations[2] += 0.02 * jointsMoving[1];
-  /*if (testModel.segments.get(1).currentRotations[2] > testModel.segments.get(1).rotationMaxConstraints[2]) {
-    jointsMoving[1] = 0;
-    testModel.segments.get(1).currentRotations[2] = testModel.segments.get(1).rotationMaxConstraints[2];
-  } else if (testModel.segments.get(1).currentRotations[2] < testModel.segments.get(1).rotationMinConstraints[2]) {
-    jointsMoving[1] = 0;
-    testModel.segments.get(1).currentRotations[2] = testModel.segments.get(1).rotationMinConstraints[2];
-  }*/
-  
-  testModel.segments.get(2).currentRotations[2] += 0.02 * jointsMoving[2];
-  /*if (testModel.segments.get(2).currentRotations[2] > testModel.segments.get(2).rotationMaxConstraints[2]) {
-    jointsMoving[2] = 0;
-    testModel.segments.get(2).currentRotations[2] = testModel.segments.get(2).rotationMaxConstraints[2];
-  } else if (testModel.segments.get(2).currentRotations[2] < testModel.segments.get(2).rotationMinConstraints[2]) {
-    jointsMoving[2] = 0;
-    testModel.segments.get(2).currentRotations[2] = testModel.segments.get(2).rotationMinConstraints[2];
-  }*/
+  trialAngle = testModel.segments.get(1).currentRotations[2] + 0.02 * jointsMoving[1];
+  trialAngle = clampAngle(trialAngle);
+  if (testModel.segments.get(1).anglePermitted(2, trialAngle))
+    testModel.segments.get(1).currentRotations[2] = trialAngle;
+    
+  trialAngle = testModel.segments.get(2).currentRotations[2] + 0.02 * jointsMoving[2];
+  trialAngle = clampAngle(trialAngle);
+  if (testModel.segments.get(2).anglePermitted(2, trialAngle))
+    testModel.segments.get(2).currentRotations[2] = trialAngle;
 }
 
 void drawModel(Model model) {
@@ -72,8 +68,7 @@ public class Triangle {
 public class Model {
   public ArrayList<Triangle> triangles = new ArrayList<Triangle>();
   public boolean[] rotations = new boolean[3]; // is rotating on this joint valid?
-  public float[] rotationMinConstraints = new float[3];
-  public float[] rotationMaxConstraints = new float[3];
+  public ArrayList<PVector>[] jointRanges = (ArrayList<PVector>[])new ArrayList[3];
   public float[] currentRotations = new float[3]; // current rotation value
   public float[] testRotations = new float[3]; // used while performing IK
   public float[] targetRotations = new float[3]; // we want to be rotated this way
@@ -84,11 +79,17 @@ public class Model {
   public Model(int in) {
     for (int n = 0; n < 3; n++) {
       rotations[n] = false;
-      rotationMinConstraints[n] = Float.MIN_VALUE;
-      rotationMaxConstraints[n] = Float.MAX_VALUE;
       currentRotations[n] = 0;
+      jointRanges[n] = new ArrayList<PVector>();
     }
     length = in;
+  }
+  
+  public boolean anglePermitted(int idx, float angle) {
+    for (PVector range : jointRanges[idx]) {
+      if (angle >= range.x && angle <= range.y) return true;
+    }
+    return false;
   }
 }
 
@@ -106,16 +107,18 @@ public class ArmModel {
     if (type == ARM_TEST) {
       Model base = loadSTLModel("Base.STL", 140);
       base.rotations[1] = true;
+      base.jointRanges[1].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
       Model link1 = loadSTLModel("Link1.STL", 137);
       link1.rotations[2] = true;
-      link1.rotationMinConstraints[2] = 0;
-      link1.rotationMaxConstraints[2] = 4.8;
+      link1.jointRanges[2].add(new PVector(0, 2.4));
+      link1.jointRanges[2].add(new PVector(3.88, PI*2));
       Model link2 = loadSTLModel("Link2.STL", 173);
       link2.rotations[2] = true;
-      link2.rotationMinConstraints[2] = 0;
-      link2.rotationMaxConstraints[2] = 4;
+      link2.jointRanges[2].add(new PVector(0, 2));
+      link2.jointRanges[2].add(new PVector(4.28, PI*2));
       Model link3 = loadSTLModel("Link3.STL", 140);
       link3.rotations[0] = true;
+      link3.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
       // end effector rotates around X and Y axes
       // doesn't seem to be included in model files yet
       segments.add(base);

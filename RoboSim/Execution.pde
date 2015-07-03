@@ -3,10 +3,8 @@
 
 /*
   Next on to-do list:
-  1 Rewrite the angle constraints code. The current implementation doesn't
-    work with the IK at all.
-  2 Port smooth movement
-  3 Port linear motion
+  1 Port smooth movement
+  2 Port linear motion
 */
 
 int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
@@ -55,9 +53,7 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
         float bestAngle = segment.testRotations[r];
         for (int n = 0; n < slices; n++) {
           segment.testRotations[r] += checkAngle;
-          //if (segment.testRotations[r] < segment.rotationMaxConstraints[r] &&
-          //    segment.testRotations[r] > segment.rotationMinConstraints[r])
-          //{
+          if (segment.anglePermitted(r, checkAngle)) {
             pushMatrix();
             applyCamera();
             eetp = calculateEndEffectorPosition(model, true);
@@ -66,7 +62,7 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
               closest = dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z);
               bestAngle = segment.testRotations[r];
             }
-          //}
+          }
         } // end loop through slices (try all the different angles)
         bestAngle = clampAngle(bestAngle);
         segment.testRotations[r] = segment.targetRotations[r] = bestAngle;
