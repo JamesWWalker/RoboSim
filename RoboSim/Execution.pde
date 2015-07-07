@@ -1,9 +1,3 @@
-/*
-  Next on to-do list:
-  1 Get linear motion working better
-*/
-
-int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
 
 PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
   pushMatrix();

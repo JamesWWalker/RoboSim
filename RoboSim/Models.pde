@@ -99,15 +99,17 @@ final int ARM_TEST = 0;
 
 public class ArmModel {
   
-  ArrayList<Model> segments = new ArrayList<Model>();
-  int type;
-  public boolean calculatingArms = false, movingArms = false;
-  ArrayList<PVector> intermediatePositions;
-  int interIdx = -1;
+  public ArrayList<Model> segments = new ArrayList<Model>();
+  public int type;
+  //public boolean calculatingArms = false, movingArms = false;
+  public ArrayList<PVector> intermediatePositions;
+  public int interIdx = -1;
+  public float motorSpeed;
   
   public ArmModel(int in) {
     type = in;
     if (type == ARM_TEST) {
+      motorSpeed = 255.0 / 60.0; // speed in mm divided by the framerate
       Model base = loadSTLModel("Base.STL");
       base.rotations[1] = true;
       base.jointRanges[1].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
@@ -172,12 +174,52 @@ public class ArmModel {
     return allDone;
   } // end interpolate rotation
   
+  public void instantRotation() {
+    for (Model a : segments) {
+      for (int r = 0; r < 3; r++) {
+        a.currentRotations[r] = a.targetRotations[r];
+      }
+    }
+  }
+  
+  int motionFrameCounter = 0;
+  float DISTANCE_BETWEEN_POINTS = 5.0;
+  
+  public void beginNewLinearMotion(PVector start, PVector end) {
+    calculateIntermediatePositions(start, end);
+    motionFrameCounter = 0;
+    int result = calculateIK(this, intermediatePositions.get(interIdx), 720, 15);
+    // TODO: FLAG: MIGHT NEED TO UPDATE THIS LATER TO ACCOUNT FOR FAILURE POSSIBILITY.
+    while (result != EXEC_SUCCESS)
+      result = calculateIK(this, intermediatePositions.get(interIdx), 720, 15);
+  }
+  
+  public boolean executeLinearMotion(float speedMult) {
+    motionFrameCounter++;
+    // speed is in pixels per frame, multiply that by the current speed setting
+    // which is contained in the motion instruction
+    float currentSpeed = motorSpeed * speedMult;
+    if (currentSpeed * motionFrameCounter > DISTANCE_BETWEEN_POINTS) {
+      instantRotation();
+      interIdx++;
+      motionFrameCounter = 0;
+      if (interIdx >= intermediatePositions.size()) {
+        interIdx = -1;
+        return true;
+      }
+      int result = calculateIK(this, intermediatePositions.get(interIdx), 720, 15);
+      // TODO: FLAG: MIGHT NEED TO UPDATE THIS LATER TO ACCOUNT FOR FAILURE POSSIBILITY.
+      while (result != EXEC_SUCCESS)
+        result = calculateIK(this, intermediatePositions.get(interIdx), 720, 15);
+    }
+    return false;
+  } // end execute linear motion
+  
   public void calculateIntermediatePositions(PVector start, PVector end) {
     intermediatePositions = new ArrayList<PVector>();
     float mu = 0;
-    float DISTANCE_BETWEEN = 10.0;
     int numberOfPoints = (int)
-      (dist(start.x, start.y, start.z, end.x, end.y, end.z) / DISTANCE_BETWEEN);
+      (dist(start.x, start.y, start.z, end.x, end.y, end.z) / DISTANCE_BETWEEN_POINTS);
     float increment = 1.0 / (float)numberOfPoints;
     for (int n = 0; n < numberOfPoints; n++) {
       mu += increment;

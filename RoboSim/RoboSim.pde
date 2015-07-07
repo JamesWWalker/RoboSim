@@ -34,6 +34,33 @@ boolean doRotate = false;
 float myscale = 0.5;
 /*******************************/
 
+/* other global variables      */
+
+// for Execution
+Program currentProgram;
+int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
+// for GUI
+final int FRAME_JOINT = 0, 
+          FRAME_JGFRM = 1, 
+          FRAME_WORLD = 2, 
+          FRAME_TOOL = 3, 
+          FRAME_USER = 4;
+int frame = FRAME_JOINT;
+String displayFrame = "JOINT";
+
+final int OFF = 0, ON = 1;
+int shift = OFF; 
+
+int active_task = -1; // which program is active? Default: no program is active
+//for Programming
+final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
+final int TERM_FINE = 0, TERM_CONT = 1;
+final float SPEED_FINE = 0.0025;
+final float SPEED_VFINE = 0.001;
+PVector[] registers = new PVector[999];
+
+/*******************************/
+
 public void setup() {
   size(1200, 800, P3D);
   cp5 = new ControlP5(this);
@@ -42,6 +69,8 @@ public void setup() {
   for (int n = 0; n < 6; n++) jointsMoving[n] = 0;
   testModel = new ArmModel(ARM_TEST);
 }
+
+boolean doneMoving = false; // TESTING CODE
 
 public void draw() {
   
@@ -52,34 +81,12 @@ public void draw() {
     applyCamera();
     PVector start = calculateEndEffectorPosition(testModel, false);
     popMatrix();
-    testModel.calculateIntermediatePositions(start, new PVector(575, 300, 50));
-    testModel.calculatingArms = true;
-  }
-  // execute arm movement
-  if (testModel.calculatingArms) {
-    if (!testModel.movingArms) {
-      int result = calculateIK(testModel,
-                               testModel.intermediatePositions.get(
-                                 testModel.interIdx),
-                               720, 15);
-      if (result == EXEC_SUCCESS) testModel.movingArms = true;
-    } else {
-      boolean allDone = testModel.interpolateRotation();
-      if (allDone) {
-        testModel.movingArms = false;
-        testModel.calculatingArms = false;
-        if (testModel.interIdx >= 0) {
-          testModel.interIdx++;
-          if (testModel.interIdx >= testModel.intermediatePositions.size())
-            testModel.interIdx = -1;
-        }
-      }
-    }
-  } else if (testModel.interIdx >= 0) {
-    testDest.x = testModel.intermediatePositions.get(testModel.interIdx).x;
-    testDest.y = testModel.intermediatePositions.get(testModel.interIdx).y;
-    testDest.z = testModel.intermediatePositions.get(testModel.interIdx).z;
-    testModel.calculatingArms = true;
+    //testModel.calculateIntermediatePositions(start, new PVector(575, 300, 50));
+    testModel.beginNewLinearMotion(start, new PVector(575, 300, 50));
+    //testModel.calculatingArms = true;
+  } else if (frameCount > 20) {
+    // execute arm movement
+    if (!doneMoving) doneMoving = testModel.executeLinearMotion(1.0);
   } /* */
   // END TESTING CODE
   
@@ -102,7 +109,7 @@ public void draw() {
   popMatrix();
   
   // TESTING CODE: DRAW INTERMEDIATE POINTS
-  /*stroke(255, 0, 0);
+  stroke(255, 0, 0);
   pushMatrix();
   if (testModel.intermediatePositions != null) {
     for (PVector v : testModel.intermediatePositions) {

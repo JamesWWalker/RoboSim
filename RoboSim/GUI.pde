@@ -1,17 +1,3 @@
-final int FRAME_JOINT = 0, 
-          FRAME_JGFRM = 1, 
-          FRAME_WORLD = 2, 
-          FRAME_TOOL = 3, 
-          FRAME_USER = 4;
-int frame = FRAME_JOINT;
-String displayFrame = "JOINT";
-
-final int OFF = 0, ON = 1;
-int shift = OFF; 
-
-int active_task = -1; // which program is active? Default: no program is active
-
-
 // for display
     // The teaching pendant screen can display 15 lines, each line 
     // can display 40 symbols.
