@@ -14,7 +14,7 @@ ControlP5 cp5;
 Textarea myTextarea;
 Accordion accordion;
 
-ArrayList<Program> tasks = new ArrayList<Program>();
+ArrayList<Program> programs = new ArrayList<Program>();
 
 /* global variables for toolbar */
 
@@ -51,7 +51,7 @@ String displayFrame = "JOINT";
 final int OFF = 0, ON = 1;
 int shift = OFF; 
 
-int active_task = -1; // which program is active? Default: no program is active
+int active_program = -1; // which program is active? Default: no program is active
 //for Programming
 final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
 final int TERM_FINE = 0, TERM_CONT = 1;
