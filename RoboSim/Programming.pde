@@ -4,6 +4,7 @@ final int TERM_FINE = 0, TERM_CONT = 1;
 final float SPEED_FINE = 0.0025;
 final float SPEED_VFINE = 0.001;
 
+
 PVector[] registers = new PVector[999];
 
 public class Program {
