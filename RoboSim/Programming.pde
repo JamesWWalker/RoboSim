@@ -8,21 +8,23 @@ final float SPEED_VFINE = 0.001;
 PVector[] registers = new PVector[999];
 
 public class Program {
-  
-  // constructor, init an empty list of instructions
-  Program(){
-      instructions = new ArrayList<Instruction>();  
-  }
-  
   private ArrayList<Instruction> instructions;
+  
+  public Program() {
+    instructions = new ArrayList<Instruction>();
+  }
   
   public ArrayList<Instruction> getInstructions() {
     return instructions;
   }
   
-  // TODO: you may want to add a number of functions like
-  //  addInstruction()
-  //  removeInstruction() 
+  public void addInstruction(Instruction i) {
+    instructions.add(i);
+  }
+  
+  public void addInstruction(int idx, Instruction i) {
+    instructions.add(idx, i);
+  }
 }
 
 public class Instruction {
@@ -34,6 +36,13 @@ public class MotionInstruction extends Instruction {
   private float speed;
   private int terminationType;
   
+  public MotionInstruction(int m, int r, float s, int t) {
+    motionType = m;
+    register = r;
+    speed = s;
+    terminationType = t;
+  }
+  
   public int getMotionType() { return motionType; }
   public void setMotionType(int in) { motionType = in; }
   public int getRegister() { return register; }
@@ -42,8 +51,6 @@ public class MotionInstruction extends Instruction {
   public void setSpeed(float in) { speed = in; }
   public int getTerminationType() { return terminationType; }
   public void setTerminationType(int in) { terminationType = in; }
-  
-  // TODO: you may want to add a constructor which set the default values for fields, instead of using default constructor
 }
 
 public class FrameInstruction extends Instruction {

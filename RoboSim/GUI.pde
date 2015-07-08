@@ -12,7 +12,6 @@ int shift = OFF;
 
 int active_task = -1; // which program is active? Default: no program is active
 
-
 // for display
     // The teaching pendant screen can display 15 lines, each line 
     // can display 40 symbols.
@@ -1236,11 +1235,11 @@ public void RSHIFT(int theValue){
 
 public void F1(int theValue){
     if (shift == ON){
-       if (active_task == -1 && tasks.size() <= 0 ){
+       if (active_program == -1 && programs.size() <= 0 ){
            // TODO: if no active task and there is no program so far, create a new program
            //Program aProgram = new Program();
            //aProgram.getInstruction().add() // TODO, incomplete
-           //tasks.add(new Program());
+           //programs.add(new Program());
        }
     }
 }
