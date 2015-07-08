@@ -2,8 +2,20 @@
 public class Program {
   private ArrayList<Instruction> instructions;
   
+  public Program() {
+    instructions = new ArrayList<Instruction>();
+  }
+  
   public ArrayList<Instruction> getInstructions() {
     return instructions;
+  }
+  
+  public void addInstruction(Instruction i) {
+    instructions.add(i);
+  }
+  
+  public void addInstruction(int idx, Instruction i) {
+    instructions.add(idx, i);
   }
 }
 
@@ -15,6 +27,13 @@ public class MotionInstruction extends Instruction {
   private int register;
   private float speed;
   private int terminationType;
+  
+  public MotionInstruction(int m, int r, float s, int t) {
+    motionType = t;
+    register = r;
+    speed = s;
+    terminationType = t;
+  }
   
   public int getMotionType() { return motionType; }
   public void setMotionType(int in) { motionType = in; }

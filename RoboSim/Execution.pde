@@ -1,4 +1,23 @@
 
+// Next on to-do list:
+// The executor will now theoretically carry out a series of linear motion instructions.
+// Try hard-coding a program and test it.
+
+void createTestProgram() {
+  Program program = new Program();
+  MotionInstruction instruction =
+    new MotionInstruction(MTYPE_LINEAR, 0, 1.0, TERM_FINE);
+  program.addInstruction(instruction);
+  instruction = new MotionInstruction(MTYPE_LINEAR, 1, 1.0, TERM_FINE);
+  program.addInstruction(instruction);
+  instruction = new MotionInstruction(MTYPE_LINEAR, 2, 1.0, TERM_FINE);
+  program.addInstruction(instruction);
+  registers[0] = new PVector(575, 300, 50);
+  registers[0] = new PVector(525, 375, 50);
+  registers[0] = new PVector(475, 450, 50);
+}
+
+
 PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
   pushMatrix();
   if (model.type == ARM_TEST) {
@@ -81,6 +100,55 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
     return EXEC_SUCCESS;
   } else return EXEC_PROCESSING;
 } // end calculateIK
+
+
+
+boolean executingInstruction = false;
+
+void readyProgram() {
+  currentInstruction = 0;
+  executingInstruction = false;
+}
+/* */
+
+// return true when done
+boolean executeProgram(Program program, ArmModel model) {
+  if (program == null || currentInstruction >= program.getInstructions().size())
+    return true;
+  Instruction ins =  program.getInstructions().get(currentInstruction);
+  if (ins instanceof MotionInstruction) {
+    MotionInstruction instruction = (MotionInstruction)ins;
+    if (!executingInstruction) { // start executing new instruction
+      if (instruction.getMotionType() == MTYPE_LINEAR) {
+      
+        pushMatrix();
+        applyCamera();
+        PVector start = calculateEndEffectorPosition(testModel, false);
+        popMatrix();
+        //testModel.calculateIntermediatePositions(start, new PVector(575, 300, 50));
+        model.beginNewLinearMotion(start, registers[instruction.getRegister()]);
+        executingInstruction = true;
+        
+      } // end of if instruction type==linear
+      //
+    } else { // continue executing current instruction
+      if (instruction.getMotionType() == MTYPE_LINEAR) {
+      
+        executingInstruction = !(model.executeLinearMotion(instruction.speed));
+        if (!executingInstruction) {
+          currentInstruction++;
+          if (currentInstruction >= program.getInstructions().size()) return true;
+        }
+        
+      } // end of if instruction type==linear
+      //
+    }
+    //
+  } // end of if instruction==motion instruction
+  //
+  return false;
+}
+
 
 
 float clampAngle(float angle) {

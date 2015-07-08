@@ -38,6 +38,7 @@ float myscale = 0.5;
 
 // for Execution
 Program currentProgram;
+int currentInstruction;
 int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
 // for GUI
 final int FRAME_JOINT = 0, 
@@ -75,7 +76,7 @@ boolean doneMoving = false; // TESTING CODE
 public void draw() {
   
   // TESTING CODE
-  /*PVector testDest = new PVector();
+  PVector testDest = new PVector();
   if (frameCount == 20) {
     pushMatrix();
     applyCamera();
