@@ -29,7 +29,7 @@ public class MotionInstruction extends Instruction {
   private int terminationType;
   
   public MotionInstruction(int m, int r, float s, int t) {
-    motionType = t;
+    motionType = m;
     register = r;
     speed = s;
     terminationType = t;

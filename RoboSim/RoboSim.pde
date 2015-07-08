@@ -67,8 +67,11 @@ public void setup() {
   cp5 = new ControlP5(this);
   gui();
   for (int n = 0; n < registers.length; n++) registers[n] = new PVector();
+  // TESTING CODE
   for (int n = 0; n < 6; n++) jointsMoving[n] = 0;
   testModel = new ArmModel(ARM_TEST);
+  createTestProgram();
+  // END TESTING CODE
 }
 
 boolean doneMoving = false; // TESTING CODE
@@ -76,7 +79,17 @@ boolean doneMoving = false; // TESTING CODE
 public void draw() {
   
   // TESTING CODE
-  PVector testDest = new PVector();
+  /*if (frameCount == 20) {
+    readyProgram();
+  } else if (frameCount > 20) {
+    if (!doneMoving) {
+      doneMoving = executeProgram(currentProgram, testModel);
+    }
+  } /* */
+  // END TESTING CODE
+  
+  // TESTING CODE
+  /*PVector testDest = new PVector();
   if (frameCount == 20) {
     pushMatrix();
     applyCamera();

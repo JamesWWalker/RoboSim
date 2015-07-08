@@ -15,6 +15,8 @@ void createTestProgram() {
   registers[0] = new PVector(575, 300, 50);
   registers[0] = new PVector(525, 375, 50);
   registers[0] = new PVector(475, 450, 50);
+  programs.add(program);
+  currentProgram = program;
 }
 
 
@@ -120,7 +122,7 @@ boolean executeProgram(Program program, ArmModel model) {
     MotionInstruction instruction = (MotionInstruction)ins;
     if (!executingInstruction) { // start executing new instruction
       if (instruction.getMotionType() == MTYPE_LINEAR) {
-      
+        println("roger that");
         pushMatrix();
         applyCamera();
         PVector start = calculateEndEffectorPosition(testModel, false);
