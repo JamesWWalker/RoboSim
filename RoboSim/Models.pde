@@ -195,23 +195,31 @@ public class ArmModel {
   }
   
   public boolean executeLinearMotion(float speedMult) {
+    println("execute linear motion start");
     motionFrameCounter++;
     // speed is in pixels per frame, multiply that by the current speed setting
     // which is contained in the motion instruction
     float currentSpeed = motorSpeed * speedMult;
     if (currentSpeed * motionFrameCounter > DISTANCE_BETWEEN_POINTS) {
+      println("did i get here?");
       instantRotation();
       interIdx++;
       motionFrameCounter = 0;
       if (interIdx >= intermediatePositions.size()) {
         interIdx = -1;
+        println("returning that i'm done");
         return true;
       }
-      int result = calculateIK(this, intermediatePositions.get(interIdx), 720, 15);
+      println("before IK");
+      int result = calculateIK(this, intermediatePositions.get(interIdx), 720, 25);
+      println("after IK: " + result);
       // TODO: FLAG: MIGHT NEED TO UPDATE THIS LATER TO ACCOUNT FOR FAILURE POSSIBILITY.
-      while (result != EXEC_SUCCESS)
-        result = calculateIK(this, intermediatePositions.get(interIdx), 720, 15);
+      while (result != EXEC_SUCCESS) {
+        println("stuck in here");
+        result = calculateIK(this, intermediatePositions.get(interIdx), 720, 25);
+      }
     }
+    println("execute linear motion end");
     return false;
   } // end execute linear motion
   

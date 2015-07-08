@@ -88,22 +88,6 @@ public void draw() {
   } /* */
   // END TESTING CODE
   
-  // TESTING CODE
-  /*PVector testDest = new PVector();
-  if (frameCount == 20) {
-    pushMatrix();
-    applyCamera();
-    PVector start = calculateEndEffectorPosition(testModel, false);
-    popMatrix();
-    //testModel.calculateIntermediatePositions(start, new PVector(575, 300, 50));
-    testModel.beginNewLinearMotion(start, new PVector(575, 300, 50));
-    //testModel.calculatingArms = true;
-  } else if (frameCount > 20) {
-    // execute arm movement
-    if (!doneMoving) doneMoving = testModel.executeLinearMotion(1.0);
-  } /* */
-  // END TESTING CODE
-  
   moveJoints(); // respond to manual movement from J button presses
   
   cursor(cursorMode);

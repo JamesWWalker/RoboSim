@@ -12,9 +12,15 @@ void createTestProgram() {
   program.addInstruction(instruction);
   instruction = new MotionInstruction(MTYPE_LINEAR, 2, 1.0, TERM_FINE);
   program.addInstruction(instruction);
+  instruction = new MotionInstruction(MTYPE_LINEAR, 3, 1.0, TERM_FINE);
+  program.addInstruction(instruction);
+  instruction = new MotionInstruction(MTYPE_LINEAR, 4, 1.0, TERM_FINE);
+  program.addInstruction(instruction);
   registers[0] = new PVector(575, 300, 50);
-  registers[0] = new PVector(525, 375, 50);
-  registers[0] = new PVector(475, 450, 50);
+  registers[1] = new PVector(625, 225, 50);
+  registers[2] = new PVector(675, 200, 50);
+  registers[3] = new PVector(725, 225, 50);
+  registers[4] = new PVector(775, 300, 50);
   programs.add(program);
   currentProgram = program;
 }
@@ -135,11 +141,13 @@ boolean executeProgram(Program program, ArmModel model) {
       //
     } else { // continue executing current instruction
       if (instruction.getMotionType() == MTYPE_LINEAR) {
-      
+        println("executing current instruction");
         executingInstruction = !(model.executeLinearMotion(instruction.speed));
         if (!executingInstruction) {
+          println("it has told me that it is done");
           currentInstruction++;
           if (currentInstruction >= program.getInstructions().size()) return true;
+          println("another check");
         }
         
       } // end of if instruction type==linear
@@ -148,6 +156,7 @@ boolean executeProgram(Program program, ArmModel model) {
     //
   } // end of if instruction==motion instruction
   //
+  println("reached end");
   return false;
 }
 
