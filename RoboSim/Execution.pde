@@ -2,33 +2,20 @@
 // To-do list:
 // -> The speed control for executing motion instructions is pretty rough.
 //    Make it better.
-// -> Enable continuous (instead of fine) motion control
-/*
-Plan:
-
-- Do this while plotting points for interpolation.
-- This only works if you move to another point after the next point; otherwise,
-  just do normal linear interpolation.
-- Assuming our current point is P1, and we're moving to P2 and then P3:
-  1 Do linear interpolation between points P2 and P3 FIRST.
-  2 Begin interpolation between P1 and P2.
-  3 When you're (cont% / 2)% away from P2, begin interpolating not towards
-    P2, but towards the points defined between P2 and P3 in step 1.
-  4 Once you reach the final point, repeat for the next target.
-*/
+// -> Continuous motion seems to be working, but needs more thorough testing
 // -> Make motion instructions follow different coordinate systems
 // -> Add more sophisticated handling of failure possibility when calculating IK
 
 void createTestProgram() {
   Program program = new Program();
   MotionInstruction instruction =
-    new MotionInstruction(MTYPE_LINEAR, 0, 1.0, TERM_FINE);
+    new MotionInstruction(MTYPE_LINEAR, 0, 1.0, TERM_CONT100);
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 1, 1.0, TERM_FINE);
+  instruction = new MotionInstruction(MTYPE_LINEAR, 1, 1.0, TERM_CONT75);
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 2, 1.0, TERM_FINE);
+  instruction = new MotionInstruction(MTYPE_LINEAR, 2, 1.0, TERM_CONT50);
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 3, 0.25, TERM_FINE);
+  instruction = new MotionInstruction(MTYPE_LINEAR, 3, 0.25, TERM_CONT0);
   program.addInstruction(instruction);
   instruction = new MotionInstruction(MTYPE_LINEAR, 4, 0.25, TERM_FINE);
   program.addInstruction(instruction);
@@ -66,6 +53,8 @@ PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
   popMatrix();
   return ret;
 }
+
+/* */
 
 int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
   
@@ -130,7 +119,9 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
 public ArrayList<PVector> intermediatePositions;
 int motionFrameCounter = 0;
 float DISTANCE_BETWEEN_POINTS = 5.0;
-int interIdx = -1;
+int interMotionIdx = -1;
+
+
 
 void calculateIntermediatePositions(PVector start, PVector end) {
   intermediatePositions = new ArrayList<PVector>();
@@ -145,18 +136,92 @@ void calculateIntermediatePositions(PVector start, PVector end) {
       start.y * (1 - mu) + (end.y * mu),
       start.z * (1 - mu) + (end.z * mu)));
   }
-  interIdx = 0;
+  interMotionIdx = 0;
 } // end calculate intermediate positions
 
 
 
-public void beginNewLinearMotion(ArmModel model, PVector start, PVector end) {
-  calculateIntermediatePositions(start, end);
+/*
+Here's how this works:
+  Assuming our current point is P1, and we're moving to P2 and then P3:
+  1 Do linear interpolation between points P2 and P3 FIRST.
+  2 Begin interpolation between P1 and P2.
+  3 When you're (cont% / 2)% away from P2, begin interpolating not towards
+    P2, but towards the points defined between P2 and P3 in step 1.
+    The mu for this is from 0 to 0.5 instead of 0 to 1.0.
+*/
+void calculateContinuousPositions(PVector p1, PVector p2, PVector p3, float percentage) {
+  percentage /= 2;
+  percentage = 1 - percentage;
+  percentage = constrain(percentage, 0, 1);
+  intermediatePositions = new ArrayList<PVector>();
+  ArrayList<PVector> secondaryTargets = new ArrayList<PVector>();
+  float mu = 0;
+  int numberOfPoints = 0;
+  if (dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) >
+      dist(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z))
+  {
+    numberOfPoints = (int)
+      (dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) / DISTANCE_BETWEEN_POINTS);
+  } else {
+    numberOfPoints = (int)
+      (dist(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z) / DISTANCE_BETWEEN_POINTS);
+  }
+  float increment = 1.0 / (float)numberOfPoints;
+  for (int n = 0; n < numberOfPoints; n++) {
+    mu += increment;
+    secondaryTargets.add(new PVector(
+      p2.x * (1 - mu) + (p3.x * mu),
+      p2.y * (1 - mu) + (p3.y * mu),
+      p2.z * (1 - mu) + (p3.z * mu)));
+  }
+  mu = 0;
+  int transitionPoint = (int)((float)numberOfPoints * percentage);
+  for (int n = 0; n < transitionPoint; n++) {
+    mu += increment;
+    intermediatePositions.add(new PVector(
+      p1.x * (1 - mu) + (p2.x * mu),
+      p1.y * (1 - mu) + (p2.y * mu),
+      p1.z * (1 - mu) + (p2.z * mu)));
+  }
+  int secondaryIdx = 0; // accessor for secondary targets
+  mu = 0;
+  increment /= 2.0;
+  PVector currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
+  for (int n = transitionPoint; n < numberOfPoints; n++) {
+    mu += increment;
+    intermediatePositions.add(new PVector(
+      currentPoint.x * (1 - mu) + (secondaryTargets.get(secondaryIdx).x * mu),
+      currentPoint.y * (1 - mu) + (secondaryTargets.get(secondaryIdx).y * mu),
+      currentPoint.z * (1 - mu) + (secondaryTargets.get(secondaryIdx).z * mu)));
+    currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
+    secondaryIdx++;
+  }
+  interMotionIdx = 0;
+} // end calculate continuous positions
+
+
+
+void beginNewContinuousMotion(ArmModel model, PVector start, PVector end,
+                              PVector next, float percentage)
+{
+  calculateContinuousPositions(start, end, next, percentage);
   motionFrameCounter = 0;
-  int result = calculateIK(model, intermediatePositions.get(interIdx), 720, 15);
+  int result = calculateIK(model, intermediatePositions.get(interMotionIdx), 720, 15);
   // TODO: FLAG: UPDATE THIS LATER TO ACCOUNT FOR FAILURE POSSIBILITY.
   while (result != EXEC_SUCCESS)
-    result = calculateIK(model, intermediatePositions.get(interIdx), 720, 15);
+    result = calculateIK(model, intermediatePositions.get(interMotionIdx), 720, 15);
+}
+
+
+
+void beginNewLinearMotion(ArmModel model, PVector start, PVector end) {
+  calculateIntermediatePositions(start, end);
+  motionFrameCounter = 0;
+  int result = calculateIK(model, intermediatePositions.get(interMotionIdx), 720, 15);
+  // TODO: FLAG: UPDATE THIS LATER TO ACCOUNT FOR FAILURE POSSIBILITY.
+  while (result != EXEC_SUCCESS)
+    result = calculateIK(model, intermediatePositions.get(interMotionIdx), 720, 15);
 }
 
 
@@ -169,27 +234,35 @@ void readyProgram() {
 }
 
 
-boolean executeLinearMotion(ArmModel model, float speedMult) {
+boolean executeMotion(ArmModel model, float speedMult) {
   motionFrameCounter++;
   // speed is in pixels per frame, multiply that by the current speed setting
   // which is contained in the motion instruction
   float currentSpeed = model.motorSpeed * speedMult;
   if (currentSpeed * motionFrameCounter > DISTANCE_BETWEEN_POINTS) {
     model.instantRotation();
-    interIdx++;
+    interMotionIdx++;
     motionFrameCounter = 0;
-    if (interIdx >= intermediatePositions.size()) {
-      interIdx = -1;
+    if (interMotionIdx >= intermediatePositions.size()) {
+      interMotionIdx = -1;
       return true;
     }
-    int result = calculateIK(model, intermediatePositions.get(interIdx), 720, 25);
+    int result = calculateIK(model, intermediatePositions.get(interMotionIdx), 720, 25);
     // TODO: FLAG: MIGHT NEED TO UPDATE THIS LATER TO ACCOUNT FOR FAILURE POSSIBILITY.
     while (result != EXEC_SUCCESS) {
-      result = calculateIK(model, intermediatePositions.get(interIdx), 720, 25);
+      result = calculateIK(model, intermediatePositions.get(interMotionIdx), 720, 25);
     }
   }
   return false;
 } // end execute linear motion
+
+
+float getContinuousPercentage(int term) {
+  if (term == TERM_CONT50) return 0.5;
+  else if (term == TERM_CONT75) return 0.75;
+  else if (term == TERM_CONT100) return 1.0;
+  return 0;
+}
 
 
 // return true when done
@@ -200,26 +273,41 @@ boolean executeProgram(Program program, ArmModel model) {
   if (ins instanceof MotionInstruction) {
     MotionInstruction instruction = (MotionInstruction)ins;
     if (!executingInstruction) { // start executing new instruction
-      if (instruction.getMotionType() == MTYPE_LINEAR) {
-        pushMatrix();
-        applyCamera();
-        PVector start = calculateEndEffectorPosition(testModel, false);
-        popMatrix();
-        //testModel.calculateIntermediatePositions(start, new PVector(575, 300, 50));
+    
+      pushMatrix();
+      applyCamera();
+      PVector start = calculateEndEffectorPosition(testModel, false);
+      popMatrix();
+      if (instruction.getTerminationType() == TERM_FINE)
         beginNewLinearMotion(model, start, registers[instruction.getRegister()]);
-        executingInstruction = true;
-        
-      } // end of if instruction type==linear
-      //
-    } else { // continue executing current instruction
-      if (instruction.getMotionType() == MTYPE_LINEAR) {
-        executingInstruction = !(executeLinearMotion(model, instruction.speed));
-        if (!executingInstruction) {
-          currentInstruction++;
-          if (currentInstruction >= program.getInstructions().size()) return true;
+      else {
+        PVector nextPoint = null;
+        for (int n = currentInstruction+1; n < program.getInstructions().size(); n++) {
+          Instruction nextIns = program.getInstructions().get(n);
+          if (nextIns instanceof MotionInstruction) {
+            MotionInstruction castIns = (MotionInstruction)nextIns;
+            nextPoint = registers[castIns.getRegister()];
+          }
         }
-        
-      } // end of if instruction type==linear
+        if (nextPoint == null) beginNewLinearMotion(
+                               model, start, registers[instruction.getRegister()]);
+        else {
+          float percentage = getContinuousPercentage(instruction.getTerminationType());
+          if (percentage <= 0) beginNewLinearMotion(
+                               model, start, registers[instruction.getRegister()]);
+          else beginNewContinuousMotion(model, start, registers[instruction.getRegister()],
+                                        nextPoint, percentage);
+        }
+      }
+      executingInstruction = true;
+      
+    } else { // continue executing current instruction
+    
+      executingInstruction = !(executeMotion(model, instruction.speed));
+      if (!executingInstruction) {
+        currentInstruction++;
+        if (currentInstruction >= program.getInstructions().size()) return true;
+      }
       //
     }
     //

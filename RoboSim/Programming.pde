@@ -1,6 +1,7 @@
 
 final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
-final int TERM_FINE = 0, TERM_CONT = 1;
+final int TERM_FINE = 0, TERM_CONT0 = 1, TERM_CONT50 = 2,
+          TERM_CONT75 = 3, TERM_CONT100 = 4;
 final float SPEED_FINE = 0.0025;
 final float SPEED_VFINE = 0.001;
 
