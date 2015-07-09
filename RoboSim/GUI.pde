@@ -1235,7 +1235,7 @@ public void RSHIFT(int theValue){
 
 public void F1(int theValue){
     if (shift == ON){
-       if (active_program == -1 && programs.size() <= 0 ){
+       if (active_task == -1 && programs.size() <= 0 ){
            // TODO: if no active task and there is no program so far, create a new program
            //Program aProgram = new Program();
            //aProgram.getInstruction().add() // TODO, incomplete

@@ -1,7 +1,23 @@
 
-// Next on to-do list:
-// The executor will now theoretically carry out a series of linear motion instructions.
-// Try hard-coding a program and test it.
+// To-do list:
+// -> The speed control for executing motion instructions is pretty rough.
+//    Make it better.
+// -> Enable continuous (instead of fine) motion control
+/*
+Plan:
+
+- Do this while plotting points for interpolation.
+- This only works if you move to another point after the next point; otherwise,
+  just do normal linear interpolation.
+- Assuming our current point is P1, and we're moving to P2 and then P3:
+  1 Do linear interpolation between points P2 and P3 FIRST.
+  2 Begin interpolation between P1 and P2.
+  3 When you're (cont% / 2)% away from P2, begin interpolating not towards
+    P2, but towards the points defined between P2 and P3 in step 1.
+  4 Once you reach the final point, repeat for the next target.
+*/
+// -> Make motion instructions follow different coordinate systems
+// -> Add more sophisticated handling of failure possibility when calculating IK
 
 void createTestProgram() {
   Program program = new Program();
@@ -12,9 +28,9 @@ void createTestProgram() {
   program.addInstruction(instruction);
   instruction = new MotionInstruction(MTYPE_LINEAR, 2, 1.0, TERM_FINE);
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 3, 1.0, TERM_FINE);
+  instruction = new MotionInstruction(MTYPE_LINEAR, 3, 0.25, TERM_FINE);
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 4, 1.0, TERM_FINE);
+  instruction = new MotionInstruction(MTYPE_LINEAR, 4, 0.25, TERM_FINE);
   program.addInstruction(instruction);
   registers[0] = new PVector(575, 300, 50);
   registers[1] = new PVector(625, 225, 50);
@@ -111,13 +127,70 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
 
 
 
+public ArrayList<PVector> intermediatePositions;
+int motionFrameCounter = 0;
+float DISTANCE_BETWEEN_POINTS = 5.0;
+int interIdx = -1;
+
+void calculateIntermediatePositions(PVector start, PVector end) {
+  intermediatePositions = new ArrayList<PVector>();
+  float mu = 0;
+  int numberOfPoints = (int)
+    (dist(start.x, start.y, start.z, end.x, end.y, end.z) / DISTANCE_BETWEEN_POINTS);
+  float increment = 1.0 / (float)numberOfPoints;
+  for (int n = 0; n < numberOfPoints; n++) {
+    mu += increment;
+    intermediatePositions.add(new PVector(
+      start.x * (1 - mu) + (end.x * mu),
+      start.y * (1 - mu) + (end.y * mu),
+      start.z * (1 - mu) + (end.z * mu)));
+  }
+  interIdx = 0;
+} // end calculate intermediate positions
+
+
+
+public void beginNewLinearMotion(ArmModel model, PVector start, PVector end) {
+  calculateIntermediatePositions(start, end);
+  motionFrameCounter = 0;
+  int result = calculateIK(model, intermediatePositions.get(interIdx), 720, 15);
+  // TODO: FLAG: UPDATE THIS LATER TO ACCOUNT FOR FAILURE POSSIBILITY.
+  while (result != EXEC_SUCCESS)
+    result = calculateIK(model, intermediatePositions.get(interIdx), 720, 15);
+}
+
+
+
 boolean executingInstruction = false;
 
 void readyProgram() {
   currentInstruction = 0;
   executingInstruction = false;
 }
-/* */
+
+
+boolean executeLinearMotion(ArmModel model, float speedMult) {
+  motionFrameCounter++;
+  // speed is in pixels per frame, multiply that by the current speed setting
+  // which is contained in the motion instruction
+  float currentSpeed = model.motorSpeed * speedMult;
+  if (currentSpeed * motionFrameCounter > DISTANCE_BETWEEN_POINTS) {
+    model.instantRotation();
+    interIdx++;
+    motionFrameCounter = 0;
+    if (interIdx >= intermediatePositions.size()) {
+      interIdx = -1;
+      return true;
+    }
+    int result = calculateIK(model, intermediatePositions.get(interIdx), 720, 25);
+    // TODO: FLAG: MIGHT NEED TO UPDATE THIS LATER TO ACCOUNT FOR FAILURE POSSIBILITY.
+    while (result != EXEC_SUCCESS) {
+      result = calculateIK(model, intermediatePositions.get(interIdx), 720, 25);
+    }
+  }
+  return false;
+} // end execute linear motion
+
 
 // return true when done
 boolean executeProgram(Program program, ArmModel model) {
@@ -128,26 +201,22 @@ boolean executeProgram(Program program, ArmModel model) {
     MotionInstruction instruction = (MotionInstruction)ins;
     if (!executingInstruction) { // start executing new instruction
       if (instruction.getMotionType() == MTYPE_LINEAR) {
-        println("roger that");
         pushMatrix();
         applyCamera();
         PVector start = calculateEndEffectorPosition(testModel, false);
         popMatrix();
         //testModel.calculateIntermediatePositions(start, new PVector(575, 300, 50));
-        model.beginNewLinearMotion(start, registers[instruction.getRegister()]);
+        beginNewLinearMotion(model, start, registers[instruction.getRegister()]);
         executingInstruction = true;
         
       } // end of if instruction type==linear
       //
     } else { // continue executing current instruction
       if (instruction.getMotionType() == MTYPE_LINEAR) {
-        println("executing current instruction");
-        executingInstruction = !(model.executeLinearMotion(instruction.speed));
+        executingInstruction = !(executeLinearMotion(model, instruction.speed));
         if (!executingInstruction) {
-          println("it has told me that it is done");
           currentInstruction++;
           if (currentInstruction >= program.getInstructions().size()) return true;
-          println("another check");
         }
         
       } // end of if instruction type==linear
@@ -156,9 +225,8 @@ boolean executeProgram(Program program, ArmModel model) {
     //
   } // end of if instruction==motion instruction
   //
-  println("reached end");
   return false;
-}
+} // end executeProgram
 
 
 

@@ -102,8 +102,6 @@ public class ArmModel {
   public ArrayList<Model> segments = new ArrayList<Model>();
   public int type;
   //public boolean calculatingArms = false, movingArms = false;
-  public ArrayList<PVector> intermediatePositions;
-  public int interIdx = -1;
   public float motorSpeed;
   
   public ArmModel(int in) {
@@ -181,63 +179,6 @@ public class ArmModel {
       }
     }
   }
-  
-  int motionFrameCounter = 0;
-  float DISTANCE_BETWEEN_POINTS = 5.0;
-  
-  public void beginNewLinearMotion(PVector start, PVector end) {
-    calculateIntermediatePositions(start, end);
-    motionFrameCounter = 0;
-    int result = calculateIK(this, intermediatePositions.get(interIdx), 720, 15);
-    // TODO: FLAG: MIGHT NEED TO UPDATE THIS LATER TO ACCOUNT FOR FAILURE POSSIBILITY.
-    while (result != EXEC_SUCCESS)
-      result = calculateIK(this, intermediatePositions.get(interIdx), 720, 15);
-  }
-  
-  public boolean executeLinearMotion(float speedMult) {
-    println("execute linear motion start");
-    motionFrameCounter++;
-    // speed is in pixels per frame, multiply that by the current speed setting
-    // which is contained in the motion instruction
-    float currentSpeed = motorSpeed * speedMult;
-    if (currentSpeed * motionFrameCounter > DISTANCE_BETWEEN_POINTS) {
-      println("did i get here?");
-      instantRotation();
-      interIdx++;
-      motionFrameCounter = 0;
-      if (interIdx >= intermediatePositions.size()) {
-        interIdx = -1;
-        println("returning that i'm done");
-        return true;
-      }
-      println("before IK");
-      int result = calculateIK(this, intermediatePositions.get(interIdx), 720, 25);
-      println("after IK: " + result);
-      // TODO: FLAG: MIGHT NEED TO UPDATE THIS LATER TO ACCOUNT FOR FAILURE POSSIBILITY.
-      while (result != EXEC_SUCCESS) {
-        println("stuck in here");
-        result = calculateIK(this, intermediatePositions.get(interIdx), 720, 25);
-      }
-    }
-    println("execute linear motion end");
-    return false;
-  } // end execute linear motion
-  
-  public void calculateIntermediatePositions(PVector start, PVector end) {
-    intermediatePositions = new ArrayList<PVector>();
-    float mu = 0;
-    int numberOfPoints = (int)
-      (dist(start.x, start.y, start.z, end.x, end.y, end.z) / DISTANCE_BETWEEN_POINTS);
-    float increment = 1.0 / (float)numberOfPoints;
-    for (int n = 0; n < numberOfPoints; n++) {
-      mu += increment;
-      intermediatePositions.add(new PVector(
-        start.x * (1 - mu) + (end.x * mu),
-        start.y * (1 - mu) + (end.y * mu),
-        start.z * (1 - mu) + (end.z * mu)));
-    }
-    interIdx = 0;
-  } // end calculate intermediate positions
   
 } // end ArmModel class
 
