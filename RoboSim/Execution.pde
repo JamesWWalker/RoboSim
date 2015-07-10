@@ -1,9 +1,10 @@
 
 // To-do list:
+// -> Make motion instructions follow different coordinate systems
+//
 // -> The speed control for executing motion instructions is pretty rough.
 //    Make it better.
 // -> Continuous motion seems to be working, but needs more thorough testing
-// -> Make motion instructions follow different coordinate systems
 // -> Add more sophisticated handling of failure possibility when calculating IK
 
 void createTestProgram() {
@@ -27,6 +28,45 @@ void createTestProgram() {
   programs.add(program);
   currentProgram = program;
 }
+
+
+
+// converts from RoboSim-defined world coordinates into
+// Processing's coordinate system.
+// Assumes that the robot starts out facing toward the LEFT.
+PVector convertWorldToNative(PVector in) {
+  pushMatrix();
+  applyCamera();
+  translate(-in.x, -in.z, in.y);
+  PVector out = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
+  popMatrix();
+  return out;
+}
+
+
+
+// convert from user-defined RoboSim coordinates into
+// Processing's coordinate system.
+PVector convertUserToNative(CoordinateFrame frame, PVector in) {
+  pushMatrix();
+  applyCamera();
+  PVector tr = frame.getOrigin();
+  // first, apply the user-defined coordinate frame by translating to the
+  // origin and then rotating to the user-defined orientation (remember
+  // that we need to rotate coording to RoboSim conventions).
+  translate(-tr.x, -tr.z, tr.y);
+  tr = frame.getRotation();
+  rotateX(-tr.x);
+  rotateY(-tr.z);
+  rotateZ(tr.y);
+  // now translate to the given point, which is now defined in terms of
+  // the user-defined coordinates, then get the corresponding Processing coordinates.
+  translate(-in.x, -in.z, in.y);
+  PVector out = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
+  popMatrix();
+  return out;
+}
+
 
 
 PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
