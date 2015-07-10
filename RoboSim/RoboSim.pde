@@ -46,7 +46,7 @@ int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
 public void setup() {
   size(1200, 800, P3D);
   cp5 = new ControlP5(this);
-  gui();
+  //gui();
   for (int n = 0; n < registers.length; n++) registers[n] = new PVector();
   // TESTING CODE
   for (int n = 0; n < 6; n++) jointsMoving[n] = 0;
@@ -58,7 +58,8 @@ public void setup() {
 boolean doneMoving = false; // TESTING CODE
 
 public void draw() {
-  
+  background(127);
+  gui();
   // TESTING CODE
   /*if (frameCount == 20) {
     readyProgram();
