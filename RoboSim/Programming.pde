@@ -9,16 +9,21 @@ final float SPEED_VFINE = 0.001;
 PVector[] registers = new PVector[999];
 
 public class Program {
+  private String name;
   private ArrayList<Instruction> instructions;
   
-  public Program() {
+  public Program(String theName) {
     instructions = new ArrayList<Instruction>();
+    name = theName;
   }
   
   public ArrayList<Instruction> getInstructions() {
     return instructions;
   }
   
+  public String getName(){
+    return name;
+  }
   public void addInstruction(Instruction i) {
     instructions.add(i);
   }
@@ -26,6 +31,7 @@ public class Program {
   public void addInstruction(int idx, Instruction i) {
     instructions.add(idx, i);
   }
+  
 }
 
 public class Instruction {
