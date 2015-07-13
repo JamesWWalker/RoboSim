@@ -8,7 +8,7 @@
 // -> Add more sophisticated handling of failure possibility when calculating IK
 
 void createTestProgram() {
-  Program program = new Program();
+  Program program = new Program("Test Program");
   MotionInstruction instruction =
     new MotionInstruction(MTYPE_LINEAR, 0, 1.0, TERM_CONT100);
   program.addInstruction(instruction);
@@ -27,6 +27,14 @@ void createTestProgram() {
   registers[4] = new PVector(775, 300, 50);
   programs.add(program);
   currentProgram = program;
+  
+  Program program2 = new Program("Test Program 2");
+  MotionInstruction instruction2 =
+    new MotionInstruction(MTYPE_LINEAR, 0, 1.0, TERM_CONT100);
+  program2.addInstruction(instruction2);
+  instruction = new MotionInstruction(MTYPE_LINEAR, 1, 1.0, TERM_CONT75);
+  programs.add(program2);
+  //currentProgram = program;
 }
 
 

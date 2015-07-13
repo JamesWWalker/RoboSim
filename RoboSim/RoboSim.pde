@@ -58,7 +58,8 @@ public void setup() {
 boolean doneMoving = false; // TESTING CODE
 
 public void draw() {
-  
+  background(127);
+  //gui();
   // TESTING CODE
   /*if (frameCount == 20) {
     readyProgram();
