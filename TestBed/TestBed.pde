@@ -1,302 +1,58 @@
 
 import java.util.*;
 
-ArrayList<Arm> arms;
-
-float eepx, eepy, eepz; // end effector current position
-float edpx, edpy, edpz; // end effector desired position
-float etpx, etpy, etpz; // end effector position based on working joint rotations
-boolean calculatingArms = false, movingArms = false;
-
-int MODE_WHATEVER = 0;
-int MODE_LINEAR = 1;
-int currentMode = MODE_WHATEVER;
-
-PVector[] intermediatePos = new PVector[10];
-int interIdx = -1;
+PVector a, b, c, circleCenter;
+ArrayList<PVector> circle = new ArrayList<PVector>();
 
 void setup() {
-  size(800, 600, P3D);
-  arms = new ArrayList<Arm>();
-  arms.add(new Arm(100, PI/8.0, PI/4.0));
-  arms.add(new Arm(100, PI/6.0, PI/6.0));
-  arms.add(new Arm(100, PI/4.0, PI/8.0));
-  calculateCurrentEndEffectorPosition();
-  for (int n = 0; n < intermediatePos.length; n++)
-    intermediatePos[n] = new PVector(0, 0, 0);
+  size(800, 600);
+  a = new PVector(200, 200);
+  b = new PVector(300, 100);
+  c = new PVector(500, 200);
+  circleCenter = circleCenter(a, b, c);
+  circle = createCircleRadius(circleCenter, circleCenter.z, 360);
 }
 
 void draw() {
-  if (calculatingArms) {
-    if (!movingArms) {
-      int result = calculateIK(360, 10);
-      if (result == SUCCESS) movingArms = true;
-    } else {
-      boolean allDone = interpolateArms();
-      calculateCurrentEndEffectorPosition();
-      if (allDone) {
-        movingArms = false;
-        calculatingArms = false;
-        if (interIdx >= 0) {
-          interIdx++;
-          if (interIdx >= intermediatePos.length) interIdx = -1;
-        }
-      }
-    }
-  } else if (interIdx >= 0) {
-    edpx = intermediatePos[interIdx].x;
-    edpy = intermediatePos[interIdx].y;
-    edpz = intermediatePos[interIdx].z;
-    calculatingArms = true;
-  }
-  
   background(255);
-  
-  fill(0);
-  if (currentMode == MODE_WHATEVER) text("Current Mode: Whatever", 20, 20);
-  else if (currentMode == MODE_LINEAR) text("Current Mode: Linear", 20, 20);
-  
-  noFill();
-  
-  // draw arms
-  pushMatrix();
-  translate(400, 300, 0);
-  for (Arm a : arms) {
-    stroke(0);
-    float endX = a.length * sin(a.angleGround) * cos(a.angleAir);
-    float endY = a.length * sin(a.angleGround) * sin(a.angleAir);
-    float endZ = a.length * cos(a.angleGround);
-    line(0, 0, 0, endX, endY, endZ);
-    translate(endX, endY, endZ);
-    rotateY(a.angleGround);
-    rotateZ(a.angleAir);
-  }
-  popMatrix();
-  // draw "target" arms
-  pushMatrix();
-  translate(400, 300, 0);
-  for (Arm a : arms) {
-    stroke(0, 0, 255);
-    float endX = a.length * sin(a.angleGroundTarget) * cos(a.angleAirTarget);
-    float endY = a.length * sin(a.angleGroundTarget) * sin(a.angleAirTarget);
-    float endZ = a.length * cos(a.angleGroundTarget);
-    line(0, 0, 0, endX, endY, endZ);
-    translate(endX, endY, endZ);
-    rotateY(a.angleGroundTarget);
-    rotateZ(a.angleAirTarget);
-  }
-  popMatrix();
-  // draw end effector position
-  stroke(0);
-  pushMatrix();
-  translate(400, 300);
-  translate(eepx, eepy, eepz);
-  sphere(15);
-  popMatrix(); /**/
-  // draw desired end effector position
-  pushMatrix();
+  fill(255, 0, 0);
   stroke(255, 0, 0);
-  translate(400, 300, 0);
-  translate(edpx, edpy, edpz);
-  sphere(15);
-  popMatrix();
-  // draw "working" end effector position
-  pushMatrix();
+  ellipse(a.x, a.y, 20, 20);
+  ellipse(b.x, b.y, 20, 20);
+  ellipse(c.x, c.y, 20, 20);
+  fill(0, 0, 255);
   stroke(0, 0, 255);
-  translate(400, 300, 0);
-  translate(etpx, etpy, etpz);
-  sphere(15);
-  popMatrix();
-  // draw intermediate positions
-  pushMatrix();
-  translate(400, 300, 0);
-  for (int n = 0; n < intermediatePos.length; n++) {
-    pushMatrix();
-    stroke(0, 255, 0);
-    translate(intermediatePos[n].x,
-              intermediatePos[n].y,
-              intermediatePos[n].z);
-    sphere(10);
-    popMatrix();
+  ellipse(circleCenter.x, circleCenter.y, 20, 20);
+  fill(0, 255, 0);
+  stroke(0, 255, 0);
+  for (PVector p : circle) ellipse(p.x, p.y, 5, 5);
+}
+
+PVector circleCenter(PVector a, PVector b, PVector c) {
+  float yDeltaA = b.y - a.y;
+  float xDeltaA = b.x - a.x;
+  float yDeltaB = c.y - b.y;
+  float xDeltaB = c.x - b.x;
+  PVector center = new PVector(0,0,0);
+  if (xDeltaA == 0 || xDeltaB == 0) return null; // error condition
+  float aSlope = yDeltaA / xDeltaA;
+  float bSlope = yDeltaB / xDeltaB;
+  if (bSlope-aSlope == 0 || aSlope == 0) return null; // error condition 2
+  center.x = (aSlope*bSlope*(a.y-c.y) + bSlope*(a.x+b.x) -
+              aSlope*(b.x+c.x)) / (2*(bSlope-aSlope));
+  center.y = -1*(center.x - (a.x+b.x)/2)/aSlope + (a.y+b.y)/2;
+  center.z = dist(center.x, center.y, a.x, a.y); // this actually contains the radius
+  return center;
+}
+
+ArrayList<PVector> createCircleRadius(PVector center, float radius, int numPoints) {
+  float angle = 0;
+  float angleInc = (PI*2.0)/(float)numPoints;
+  ArrayList<PVector> points = new ArrayList<PVector>();
+  for (int n = 0; n < numPoints; n++) {
+    points.add(new PVector(radius * cos(angle) + center.x,
+                           radius * sin(angle) + center.y));
+    angle += angleInc;
   }
-  popMatrix();
-}
-
-int armIdx = -1;
-
-void keyPressed() {
-  if (keyCode == LEFT) edpx -= 5;
-  else if (keyCode == RIGHT) edpx += 5;
-  else if (keyCode == UP) edpy -= 5;
-  else if (keyCode == DOWN) edpy += 5;
-  else if (key == 'q') edpz += 5;
-  else if (key == 'w') edpz -= 5;
-  else if (key == 'm') {
-    currentMode++;
-    if (currentMode > MODE_LINEAR) currentMode = MODE_WHATEVER;
-  } else if (key == ' ') {
-    if (currentMode == MODE_WHATEVER) calculatingArms = true;
-    else if (currentMode == MODE_LINEAR) {
-      calculateIntermediates();
-      interIdx = 0;
-    }
-  }
-  
-/*  if (keyCode == LEFT) armIdx--;
-  else if (keyCode == RIGHT) armIdx++;
-  else if (keyCode == UP) arms.get(armIdx).angleGround -= 0.05;
-  else if (keyCode == DOWN) arms.get(armIdx).angleGround += 0.05;
-  else if (key == 'q') arms.get(armIdx).angleAir -= 0.05;
-  else if (key == 'w') arms.get(armIdx).angleAir += 0.05;
-  
-  if (armIdx < 0) armIdx = arms.size() - 1;
-  else if (armIdx >= arms.size()) armIdx = 0;
-  
-  calculateEndEffectorPosition(); /* */
-}
-
-void calculateCurrentEndEffectorPosition() {
-  pushMatrix();
-  for (Arm a : arms) {
-    float endX = a.length * sin(a.angleGround) * cos(a.angleAir);
-    float endY = a.length * sin(a.angleGround) * sin(a.angleAir);
-    float endZ = a.length * cos(a.angleGround);
-    translate(endX, endY, endZ);
-    rotateY(a.angleGround);
-    rotateZ(a.angleAir);
-    eepx = modelX(0, 0, 0);
-    eepy = modelY(0, 0, 0);
-    eepz = modelZ(0, 0, 0);
-  }
-  popMatrix();
-}
-
-void calculateTargetEndEffectorPosition() {
-  pushMatrix();
-  for (Arm a : arms) {
-    float endX = a.length * sin(a.angleGroundTarget) * cos(a.angleAirTarget);
-    float endY = a.length * sin(a.angleGroundTarget) * sin(a.angleAirTarget);
-    float endZ = a.length * cos(a.angleGroundTarget);
-    translate(endX, endY, endZ);
-    rotateY(a.angleGroundTarget);
-    rotateZ(a.angleAirTarget);
-    etpx = modelX(0, 0, 0);
-    etpy = modelY(0, 0, 0);
-    etpz = modelZ(0, 0, 0);
-  }
-  popMatrix();
-}
-
-
-int PROCESSING = 0, FAILURE = 1, SUCCESS = 2;
-
-int calculateIK(int slices, float closeEnough) {
-
-  float checkAngle = (2*PI)/(float)slices;
-  
-  // loop through each arm segment in turn
-  for (int a = 0; a < arms.size(); a++) {
-    // figure out which ground angle of current arm segment causes
-    // the arms' total endpoint to be closest to the EEDP
-    calculateTargetEndEffectorPosition();
-    float closest = dist(etpx, etpy, etpz, edpx, edpy, edpz);
-    float bestAngle = arms.get(a).angleGroundTarget;
-    for (int n = 0; n < slices; n++) {
-      arms.get(a).angleGroundTarget += checkAngle;
-      calculateTargetEndEffectorPosition();
-      if (dist(etpx, etpy, etpz, edpx, edpy, edpz) < closest) {
-        closest = dist(etpx, etpy, etpz, edpx, edpy, edpz);
-        bestAngle = arms.get(a).angleGroundTarget;
-      }
-    }
-    bestAngle = clampAngle(bestAngle);
-    arms.get(a).angleGroundTarget = bestAngle;
-    // repeat for air angles
-    calculateTargetEndEffectorPosition();
-    closest = dist(etpx, etpy, etpz, edpx, edpy, edpz);
-    bestAngle = arms.get(a).angleAirTarget;
-    for (int n = 0; n < slices; n++) {
-      arms.get(a).angleAirTarget += checkAngle;
-      calculateTargetEndEffectorPosition();
-      if (dist(etpx, etpy, etpz, edpx, edpy, edpz) < closest) {
-        closest = dist(etpx, etpy, etpz, edpx, edpy, edpz);
-        bestAngle = arms.get(a).angleAirTarget;
-      }
-    }
-    bestAngle = clampAngle(bestAngle);
-    arms.get(a).angleAirTarget = bestAngle;
-  } // end loop through arm segments
-  
-  // figure out where the end of all the arms is and
-  // compare that to where we want it to be
-  calculateTargetEndEffectorPosition();
-  if (dist(etpx, etpy, etpz, edpx, edpy, edpz) <= closeEnough) {
-    // calculate whether it's faster to turn CW or CCW
-    for (Arm a : arms) {
-      // ground
-      float blueAngle = a.angleGroundTarget - a.angleGround;
-      blueAngle = clampAngle(blueAngle);
-      if (blueAngle < PI) a.angleGroundDirection = 1;
-      else a.angleGroundDirection = -1;
-      // air
-      blueAngle = a.angleAirTarget - a.angleAir;
-      blueAngle = clampAngle(blueAngle);
-      if (blueAngle < PI) a.angleAirDirection = 1;
-      else a.angleAirDirection = -1;
-    }
-    return SUCCESS;
-  } return PROCESSING; /* */
-}
-
-float ARM_ROTATION_SPEED = 0.01;
-
-boolean interpolateArms() {
-  // DEBUG
-  //println("GROUND: " + arms.get(0).angleGround + " / " + arms.get(0).angleGroundTarget);
-  //println("AIR: " + arms.get(0).angleAir + " / " + arms.get(0).angleAirTarget);
-   // END DEBUG
-  boolean allDone = true;
-  for (int a = 0; a < arms.size(); a++) {
-    if (abs(arms.get(a).angleGround - arms.get(a).angleGroundTarget) > 0.02) {
-      allDone = false;
-      arms.get(a).angleGround += ARM_ROTATION_SPEED * arms.get(a).angleGroundDirection;
-      arms.get(a).angleGround = clampAngle(arms.get(a).angleGround);
-    }
-    if (abs(arms.get(a).angleAir - arms.get(a).angleAirTarget) > 0.02) {
-      allDone = false;
-      arms.get(a).angleAir += ARM_ROTATION_SPEED * arms.get(a).angleAirDirection;
-      arms.get(a).angleAir = clampAngle(arms.get(a).angleAir);
-    }
-  }
-  return allDone;
-}
-
-
-void calculateIntermediates() {
-  float mu = 0;
-  for (int n = 0; n < intermediatePos.length; n++) {
-    mu += 0.1;
-    intermediatePos[n].x = eepx*(1-mu)+(edpx*mu);
-    intermediatePos[n].y = eepy*(1-mu)+(edpy*mu);
-    intermediatePos[n].z = eepz*(1-mu)+(edpz*mu);
-  }
-}
-
-
-float clampAngle(float angle) {
-  while (angle > PI*2.0) angle -= (PI*2.0);
-  while (angle < 0) angle += (PI*2.0);
-  return angle;
-}
-
-
-public class Arm {
-  public float length, angleGround, angleAir, angleGroundTarget, angleAirTarget;
-  int angleGroundDirection, angleAirDirection;
-  
-  public Arm(float l, float g, float a) {
-    length = l;
-    angleGround = angleGroundTarget = g;
-    angleAir = angleAirTarget = a;
-  }
+  return points;
 }
