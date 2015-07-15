@@ -1,24 +1,23 @@
 
+import java.util.*;
+
 PVector center, a, b, c;
 ArrayList<PVector> points;
 PVector[] plane = new PVector[3];
 
 void setup() {
   size(800, 600, P3D);
-  c = new PVector(200, 200, 0);
+  a = new PVector(200, 200, 0);
   b = new PVector(300, 100, -50);
-  a = new PVector(400, 200, -400);
+  c = new PVector(400, 200, -400);
   plane = createPlaneFrom3Points(a, b, c);
   PVector acon = vectorConvertTo(a, plane[0], plane[1], plane[2]);
   PVector bcon = vectorConvertTo(b, plane[0], plane[1], plane[2]);
   PVector ccon = vectorConvertTo(c, plane[0], plane[1], plane[2]);
-  println(acon);
-  println(bcon);
-  println(ccon);
   center = circleCenter(acon, bcon, ccon);
   center = vectorConvertFrom(center, plane[0], plane[1], plane[2]);
-  println(center);
-  points = createCircleRadius(a, b, c, 360);
+  points = createCircleRadius(a, b, c, 255);
+  points = createArc(points, a, b, c);
 }
 
 
@@ -68,12 +67,14 @@ void draw() {
   popMatrix();
   
   // circle circumference
-  stroke(0, 255, 0);
+  int alpha = 255;
   for (PVector p : points) {
+    stroke(0, 255, 0, alpha);
     pushMatrix();
     translate(p.x, p.y, p.z);
     sphere(5);
     popMatrix();
+    alpha--;
   }
   
 }
@@ -160,24 +161,73 @@ ArrayList<PVector> createCircleRadius(PVector a,
   float angle = 0;
   float angleInc = (PI*2.0)/(float)numPoints;
   ArrayList<PVector> points = new ArrayList<PVector>();
-  boolean start = true;
+  boolean start = false, grace = false;
   for (int iter = 0; iter < numPoints; iter++) {
     PVector inter1 = PVector.mult(u, r * cos(angle));
     PVector inter2 =  n.cross(u);
     inter2 = PVector.mult(inter2, r * sin(angle));
     inter1.add(inter2);
     inter1.add(center);
-    //if (!start && (dist(inter1.x, inter1.y, inter1.z, a.x, a.y, a.z) <= 15 ||
-    //               dist(inter1.x, inter1.y, inter1.z, c.x, c.y, c.z) <= 15))
-    //  start = true;
-    //if (start && (dist(inter1.x, inter1.y, inter1.z, c.x, c.y, c.z) <= 15 ||
-    //               dist(inter1.x, inter1.y, inter1.z, c.x, c.y, c.z) <= 15))
-    //  break;
-    if (start) points.add(inter1);
+    points.add(inter1);
     angle += angleInc;
   }
   return points;
 }
+
+
+// createArc helper method
+int cycleNumber(int number) {
+  number++;
+  if (number >= 4) number = 1;
+  return number;
+}
+
+ArrayList<PVector> createArc(ArrayList<PVector> points, PVector a, PVector b, PVector c) {
+  float CHKDIST = 15.0;
+  while (true) {
+    int seenA = 0, seenB = 0, seenC = 0, currentSee = 1;
+    for (int n = 0; n < points.size(); n++) {
+      PVector pt = points.get(n);
+      if (dist(pt.x, pt.y, pt.z, a.x, a.y, a.z) <= CHKDIST) seenA = currentSee++;
+      if (dist(pt.x, pt.y, pt.z, b.x, b.y, b.z) <= CHKDIST) seenB = currentSee++;
+      if (dist(pt.x, pt.y, pt.z, c.x, c.y, c.z) <= CHKDIST) seenC = currentSee++;
+    }
+    while (seenA != 1) {
+      seenA = cycleNumber(seenA);
+      seenB = cycleNumber(seenB);
+      seenC = cycleNumber(seenC);
+    }
+    // detect reverse case: if b > c then we're going the wrong way, so reverse
+    if (seenB > seenC) {
+      println("Had to reverse it");
+      Collections.reverse(points);
+      continue;
+    }
+    break;
+  } // end while loop
+  
+  // now we're going in the right direction, so remove unnecessary points
+  ArrayList<PVector> newPoints = new ArrayList<PVector>();
+  boolean seenA = false, seenC = false;
+  for (PVector pt : points) {
+    if (seenA && !seenC) newPoints.add(pt);
+    if (dist(pt.x, pt.y, pt.z, a.x, a.y, a.z) <= CHKDIST) seenA = true;
+    if (seenA && dist(pt.x, pt.y, pt.z, c.x, c.y, c.z) <= CHKDIST) {
+      seenC = true;
+      break;
+    }
+  }
+  // might have to go through a second time
+  if (seenA && !seenC) {
+    for (PVector pt : points) {
+      if (!seenC) newPoints.add(pt);
+      if (dist(pt.x, pt.y, pt.z, c.x, c.y, c.z) <= CHKDIST) break;
+    }
+  }
+  if (newPoints.size() > 0) newPoints.remove(0);
+  newPoints.add(c);
+  return newPoints;
+} // end createArc
 
 
 // Find the circle center of 3 points in 2D
@@ -187,6 +237,7 @@ PVector circleCenter(PVector a, PVector b, PVector c) {
   return new PVector(h, k, a.z);
 }
 
+// TODO: Add error check for colinear case (denominator is zero)
 float calculateH(float x1, float y1, float x2, float y2, float x3, float y3) {
     float numerator = (x2*x2+y2*y2)*y3 - (x3*x3+y3*y3)*y2 - 
                       ((x1*x1+y1*y1)*y3 - (x3*x3+y3*y3)*y1) +
