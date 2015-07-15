@@ -5,14 +5,19 @@ PVector[] plane = new PVector[3];
 
 void setup() {
   size(800, 600, P3D);
-  a = new PVector(200, 200, 0);
+  c = new PVector(200, 200, 0);
   b = new PVector(300, 100, -50);
-  c = new PVector(400, 200, -400);
+  a = new PVector(400, 200, -400);
   plane = createPlaneFrom3Points(a, b, c);
-  center = circleCenter(vectorConvertTo(a, plane[0], plane[1], plane[2]),
-                        vectorConvertTo(b, plane[0], plane[1], plane[2]),
-                        vectorConvertTo(c, plane[0], plane[1], plane[2]));
+  PVector acon = vectorConvertTo(a, plane[0], plane[1], plane[2]);
+  PVector bcon = vectorConvertTo(b, plane[0], plane[1], plane[2]);
+  PVector ccon = vectorConvertTo(c, plane[0], plane[1], plane[2]);
+  println(acon);
+  println(bcon);
+  println(ccon);
+  center = circleCenter(acon, bcon, ccon);
   center = vectorConvertFrom(center, plane[0], plane[1], plane[2]);
+  println(center);
   points = createCircleRadius(a, b, c, 360);
 }
 
@@ -46,10 +51,12 @@ void draw() {
   translate(a.x, a.y, a.z);
   sphere(10);
   popMatrix();
+  stroke(195, 60, 60);
   pushMatrix();
   translate(b.x, b.y, b.z);
   sphere(10);
   popMatrix();
+  stroke(135, 120, 120);
   pushMatrix();
   translate(c.x, c.y, c.z);
   sphere(10);
@@ -97,7 +104,7 @@ PVector vectorConvertFrom(PVector point, PVector xAxis,
 }
 
 
-PVector[] createPlaneFrom3Points(PVector a, PVector b, PVector c) {
+PVector[] createPlaneFrom3Points(PVector a, PVector b, PVector c) {  
   PVector n1 = new PVector(a.x-b.x, a.y-b.y, a.z-b.z);
   n1.normalize();
   PVector n2 = new PVector(a.x-c.x, a.y-c.y, a.z-c.z);
@@ -122,14 +129,13 @@ ArrayList<PVector> createCircleRadius(PVector a,
                                       PVector b,
                                       PVector c,
                                       int numPoints)
-{
+{  
   // First, we need to compute the value of some variables that we'll
   // use in a parametric equation to get our answer.
   // First up is computing the circle center. This is much easier to
   // do in 2D, so first we'll convert our three input points into a 2D
   // plane, compute the circle center in those coordinates, then convert
   // back to our native 3D frame.
-  PVector[] plane = createPlaneFrom3Points(a, b, c);
   PVector center = circleCenter(vectorConvertTo(a, plane[0], plane[1], plane[2]),
                                 vectorConvertTo(b, plane[0], plane[1], plane[2]),
                                 vectorConvertTo(c, plane[0], plane[1], plane[2]));
@@ -147,17 +153,27 @@ ArrayList<PVector> createCircleRadius(PVector a,
   
   // Now plug all that into the parametric equation
   //   P = r*cos(t)*u + r*sin(t)*nxu+center [x is cross product]
-  // to compute our points along the circumference
+  // to compute our points along the circumference.
+  // We actually only want to create an arc from A to C, not the full
+  // circle, so detect when we're close to those points to decide
+  // when to start and stop adding points.
   float angle = 0;
   float angleInc = (PI*2.0)/(float)numPoints;
   ArrayList<PVector> points = new ArrayList<PVector>();
+  boolean start = true;
   for (int iter = 0; iter < numPoints; iter++) {
     PVector inter1 = PVector.mult(u, r * cos(angle));
     PVector inter2 =  n.cross(u);
     inter2 = PVector.mult(inter2, r * sin(angle));
     inter1.add(inter2);
     inter1.add(center);
-    points.add(inter1);
+    //if (!start && (dist(inter1.x, inter1.y, inter1.z, a.x, a.y, a.z) <= 15 ||
+    //               dist(inter1.x, inter1.y, inter1.z, c.x, c.y, c.z) <= 15))
+    //  start = true;
+    //if (start && (dist(inter1.x, inter1.y, inter1.z, c.x, c.y, c.z) <= 15 ||
+    //               dist(inter1.x, inter1.y, inter1.z, c.x, c.y, c.z) <= 15))
+    //  break;
+    if (start) points.add(inter1);
     angle += angleInc;
   }
   return points;
@@ -166,23 +182,36 @@ ArrayList<PVector> createCircleRadius(PVector a,
 
 // Find the circle center of 3 points in 2D
 PVector circleCenter(PVector a, PVector b, PVector c) {
-  float yDeltaA = b.y - a.y;
-  float xDeltaA = b.x - a.x;
-  float yDeltaB = c.y - b.y;
-  float xDeltaB = c.x - b.x;
-  PVector center = new PVector(0,0,0);
-  //if (xDeltaA == 0 || xDeltaB == 0) return null; // error condition
-  if (xDeltaA == 0) xDeltaA = 0.00001;
-  if (xDeltaB == 0) xDeltaB = 0.00001;
-  float aSlope = yDeltaA / xDeltaA;
-  float bSlope = yDeltaB / xDeltaB;
-  //if (bSlope-aSlope == 0 || aSlope == 0) return null; // error condition 2
-  if (aSlope == 0) aSlope = 0.00001;
-  float sub = bSlope-aSlope;
-  if (sub == 0) sub = 0.00001;
-  center.x = (aSlope*bSlope*(a.y-c.y) + bSlope*(a.x+b.x) -
-              aSlope*(b.x+c.x)) / (2*sub);
-  center.y = -1*(center.x - (a.x+b.x)/2)/aSlope + (a.y+b.y)/2;
-  center.z = a.z; // will have the same Z as the others b/c we're assuming 2D
-  return center;
+  float h = calculateH(a.x, a.y, b.x, b.y, c.x, c.y);
+  float k = calculateK(a.x, a.y, b.x, b.y, c.x, c.y);
+  return new PVector(h, k, a.z);
+}
+
+float calculateH(float x1, float y1, float x2, float y2, float x3, float y3) {
+    float numerator = (x2*x2+y2*y2)*y3 - (x3*x3+y3*y3)*y2 - 
+                      ((x1*x1+y1*y1)*y3 - (x3*x3+y3*y3)*y1) +
+                      (x1*x1+y1*y1)*y2 - (x2*x2+y2*y2)*y1;
+    float denominator = (x2*y3-x3*y2) -
+                        (x1*y3-x3*y1) +
+                        (x1*y2-x2*y1);
+    denominator *= 2;
+    return numerator / denominator;
+}
+float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
+    float numerator = x2*(x3*x3+y3*y3) - x3*(x2*x2+y2*y2) -
+                      (x1*(x3*x3+y3*y3) - x3*(x1*x1+y1*y1)) +
+                      x1*(x2*x2+y2*y2) - x2*(x1*x1+y1*y1);
+    float denominator = (x2*y3-x3*y2) -
+                        (x1*y3-x3*y1) +
+                        (x1*y2-x2*y1);
+    denominator *= 2;
+    return numerator / denominator;
+}
+
+
+
+float clampAngle(float angle) {
+  while (angle > PI*2.0) angle -= (PI*2.0);
+  while (angle < 0) angle += (PI*2.0);
+  return angle;
 }
