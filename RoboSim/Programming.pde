@@ -58,6 +58,42 @@ public class MotionInstruction extends Instruction {
   public void setSpeed(float in) { speed = in; }
   public int getTerminationType() { return terminationType; }
   public void setTerminationType(int in) { terminationType = in; }
+  
+  public String toString(){
+     String me = "";
+     switch (motionType){
+        case MTYPE_JOINT:
+           me += "J ";
+           break;
+        case MTYPE_LINEAR:
+           me += "L ";
+           break;
+        case MTYPE_CIRCULAR:
+           me += "C ";
+           break;
+     }
+     
+     me += "P["+Integer.toString(register)+"] ";
+     me += Float.toString(speed * 100) + "% ";
+     switch (terminationType){
+        case TERM_FINE:
+           me += "FINE ";
+           break;
+        case TERM_CONT0:
+           me += "CONT0 ";
+           break;
+        case TERM_CONT50:
+           me += "CONT50 ";
+           break;
+        case TERM_CONT75:
+           me += "CONT75 ";
+           break;   
+        case TERM_CONT100:
+           me += "CONT100 ";
+           break;   
+     } 
+     return me;
+  }
 }
 
 public class FrameInstruction extends Instruction {

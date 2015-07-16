@@ -7,23 +7,35 @@ final int FRAME_JOINT = 0,
 final int SMALL_BUTTON = 20,
           LARGE_BUTTON = 35; 
 final int OFF = 0, ON = 1;      
+final int NONE = 0, PROGRAM = 1, INSTRUCTION = 2;
 
 int frame = FRAME_JOINT;
-String displayFrame = "JOINT";
+//String displayFrame = "JOINT";
 
-int shift = OFF; 
-int active_task = -1; // which program is active? Default: no program is active
-
+//int shift = OFF; 
+int active_program = -1; // which program is active? Default: no program is active
+int select_program = -1; // which program is in edit mode
+int active_instruction = -1; // which motion instruction is active?
+int select_instruction = -1; // which motion instruction is in edit mode?
+int mode = NONE; 
+ 
 int g1_px, g1_py;
 int g1_width, g1_height;
 int display_px, display_py;
 
 Group g1;
-Button bt_show, bt_hide;
+Button bt_show, bt_hide, 
+       bt_zoomin_shrink, bt_zoomin_normal,
+       bt_zoomout_shrink, bt_zoomout_normal,
+       bt_pan_shrink, bt_pan_normal,
+       bt_rotate_shrink, bt_rotate_normal
+       ;
+
 
 // display the contents on screen
 ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>();
-int active_row = 0, active_col = 0;
+int active_row = 0, active_col = 0; // which element of contents is on focus?
+
 void gui(){
    int display_width = 340, display_height = 270;
    g1_px = 0;
@@ -58,25 +70,113 @@ void gui(){
    
    
    // button to show g1
+   int bt_show_px = 1;
+   int bt_show_py = 1;
    bt_show = cp5.addButton("show")
-       .setPosition(1, 1)
+       .setPosition(bt_show_px, bt_show_py)
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
        .setCaptionLabel("SHOW")
        .setColorBackground(color(127,127,255))
        .setColorCaptionLabel(color(255,255,255))  
-       .hide();
+       .hide()
        ;
+       
+    int zoomin_shrink_px =  bt_show_px + LARGE_BUTTON;
+    int zoomin_shrink_py = bt_show_py;
+    PImage[] zoomin_shrink = {loadImage("images/zoomin_35x20.png"), loadImage("images/zoomin_over.png"), loadImage("images/zoomin_down.png")};   
+    bt_zoomin_shrink = cp5.addButton("zoomin_shrink")
+       .setPosition(zoomin_shrink_px, zoomin_shrink_py)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
+       .setImages(zoomin_shrink)
+       .updateSize()
+       .hide()
+       ;   
+       
+    int zoomout_shrink_px = zoomin_shrink_px + LARGE_BUTTON ;
+    int zoomout_shrink_py = zoomin_shrink_py;   
+    PImage[] zoomout_shrink = {loadImage("images/zoomout_35x20.png"), loadImage("images/zoomout_over.png"), loadImage("images/zoomout_down.png")};   
+    bt_zoomout_shrink = cp5.addButton("zoomout_shrink")
+       .setPosition(zoomout_shrink_px, zoomout_shrink_py)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
+       .setImages(zoomout_shrink)
+       .updateSize()
+       .hide()
+       ;    
+   
+    int pan_shrink_px = zoomout_shrink_px + LARGE_BUTTON;
+    int pan_shrink_py = zoomout_shrink_py ;
+    PImage[] pan_shrink = {loadImage("images/pan_35x20.png"), loadImage("images/pan_over.png"), loadImage("images/pan_down.png")};   
+    bt_pan_shrink = cp5.addButton("pan_shrink")
+       .setPosition(pan_shrink_px, pan_shrink_py)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
+       .setImages(pan_shrink)
+       .updateSize()
+       .hide()
+       ;    
+       
+    int rotate_shrink_px = pan_shrink_px + LARGE_BUTTON;
+    int rotate_shrink_py = pan_shrink_py;   
+    PImage[] rotate_shrink = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")};   
+    bt_rotate_shrink = cp5.addButton("rotate_shrink")
+       .setPosition(rotate_shrink_px, rotate_shrink_py)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
+       .setImages(rotate_shrink)
+       .updateSize()
+       .hide()
+       ;     
       
    // button to hide g1
+   int hide_px = display_px;
+   int hide_py = display_py - SMALL_BUTTON - 1;
    bt_hide = cp5.addButton("hide")
-       .setPosition(display_px, display_py - SMALL_BUTTON - 1)
+       .setPosition(hide_px, hide_py)
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
        .setCaptionLabel("HIDE")
        .setColorBackground(color(127,127,255))
        .setColorCaptionLabel(color(255,255,255))  
        .moveTo(g1);
      
-   PImage[] imgs_arrow_up = {loadImage("images/arrow-up.png"), loadImage("images/arrow-up.png"), loadImage("images/arrow-up.png")};   
+    int zoomin_normal_px =  hide_px + LARGE_BUTTON + 1;
+    int zoomin_normal_py = hide_py;
+    PImage[] zoomin_normal = {loadImage("images/zoomin_35x20.png"), loadImage("images/zoomin_over.png"), loadImage("images/zoomin_down.png")};   
+    bt_zoomin_normal = cp5.addButton("zoomin_normal")
+       .setPosition(zoomin_normal_px, zoomin_normal_py)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
+       .setImages(zoomin_normal)
+       .updateSize()
+       .moveTo(g1) ;   
+       
+    int zoomout_normal_px = zoomin_normal_px + LARGE_BUTTON + 1;
+    int zoomout_normal_py = zoomin_normal_py;   
+    PImage[] zoomout_normal = {loadImage("images/zoomout_35x20.png"), loadImage("images/zoomout_over.png"), loadImage("images/zoomout_down.png")};   
+    bt_zoomout_normal = cp5.addButton("zoomout_normal")
+       .setPosition(zoomout_normal_px, zoomout_normal_py)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
+       .setImages(zoomout_normal)
+       .updateSize()
+       .moveTo(g1) ;    
+   
+    int pan_normal_px = zoomout_normal_px + LARGE_BUTTON + 1;
+    int pan_normal_py = zoomout_normal_py ;
+    PImage[] pan = {loadImage("images/pan_35x20.png"), loadImage("images/pan_over.png"), loadImage("images/pan_down.png")};   
+    bt_pan_normal = cp5.addButton("pan_normal")
+       .setPosition(pan_normal_px, pan_normal_py)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
+       .setImages(pan)
+       .updateSize()
+       .moveTo(g1) ;    
+       
+    int rotate_normal_px = pan_normal_px + LARGE_BUTTON + 1;
+    int rotate_normal_py = pan_normal_py;   
+    PImage[] rotate = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")};   
+    bt_rotate_normal = cp5.addButton("rotate_normal")
+       .setPosition(rotate_normal_px, rotate_normal_py)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
+       .setImages(rotate)
+       .updateSize()
+       .moveTo(g1) ;     
+       
+   PImage[] imgs_arrow_up = {loadImage("images/arrow-up.png"), loadImage("images/arrow-up_over.png"), loadImage("images/arrow-up_down.png")};   
    int up_px = display_px+display_width + 2;
    int up_py = display_py;
    cp5.addButton("up")
@@ -86,7 +186,7 @@ void gui(){
        .updateSize()
        .moveTo(g1) ;     
    
-    PImage[] imgs_arrow_down = {loadImage("images/arrow-down.png"), loadImage("images/arrow-down.png"), loadImage("images/arrow-down.png")};   
+    PImage[] imgs_arrow_down = {loadImage("images/arrow-down.png"), loadImage("images/arrow-down_over.png"), loadImage("images/arrow-down_down.png")};   
     int dn_px = up_px;
     int dn_py = up_py + LARGE_BUTTON + 2;
     cp5.addButton("dn")
@@ -96,7 +196,7 @@ void gui(){
        .updateSize()
        .moveTo(g1) ;    
    
-    PImage[] imgs_arrow_l = {loadImage("images/arrow-l.png"), loadImage("images/arrow-l.png"), loadImage("images/arrow-l.png")};
+    PImage[] imgs_arrow_l = {loadImage("images/arrow-l.png"), loadImage("images/arrow-l_over.png"), loadImage("images/arrow-l_down.png")};
     int lt_px = dn_px;
     int lt_py = dn_py + LARGE_BUTTON + 2;
     cp5.addButton("lt")
@@ -106,7 +206,7 @@ void gui(){
        .updateSize()
        .moveTo(g1) ;  
     
-    PImage[] imgs_arrow_r = {loadImage("images/arrow-r.png"), loadImage("images/arrow-r.png"), loadImage("images/arrow-r.png")};
+    PImage[] imgs_arrow_r = {loadImage("images/arrow-r.png"), loadImage("images/arrow-r_over.png"), loadImage("images/arrow-r_down.png")};
     int rt_px = lt_px;
     int rt_py = lt_py + LARGE_BUTTON + 2;;
     cp5.addButton("rt")
@@ -672,23 +772,107 @@ void gui(){
       .moveTo(g2);      
 }   
 
-
-public void mouseMoved(){
-  
-}
+// events
 
 public void mousePressed(){
-   //if (mouseX)
+   if ((clickPan % 2) == 1 ) { // pan button is pressed
+      if (doPan) {
+         doPan = false;
+      } else {
+         doPan = true;
+      }
+   }
+   
+   if ((clickRotate % 2) == 1 ) { // rotate button is pressed
+      if (doRotate) {
+         doRotate = false;
+      } else {
+         doRotate = true;
+      }
+   }
 }
 
-public void mouseDragged(){
 
+public void mouseMoved(){
+   if (doPan){
+      panX += mouseX - pmouseX;
+      panY += mouseY - pmouseY;
+   }
+   if (doRotate){
+      myRotX += (mouseY - pmouseY) * 0.01;
+      myRotY += (mouseX - pmouseX) * 0.01;
+   }
 }
 
-public void mouseReleased(){
- 
+
+// scroll mouse to zoom in / out
+public void mouseWheel(MouseEvent event){
+   float e = event.getCount();
+   if (e > 0 ) {
+      myscale *= 1.1;
+   }
+   if (e < 0){
+      myscale *= 0.9; 
+   }
+   println(e);
 }
 
+public void keyPressed(){
+   /* click spacebar once to activate pan button
+    * click spacebar again to deactivate pan button
+    */ 
+   if (key == ' '){ 
+      clickPan += 1;
+      if ((clickPan % 2) == 1){
+         cursorMode = HAND;
+         PImage[] pressed = {loadImage("images/pan_down.png"), loadImage("images/pan_down.png"), loadImage("images/pan_down.png")};
+         if (bt_show.isVisible()){
+              cp5.getController("pan_shrink")
+                 .setImages(pressed);
+         }else{
+              cp5.getController("pan_normal")
+                 .setImages(pressed);
+         }
+            
+      }else{
+         cursorMode = ARROW;
+         PImage[] released = {loadImage("images/pan_35x20.png"), loadImage("images/pan_over.png"), loadImage("images/pan_down.png")}; 
+         if (bt_show.isVisible()){
+              cp5.getController("pan_shrink")
+                 .setImages(released);
+         }else{
+              cp5.getController("pan_normal")
+                 .setImages(released);
+         }
+         doPan = false;   
+      }
+   }
+   
+   if (keyCode == SHIFT){ 
+      clickRotate += 1;
+      if ((clickRotate % 2) == 1){
+         PImage[] pressed = {loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png")};
+         if (bt_show.isVisible()){
+            cp5.getController("rotate_shrink")
+               .setImages(pressed); 
+         }else{
+            cp5.getController("rotate_normal")
+               .setImages(pressed); 
+         }
+        
+      }else{
+         PImage[] released = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")}; 
+         if (bt_show.isVisible()){
+            cp5.getController("rotate_shrink")
+               .setImages(released); 
+         }else{
+            cp5.getController("rotate_normal")
+               .setImages(released); 
+         }
+         doRotate = false;   
+      }
+   }
+}
 
 // buttons event
 public void controlEvent(ControlEvent theEvent){
@@ -699,11 +883,54 @@ public void controlEvent(ControlEvent theEvent){
 public void hide(int theValue){
    g1.hide();
    bt_show.show();
+   bt_zoomin_shrink.show();
+   bt_zoomout_shrink.show();
+   bt_pan_shrink.show();
+   bt_rotate_shrink.show(); 
+   
+   // release buttons of pan and rotate
+   clickPan = 0;
+   clickRotate = 0;
+   cursorMode = ARROW;
+   PImage[] pan_released = {loadImage("images/pan_35x20.png"), loadImage("images/pan_over.png"), loadImage("images/pan_down.png")}; 
+   cp5.getController("pan_normal")
+      .setImages(pan_released);
+   cp5.getController("pan_shrink")
+      .setImages(pan_released);   
+   doPan = false;    
+
+   cursorMode = ARROW;
+   PImage[] rotate_released = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")}; 
+   cp5.getController("rotate_normal")
+      .setImages(rotate_released);
+   cp5.getController("rotate_shrink")
+      .setImages(rotate_released);   
+   doRotate = false;   
+   
 }
 
 public void show(int theValue){
    g1.show();
    bt_show.hide();
+   bt_zoomin_shrink.hide();
+   bt_zoomout_shrink.hide();
+   bt_pan_shrink.hide();
+   bt_rotate_shrink.hide();
+   
+   // release buttons of pan and rotate
+   clickPan = 0;
+   clickRotate = 0;
+   cursorMode = ARROW;
+   PImage[] pan_released = {loadImage("images/pan_35x20.png"), loadImage("images/pan_over.png"), loadImage("images/pan_down.png")}; 
+   cp5.getController("pan_normal")
+      .setImages(pan_released);
+   doPan = false;    
+
+   cursorMode = ARROW;
+   PImage[] rotate_released = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")}; 
+   cp5.getController("rotate_normal")
+      .setImages(rotate_released);
+   doRotate = false;  
 }
 
 public void se(int theValue){
@@ -711,13 +938,17 @@ public void se(int theValue){
    if (size <= 0){
       programs.add(new Program("My Program 1"));
    }
-   contents = new ArrayList<ArrayList<String>>();
+   clearScreen();
+   contents = new ArrayList<ArrayList<String>>();  
    for(int i=0;i<size;i++){
       ArrayList<String> temp = new ArrayList<String>();
       temp.add(programs.get(i).getName());
       contents.add(temp);
-      updateScreen();
+      updateScreen(color(255,0,0), color(0,0,0));
    }
+   mode = PROGRAM;
+   active_program = 0;
+   
 }
 
 public void up(int theValue){
@@ -726,8 +957,16 @@ public void up(int theValue){
    }else {
       active_row -= 1;
       active_col = 0;
+      switch (mode){
+         case PROGRAM:
+            active_program -= 1;
+            break;
+         case INSTRUCTION:
+            active_instruction -= 1;
+            break;      
+      }
    }
-   updateScreen();
+   updateScreen(color(255,0,0), color(0,0,0));
 }
 
 public void dn(int theValue){
@@ -736,8 +975,16 @@ public void dn(int theValue){
    }else{
       active_row += 1;
       active_col = 0;
+      switch (mode){
+         case PROGRAM:
+            active_program += 1;
+            break;
+         case INSTRUCTION:
+            active_instruction += 1;
+            break;      
+      }
    }
-   updateScreen();
+   updateScreen(color(255,0,0), color(0,0,0));
 }
 
 public void lt(int theValue){
@@ -746,7 +993,9 @@ public void lt(int theValue){
    }else{
       active_col -= 1;
    }
+   updateScreen(color(255,0,0), color(0,0,0));
 }
+
 
 public void rt(int theValue){
    if (active_col == contents.get(active_row).size()-1){
@@ -754,38 +1003,201 @@ public void rt(int theValue){
    }else{
       active_col += 1;
    }
+   updateScreen(color(255,0,0), color(0,0,0));
 }
 
-public void updateScreen(){
+
+public void ENTER(int theValue){
+   switch (mode){
+      case NONE:
+         break;
+      case PROGRAM:
+         select_program = active_program;
+         clearScreen();
+         loadInstructions(select_program);
+         updateScreen(color(255,0,0), color(0,0,0));
+         break;
+      case INSTRUCTION:
+         select_instruction = active_instruction;
+         //TODO: select the instruction
+         break;
+   }
+   mode = INSTRUCTION;
+}
+
+
+// zoomin button
+public void zoomin_normal(int theValue){
+   myscale *= 1.1;
+}
+
+// zoomout button
+public void zoomout_normal(int theValue){
+   myscale *= 0.9;
+}
+
+// pan button
+public void pan_normal(int theValue){
+  clickPan += 1;
+  if ((clickPan % 2) == 1){
+     cursorMode = HAND;
+     PImage[] pressed = {loadImage("images/pan_down.png"), loadImage("images/pan_down.png"), loadImage("images/pan_down.png")};
+     cp5.getController("pan_normal")
+        .setImages(pressed);   
+  }else{
+     cursorMode = ARROW;
+     PImage[] released = {loadImage("images/pan_35x20.png"), loadImage("images/pan_over.png"), loadImage("images/pan_down.png")}; 
+     cp5.getController("pan_normal")
+        .setImages(released);
+     doPan = false;   
+  }
+}
+
+public void pan_shrink(int theValue){
+  clickPan += 1;
+  if ((clickPan % 2) == 1){
+     cursorMode = HAND;
+     PImage[] pressed = {loadImage("images/pan_down.png"), loadImage("images/pan_down.png"), loadImage("images/pan_down.png")};
+     cp5.getController("pan_shrink")
+        .setImages(pressed);   
+  }else{
+     cursorMode = ARROW;
+     PImage[] released = {loadImage("images/pan_35x20.png"), loadImage("images/pan_over.png"), loadImage("images/pan_down.png")}; 
+     cp5.getController("pan_shrink")
+        .setImages(released);
+     doPan = false;   
+  }
+}
+
+public void rotate_normal(int theValue){
+   clickRotate += 1;
+   if ((clickRotate % 2) == 1){
+     cursorMode = MOVE;
+     PImage[] pressed = {loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png")};
+     cp5.getController("rotate_normal")
+        .setImages(pressed);   
+  }else{
+     cursorMode = ARROW;
+     PImage[] released = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")}; 
+     cp5.getController("rotate_normal")
+        .setImages(released);
+     doRotate = false;   
+  }
+}
+
+public void rotate_shrink(int theValue){
+   clickRotate += 1;
+   if ((clickRotate % 2) == 1){
+     cursorMode = MOVE;
+     PImage[] pressed = {loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png")};
+     cp5.getController("rotate_shrink")
+        .setImages(pressed);   
+  }else{
+     cursorMode = ARROW;
+     PImage[] released = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")}; 
+     cp5.getController("rotate_shrink")
+        .setImages(released);
+     doRotate = false;   
+  }
+}
+
+public void updateScreen(color active, color normal){
    int next_px = display_px;
    int next_py = display_py;
+   int index = 0;
    for(int i=0;i<contents.size();i++){
       ArrayList<String> temp = contents.get(i);
       for (int j=0;j<temp.size();j++){
           if (i == active_row && j == active_col){
-             cp5.addTextlabel(temp.get(j))
+             cp5.addTextlabel(Integer.toString(index))
                 .setText(temp.get(j))
                 .setPosition(next_px, next_py)
-                .setColorValue(color(255,0,0))
+                .setColorValue(active)
+                .moveTo(g1)
                 ;
           }else{
-             cp5.addTextlabel(temp.get(j))
+             cp5.addTextlabel(Integer.toString(index))
                 .setText(temp.get(j))
                 .setPosition(next_px, next_py)
-                .setColorValue(color(0,0,0))
-                ;
+                .setColorValue(normal)
+                .moveTo(g1)
+                ;  
           }
-          
-          next_px += temp.get(j).length() * 2;
+          index++;
+          next_px += temp.get(j).length() * 6 + 5; 
       }
       next_px = display_px;
       next_py += 14;
    }
-   //myTextarea.setText(s);
- 
-   //println(s);
 }
 
+// remove all display buttons on screen
 public void clearScreen(){
-   // remove all buttons
+   // remove all display buttons
+   int index = 0;
+   for(int i=0;i<contents.size();i++){
+      ArrayList<String> temp = contents.get(i);
+      for (int j=0;j<temp.size();j++){
+          println("want to remove label: " + cp5.getController(Integer.toString(index)));
+          cp5.getController(Integer.toString(index)).hide();
+          //cp5.remove(cp5.getController(Integer.toString(index)));
+          index++;
+      }
+   }  
+   cp5.update();
+   active_row = 0;
+   active_col = 0;
+   contents = new ArrayList<ArrayList<String>>();
+}
+
+public void loadInstructions(int programID){
+   Program p = programs.get(programID);
+   contents = new ArrayList<ArrayList<String>>();
+   int size = p.getInstructions().size();
+   
+   //TODO: TEST
+   println("programID="+programID+" instructions size = "+size);
+   
+   for(int i=0;i<size;i++){
+      ArrayList<String> m = new ArrayList<String>();
+      MotionInstruction a = (MotionInstruction)p.getInstructions().get(i);
+      // add motion type
+      switch (a.getMotionType()){
+         case MTYPE_JOINT:
+            m.add("J");
+            break;
+         case MTYPE_LINEAR:
+            m.add("L");
+            break;
+         case MTYPE_CIRCULAR:
+            m.add("C");
+            break; 
+      }
+      
+      // load register no, speed and termination type
+      String temp = "P["+a.getRegister()+"]";
+      m.add(temp);
+      temp = a.getSpeed() * 100 + "%";
+      m.add(temp);
+      switch (a.getTerminationType()){
+         case TERM_FINE:
+            m.add("FINE");
+            break;
+         case TERM_CONT0:
+            m.add("CONT0");
+            break;
+         case TERM_CONT50:
+            m.add("CONT50");
+            break;
+         case TERM_CONT75:
+            m.add("CONT75");
+            break;
+         case TERM_CONT100:
+            m.add("CONT100");
+            break;   
+      }
+      contents.add(m);
+      //println("hi " + m.toString());
+   } 
+   
 }
