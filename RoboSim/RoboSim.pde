@@ -61,7 +61,7 @@ public void draw() {
   background(127);
   //gui();
   // TESTING CODE
-  /*if (frameCount == 20) {
+  if (frameCount == 20) {
     readyProgram();
   } else if (frameCount > 20) {
     if (!doneMoving) {

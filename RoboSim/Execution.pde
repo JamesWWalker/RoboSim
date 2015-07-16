@@ -7,6 +7,12 @@
 // -> Continuous motion seems to be working, but needs more thorough testing
 // -> Add more sophisticated handling of failure possibility when calculating IK
 
+ArrayList<PVector> intermediatePositions;
+int motionFrameCounter = 0;
+float DISTANCE_BETWEEN_POINTS = 5.0;
+int interMotionIdx = -1;
+
+
 void createTestProgram() {
   Program program = new Program("Test Program");
   MotionInstruction instruction =
@@ -26,7 +32,7 @@ void createTestProgram() {
   registers[3] = new PVector(725, 225, 50);
   registers[4] = new PVector(775, 300, 50);
   programs.add(program);
-  currentProgram = program;
+  //currentProgram = program;
   
   Program program2 = new Program("Test Program 2");
   MotionInstruction instruction2 =
@@ -35,6 +41,19 @@ void createTestProgram() {
   instruction = new MotionInstruction(MTYPE_LINEAR, 1, 1.0, TERM_CONT75);
   programs.add(program2);
   //currentProgram = program;
+  
+  Program program3 = new Program("Circular Test");
+  MotionInstruction instruction3 =
+    new MotionInstruction(MTYPE_LINEAR, 0, 1.0, TERM_FINE);
+  program3.addInstruction(instruction3);
+  instruction3 = new MotionInstruction(MTYPE_CIRCULAR, 1, 1.0, TERM_FINE);
+  program3.addInstruction(instruction3);
+  instruction3 = new MotionInstruction(MTYPE_LINEAR, 2, 1.0, TERM_FINE);
+  program3.addInstruction(instruction3);
+  instruction3 = new MotionInstruction(MTYPE_LINEAR, 3, 0.25, TERM_CONT0);
+  program3.addInstruction(instruction3);
+  programs.add(program3);
+  currentProgram = program3;
 }
 
 
@@ -164,13 +183,6 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
 
 
 
-public ArrayList<PVector> intermediatePositions;
-int motionFrameCounter = 0;
-float DISTANCE_BETWEEN_POINTS = 5.0;
-int interMotionIdx = -1;
-
-
-
 void calculateIntermediatePositions(PVector start, PVector end) {
   intermediatePositions = new ArrayList<PVector>();
   float mu = 0;
@@ -274,6 +286,20 @@ void beginNewLinearMotion(ArmModel model, PVector start, PVector end) {
 
 
 
+void beginNewCircularMotion(ArmModel model, PVector p1, PVector p2, PVector p3) {
+  // Generate the circle circumference,
+  // then turn it into an arc from the current point to the end point
+  intermediatePositions = createArc(createCircleCircumference(p1, p2, p3, 180), p1, p2, p3);
+  interMotionIdx = 0;
+  motionFrameCounter = 0;
+  int result = calculateIK(model, intermediatePositions.get(interMotionIdx), 720, 15);
+  // TODO: FLAG: UPDATE THIS LATER TO ACCOUNT FOR FAILURE POSSIBILITY.
+  while (result != EXEC_SUCCESS)
+    result = calculateIK(model, intermediatePositions.get(interMotionIdx), 720, 15);
+}
+
+
+
 boolean executingInstruction = false;
 
 void readyProgram() {
@@ -313,6 +339,190 @@ float getContinuousPercentage(int term) {
 }
 
 
+
+PVector vectorConvertTo(PVector point, PVector xAxis,
+                        PVector yAxis, PVector zAxis)
+{
+  PMatrix3D matrix = new PMatrix3D(xAxis.x, xAxis.y, xAxis.z, 0,
+                                   yAxis.x, yAxis.y, yAxis.z, 0,
+                                   zAxis.x, zAxis.y, zAxis.z, 0,
+                                   0,       0,       0,       1);
+  PVector result = new PVector();
+  matrix.mult(point, result);
+  return result;
+}
+
+
+PVector vectorConvertFrom(PVector point, PVector xAxis,
+                          PVector yAxis, PVector zAxis)
+{
+  PMatrix3D matrix = new PMatrix3D(xAxis.x, yAxis.x, zAxis.x, 0,
+                                   xAxis.y, yAxis.y, zAxis.y, 0,
+                                   xAxis.z, yAxis.z, zAxis.z, 0,
+                                   0,       0,       0,       1);
+  PVector result = new PVector();
+  matrix.mult(point, result);
+  return result;
+}
+
+
+PVector[] createPlaneFrom3Points(PVector a, PVector b, PVector c) {  
+  PVector n1 = new PVector(a.x-b.x, a.y-b.y, a.z-b.z);
+  n1.normalize();
+  PVector n2 = new PVector(a.x-c.x, a.y-c.y, a.z-c.z);
+  n2.normalize();
+  PVector x = n1.get();
+  PVector z = n1.cross(n2);
+  PVector y = x.cross(z);
+  y.normalize();
+  z.normalize();
+  PVector[] coordinateSystem = new PVector[3];
+  coordinateSystem[0] = x;
+  coordinateSystem[1] = y;
+  coordinateSystem[2] = z;
+  return coordinateSystem;
+}
+
+
+// Create points around the circumference of a circle calculated
+// from three arbitrary 3D points
+// TODO: Add error check in case the 3 supplied points are colinear.
+ArrayList<PVector> createCircleCircumference(PVector a,
+                                      PVector b,
+                                      PVector c,
+                                      int numPoints)
+{  
+  // First, we need to compute the value of some variables that we'll
+  // use in a parametric equation to get our answer.
+  // First up is computing the circle center. This is much easier to
+  // do in 2D, so first we'll convert our three input points into a 2D
+  // plane, compute the circle center in those coordinates, then convert
+  // back to our native 3D frame.
+  PVector[] plane = new PVector[3];
+  plane = createPlaneFrom3Points(a, b, c);
+  PVector center = circleCenter(vectorConvertTo(a, plane[0], plane[1], plane[2]),
+                                vectorConvertTo(b, plane[0], plane[1], plane[2]),
+                                vectorConvertTo(c, plane[0], plane[1], plane[2]));
+  center = vectorConvertFrom(center, plane[0], plane[1], plane[2]);
+  // Now get the radius (easy)
+  float r = dist(center.x, center.y, center.z, a.x, a.y, a.z);
+  // Get u (a unit vector from the center to some point on the circumference)
+  PVector u = new PVector(center.x-a.x, center.y-a.y, center.z-a.z);
+  u.normalize();
+  // get n (a normal of the plane created by the 3 input points)
+  PVector tmp1 = new PVector(a.x-b.x, a.y-b.y, a.z-b.z);
+  PVector tmp2 = new PVector(a.x-c.x, a.y-c.y, a.z-c.z);
+  PVector n = tmp1.cross(tmp2);
+  n.normalize();
+  
+  // Now plug all that into the parametric equation
+  //   P = r*cos(t)*u + r*sin(t)*nxu+center [x is cross product]
+  // to compute our points along the circumference.
+  // We actually only want to create an arc from A to C, not the full
+  // circle, so detect when we're close to those points to decide
+  // when to start and stop adding points.
+  float angle = 0;
+  float angleInc = (PI*2.0)/(float)numPoints;
+  ArrayList<PVector> points = new ArrayList<PVector>();
+  boolean start = false, grace = false;
+  for (int iter = 0; iter < numPoints; iter++) {
+    PVector inter1 = PVector.mult(u, r * cos(angle));
+    PVector inter2 =  n.cross(u);
+    inter2 = PVector.mult(inter2, r * sin(angle));
+    inter1.add(inter2);
+    inter1.add(center);
+    points.add(inter1);
+    angle += angleInc;
+  }
+  return points;
+}
+
+
+// createArc helper method
+int cycleNumber(int number) {
+  number++;
+  if (number >= 4) number = 1;
+  return number;
+}
+
+ArrayList<PVector> createArc(ArrayList<PVector> points, PVector a, PVector b, PVector c) {
+  float CHKDIST = 15.0;
+  while (true) {
+    int seenA = 0, seenB = 0, seenC = 0, currentSee = 1;
+    for (int n = 0; n < points.size(); n++) {
+      PVector pt = points.get(n);
+      if (dist(pt.x, pt.y, pt.z, a.x, a.y, a.z) <= CHKDIST) seenA = currentSee++;
+      if (dist(pt.x, pt.y, pt.z, b.x, b.y, b.z) <= CHKDIST) seenB = currentSee++;
+      if (dist(pt.x, pt.y, pt.z, c.x, c.y, c.z) <= CHKDIST) seenC = currentSee++;
+    }
+    while (seenA != 1) {
+      seenA = cycleNumber(seenA);
+      seenB = cycleNumber(seenB);
+      seenC = cycleNumber(seenC);
+    }
+    // detect reverse case: if b > c then we're going the wrong way, so reverse
+    if (seenB > seenC) {
+      Collections.reverse(points);
+      continue;
+    }
+    break;
+  } // end while loop
+  
+  // now we're going in the right direction, so remove unnecessary points
+  ArrayList<PVector> newPoints = new ArrayList<PVector>();
+  boolean seenA = false, seenC = false;
+  for (PVector pt : points) {
+    if (seenA && !seenC) newPoints.add(pt);
+    if (dist(pt.x, pt.y, pt.z, a.x, a.y, a.z) <= CHKDIST) seenA = true;
+    if (seenA && dist(pt.x, pt.y, pt.z, c.x, c.y, c.z) <= CHKDIST) {
+      seenC = true;
+      break;
+    }
+  }
+  // might have to go through a second time
+  if (seenA && !seenC) {
+    for (PVector pt : points) {
+      newPoints.add(pt);
+      if (dist(pt.x, pt.y, pt.z, c.x, c.y, c.z) <= CHKDIST) break;
+    }
+  }
+  if (newPoints.size() > 0) newPoints.remove(0);
+  newPoints.add(c);
+  return newPoints;
+} // end createArc
+
+
+// Find the circle center of 3 points in 2D
+PVector circleCenter(PVector a, PVector b, PVector c) {
+  float h = calculateH(a.x, a.y, b.x, b.y, c.x, c.y);
+  float k = calculateK(a.x, a.y, b.x, b.y, c.x, c.y);
+  return new PVector(h, k, a.z);
+}
+
+// TODO: Add error check for colinear case (denominator is zero)
+float calculateH(float x1, float y1, float x2, float y2, float x3, float y3) {
+    float numerator = (x2*x2+y2*y2)*y3 - (x3*x3+y3*y3)*y2 - 
+                      ((x1*x1+y1*y1)*y3 - (x3*x3+y3*y3)*y1) +
+                      (x1*x1+y1*y1)*y2 - (x2*x2+y2*y2)*y1;
+    float denominator = (x2*y3-x3*y2) -
+                        (x1*y3-x3*y1) +
+                        (x1*y2-x2*y1);
+    denominator *= 2;
+    return numerator / denominator;
+}
+float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
+    float numerator = x2*(x3*x3+y3*y3) - x3*(x2*x2+y2*y2) -
+                      (x1*(x3*x3+y3*y3) - x3*(x1*x1+y1*y1)) +
+                      x1*(x2*x2+y2*y2) - x2*(x1*x1+y1*y1);
+    float denominator = (x2*y3-x3*y2) -
+                        (x1*y3-x3*y1) +
+                        (x1*y2-x2*y1);
+    denominator *= 2;
+    return numerator / denominator;
+}
+
+
+
 // return true when done
 boolean executeProgram(Program program, ArmModel model) {
   if (program == null || currentInstruction >= program.getInstructions().size())
@@ -326,27 +536,46 @@ boolean executeProgram(Program program, ArmModel model) {
       applyCamera();
       PVector start = calculateEndEffectorPosition(testModel, false);
       popMatrix();
-      if (instruction.getTerminationType() == TERM_FINE)
-        beginNewLinearMotion(model, start, registers[instruction.getRegister()]);
-      else {
+      if (instruction.getMotionType() == MTYPE_LINEAR ||
+          instruction.getMotionType() == MTYPE_JOINT)
+      {
+        if (instruction.getTerminationType() == TERM_FINE)
+          beginNewLinearMotion(model, start, registers[instruction.getRegister()]);
+        else {
+          PVector nextPoint = null;
+          for (int n = currentInstruction+1; n < program.getInstructions().size(); n++) {
+            Instruction nextIns = program.getInstructions().get(n);
+            if (nextIns instanceof MotionInstruction) {
+              MotionInstruction castIns = (MotionInstruction)nextIns;
+              nextPoint = registers[castIns.getRegister()];
+            }
+          }
+          if (nextPoint == null) beginNewLinearMotion(
+                                 model, start, registers[instruction.getRegister()]);
+          else {
+            float percentage = getContinuousPercentage(instruction.getTerminationType());
+            if (percentage <= 0) beginNewLinearMotion(
+                                 model, start, registers[instruction.getRegister()]);
+            else beginNewContinuousMotion(model, start, registers[instruction.getRegister()],
+                                          nextPoint, percentage);
+          }
+        } // end if termination type is continuous
+      } else if (instruction.getMotionType() == MTYPE_CIRCULAR) {
+        // If it is a circular instruction, the current instruction holds the intermediate point.
+        // There must be another instruction after this that holds the end point.
+        // If this isn't the case, the instruction is invalid, so return immediately.
         PVector nextPoint = null;
-        for (int n = currentInstruction+1; n < program.getInstructions().size(); n++) {
-          Instruction nextIns = program.getInstructions().get(n);
-          if (nextIns instanceof MotionInstruction) {
+        if (program.getInstructions().size() >= currentInstruction + 2) {
+          Instruction nextIns = program.getInstructions().get(currentInstruction+1);
+          if (!(nextIns instanceof MotionInstruction)) return true;
+          else {
             MotionInstruction castIns = (MotionInstruction)nextIns;
             nextPoint = registers[castIns.getRegister()];
           }
-        }
-        if (nextPoint == null) beginNewLinearMotion(
-                               model, start, registers[instruction.getRegister()]);
-        else {
-          float percentage = getContinuousPercentage(instruction.getTerminationType());
-          if (percentage <= 0) beginNewLinearMotion(
-                               model, start, registers[instruction.getRegister()]);
-          else beginNewContinuousMotion(model, start, registers[instruction.getRegister()],
-                                        nextPoint, percentage);
-        }
-      }
+        } else return true; // invalid instruction
+        beginNewCircularMotion(model, start, registers[instruction.getRegister()], nextPoint);
+        
+      } // end if motion type is circular
       executingInstruction = true;
       
     } else { // continue executing current instruction
