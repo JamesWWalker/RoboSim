@@ -47,8 +47,8 @@ public void setup() {
   cp5 = new ControlP5(this);
   gui();
   for (int n = 0; n < registers.length; n++) registers[n] = new PVector();
+  armModel = new ArmModel(ARM_STANDARD);
   // TESTING CODE
-  armModel = new ArmModel(ARM_TEST);
   createTestProgram();
   // END TESTING CODE
 }
@@ -101,6 +101,8 @@ public void draw() {
   // END TESTING CODE
   
   hint(DISABLE_DEPTH_TEST);
+  
+  println(frameRate + " fps");
 }
 
 void applyCamera() {

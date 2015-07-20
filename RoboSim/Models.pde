@@ -141,12 +141,12 @@ public class ArmModel {
       axis3.rotations[0] = true;
       axis3.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
       Model axis4 = loadSTLModel("ROBOT_MODEL_1_AXIS4.STL");
+      axis4.rotations[2] = true;
+      axis4.jointRanges[2].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
       Model axis5 = loadSTLModel("ROBOT_MODEL_1_AXIS5.STL");
-      axis5.rotations[2] = true;
-      axis5.jointRanges[2].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
+      axis5.rotations[0] = true;
+      axis5.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
       Model axis6 = loadSTLModel("ROBOT_MODEL_1_AXIS6.STL");
-      axis6.rotations[0] = true;
-      axis6.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
       segments.add(base);
       segments.add(axis1);
       segments.add(axis2);
@@ -180,45 +180,55 @@ public class ArmModel {
     } else if (type == ARM_STANDARD) {
       stroke(0);
       fill(200, 200, 0);
+      
+      translate(600, 200, 0);
 
       rotateZ(PI);
       rotateY(PI/2);
-      rotateY(segments.get(0).currentRotations[1]);
       drawModel(segments.get(0));
       rotateY(-PI/2);
       rotateZ(-PI);
-    
+      
       fill(50);
     
       translate(-50, -166, -358); // -115, -213, -413
       rotateZ(PI);
-      rotateZ(segments.get(1).currentRotations[2]);
+      translate(150, 0, 150);
+      rotateY(segments.get(0).currentRotations[1]);
+      translate(-150, 0, -150);
       drawModel(segments.get(1));
       rotateZ(-PI);
     
       fill(200, 200, 0);
     
-      translate(-115, -100, 180);
+      translate(-115, -85, 180);
       rotateZ(PI);
       rotateY(PI/2);
-      rotateZ(segments.get(2).currentRotations[2]);
+      translate(0, 62, 62);
+      rotateX(segments.get(1).currentRotations[2]);
+      translate(0, -62, -62);
       drawModel(segments.get(2));
       rotateY(-PI/2);
       rotateZ(-PI);
     
       fill(50);
-    
+   
       translate(0, -500, -50);
       rotateZ(PI);
       rotateY(PI/2);
-      rotateX(segments.get(3).currentRotations[0]);
+      translate(0, 75, 75);
+      rotateX(segments.get(2).currentRotations[2]);
+      translate(0, -75, -75);
       drawModel(segments.get(3));
       rotateY(PI/2);
       rotateZ(-PI);
     
-      translate(750, -150, 150);
+      translate(745, -150, 150);
       rotateZ(PI/2);
       rotateY(PI/2);
+      translate(70, 0, 70);
+      rotateY(segments.get(3).currentRotations[0]);
+      translate(-70, 0, -70);
       drawModel(segments.get(4));
       rotateY(-PI/2);
       rotateZ(-PI/2);
@@ -228,7 +238,9 @@ public class ArmModel {
       translate(-115, 130, -124);
       rotateZ(PI);
       rotateY(-PI/2);
-      rotateZ(segments.get(5).currentRotations[2]);
+      translate(0, 50, 50);
+      rotateX(segments.get(4).currentRotations[2]);
+      translate(0, -50, -50);
       drawModel(segments.get(5));
       rotateY(PI/2);
       rotateZ(-PI);
@@ -238,8 +250,12 @@ public class ArmModel {
       translate(150, -10, 95);
       rotateY(-PI/2);
       rotateZ(PI);
-      rotateX(segments.get(6).currentRotations[0]);
+      translate(45, 45, 0);
+      rotateZ(segments.get(5).currentRotations[0]);
+      translate(-45, -45, 0);
       drawModel(segments.get(6));
+            
+      // next, the end effector
     }
   }// end draw arm model
   
