@@ -56,6 +56,7 @@ public void setup() {
 boolean doneMoving = false; // TESTING CODE
 
 public void draw() {
+
   background(127);
   //gui();
   // TESTING CODE
@@ -67,9 +68,9 @@ public void draw() {
     }
   } /* */
   // END TESTING CODE
-  
-  moveJoints(); // respond to manual movement from J button presses
-  
+
+  armModel.moveJoints(); // respond to manual movement from J button presses
+
   cursor(cursorMode);
   hint(ENABLE_DEPTH_TEST);
   background(255);
@@ -78,11 +79,11 @@ public void draw() {
   pushMatrix();
   
   applyCamera();
-  
+
   pushMatrix();
   armModel.draw();
   popMatrix();
-  
+
   popMatrix();
   
   // TESTING CODE: DRAW INTERMEDIATE POINTS
@@ -108,7 +109,7 @@ public void draw() {
   sphere(50);
   popMatrix(); /* */
   // END TESTING CODE
-  
+
   hint(DISABLE_DEPTH_TEST);
   
   println(frameRate + " fps");

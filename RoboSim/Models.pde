@@ -1,70 +1,11 @@
-void moveJoints() {
-  
-  for (Model model : armModel.segments) {
-    for (int n = 0; n < 3; n++) {
-      if (model.rotations[n]) {
-        float trialAngle = model.currentRotations[n] + 0.02 * model.jointsMoving[n];
-        trialAngle = clampAngle(trialAngle);
-        if (model.anglePermitted(n, trialAngle))
-          model.currentRotations[n] = trialAngle;
-        else model.jointsMoving[n] = 0;
-      }
-    }
-  }
-
-}
-
-void drawModel(Model model) {
-  pushMatrix();
-  for (Triangle t : model.triangles) {
-    beginShape(TRIANGLES);
-    normal(t.components[0].x, t.components[1].y, t.components[2].z);
-    for (int n = 1; n < 4; n++)
-      vertex(t.components[n].x, t.components[n].y, t.components[n].z);
-    endShape();
-  }
-  popMatrix();
-}
-
-Model loadSTLModel(String filename) {
-  byte[] data = loadBytes(filename);
-  Model model = new Model();
-  int n = 84; // skip header and number of triangles
-  
-  while (n < data.length) {
-    Triangle t = new Triangle();
-    for (int m = 0; m < 4; m++) {
-      byte[] bytesX = new byte[4];
-      bytesX[0] = data[n+3]; bytesX[1] = data[n+2];
-      bytesX[2] = data[n+1]; bytesX[3] = data[n];
-      n += 4;
-      byte[] bytesY = new byte[4];
-      bytesY[0] = data[n+3]; bytesY[1] = data[n+2];
-      bytesY[2] = data[n+1]; bytesY[3] = data[n];
-      n += 4;
-      byte[] bytesZ = new byte[4];
-      bytesZ[0] = data[n+3]; bytesZ[1] = data[n+2];
-      bytesZ[2] = data[n+1]; bytesZ[3] = data[n];
-      n += 4;
-      t.components[m] = new PVector(
-        ByteBuffer.wrap(bytesX).getFloat(),
-        ByteBuffer.wrap(bytesY).getFloat(),
-        ByteBuffer.wrap(bytesZ).getFloat()
-      );
-    }
-    n += 2; // skip meaningless "attribute byte count"
-    model.triangles.add(t);
-  }
-  return model;
-}
 
 public class Triangle {
+  // normal, vertex 1, vertex 2, vertex 3
   public PVector[] components = new PVector[4];
-  // normal, v1, v2, v3
 }
 
 public class Model {
-  public ArrayList<Triangle> triangles = new ArrayList<Triangle>();
+  public PShape mesh;
   public boolean[] rotations = new boolean[3]; // is rotating on this joint valid?
   public ArrayList<PVector>[] jointRanges = (ArrayList<PVector>[])new ArrayList[3];
   public float[] currentRotations = new float[3]; // current rotation value
@@ -75,14 +16,56 @@ public class Model {
   public float[] rotationSpeeds = new float[3];
   public float[] jointsMoving = new float[3]; // for live control using the joint buttons
   
-  public Model() {
+  public Model(String filename) {
     for (int n = 0; n < 3; n++) {
       rotations[n] = false;
       currentRotations[n] = 0;
       jointRanges[n] = new ArrayList<PVector>();
       rotationSpeeds[n] = 0.01;
     }
+    loadSTLModel(filename);
   }
+  
+  void loadSTLModel(String filename) {
+    ArrayList<Triangle> triangles = new ArrayList<Triangle>();
+    byte[] data = loadBytes(filename);
+    int n = 84; // skip header and number of triangles
+  
+    while (n < data.length) {
+      Triangle t = new Triangle();
+      for (int m = 0; m < 4; m++) {
+        byte[] bytesX = new byte[4];
+        bytesX[0] = data[n+3]; bytesX[1] = data[n+2];
+        bytesX[2] = data[n+1]; bytesX[3] = data[n];
+        n += 4;
+        byte[] bytesY = new byte[4];
+        bytesY[0] = data[n+3]; bytesY[1] = data[n+2];
+        bytesY[2] = data[n+1]; bytesY[3] = data[n];
+        n += 4;
+        byte[] bytesZ = new byte[4];
+        bytesZ[0] = data[n+3]; bytesZ[1] = data[n+2];
+        bytesZ[2] = data[n+1]; bytesZ[3] = data[n];
+        n += 4;
+        t.components[m] = new PVector(
+          ByteBuffer.wrap(bytesX).getFloat(),
+          ByteBuffer.wrap(bytesY).getFloat(),
+          ByteBuffer.wrap(bytesZ).getFloat()
+        );
+      }
+      triangles.add(t);
+      n += 2; // skip meaningless "attribute byte count"
+    }
+    mesh = createShape();
+    mesh.beginShape(TRIANGLES);
+    for (Triangle t : triangles) {
+      mesh.normal(t.components[0].x, t.components[0].y, t.components[0].z);
+      mesh.vertex(t.components[1].x, t.components[1].y, t.components[1].z);
+      mesh.vertex(t.components[2].x, t.components[2].y, t.components[2].z);
+      mesh.vertex(t.components[3].x, t.components[3].y, t.components[3].z);
+    }
+    mesh.endShape();
+  } // end loadSTLModel
+  
   
   public boolean anglePermitted(int idx, float angle) {
     for (PVector range : jointRanges[idx]) {
@@ -90,7 +73,13 @@ public class Model {
     }
     return false;
   }
-}
+  
+  public void draw() {
+    println("Got here A");
+    shape(mesh);
+    println("Got here B");
+  }
+} // end Model class
 
 
 final int ARM_TEST = 0, ARM_STANDARD = 1;
@@ -107,18 +96,18 @@ public class ArmModel {
     type = in;
     if (type == ARM_TEST) {
       motorSpeed = 255.0 / 60.0; // speed in mm divided by the framerate
-      Model base = loadSTLModel("Base.STL");
+      Model base = new Model("Base.STL");
       base.rotations[1] = true;
       base.jointRanges[1].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model link1 = loadSTLModel("Link1.STL");
+      Model link1 = new Model("Link1.STL");
       link1.rotations[2] = true;
       link1.jointRanges[2].add(new PVector(0, 2.4));
       link1.jointRanges[2].add(new PVector(3.88, PI*2));
-      Model link2 = loadSTLModel("Link2.STL");
+      Model link2 = new Model("Link2.STL");
       link2.rotations[2] = true;
       link2.jointRanges[2].add(new PVector(0, 2));
       link2.jointRanges[2].add(new PVector(4.28, PI*2));
-      Model link3 = loadSTLModel("Link3.STL");
+      Model link3 = new Model("Link3.STL");
       link3.rotations[0] = true;
       link3.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
       segments.add(base);
@@ -128,25 +117,25 @@ public class ArmModel {
     } else if (type == ARM_STANDARD) {
       // TODO: FILL IN PROPER JOINT RESTRICTION VALUES.
       motorSpeed = 255.0 / 60.0; // speed in mm divided by the framerate
-      Model base = loadSTLModel("ROBOT_MODEL_1_BASE.STL");
+      Model base = new Model("ROBOT_MODEL_1_BASE.STL");
       base.rotations[1] = true;
       base.jointRanges[1].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model axis1 = loadSTLModel("ROBOT_MODEL_1_AXIS1.STL");
+      Model axis1 = new Model("ROBOT_MODEL_1_AXIS1.STL");
       axis1.rotations[2] = true;
       axis1.jointRanges[2].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model axis2 = loadSTLModel("ROBOT_MODEL_1_AXIS2.STL");
+      Model axis2 = new Model("ROBOT_MODEL_1_AXIS2.STL");
       axis2.rotations[2] = true;
       axis2.jointRanges[2].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model axis3 = loadSTLModel("ROBOT_MODEL_1_AXIS3.STL");
+      Model axis3 = new Model("ROBOT_MODEL_1_AXIS3.STL");
       axis3.rotations[0] = true;
       axis3.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model axis4 = loadSTLModel("ROBOT_MODEL_1_AXIS4.STL");
+      Model axis4 = new Model("ROBOT_MODEL_1_AXIS4.STL");
       axis4.rotations[2] = true;
       axis4.jointRanges[2].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model axis5 = loadSTLModel("ROBOT_MODEL_1_AXIS5.STL");
+      Model axis5 = new Model("ROBOT_MODEL_1_AXIS5.STL");
       axis5.rotations[0] = true;
       axis5.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model axis6 = loadSTLModel("ROBOT_MODEL_1_AXIS6.STL");
+      Model axis6 = new Model("ROBOT_MODEL_1_AXIS6.STL");
       segments.add(base);
       segments.add(axis1);
       segments.add(axis2);
@@ -160,23 +149,23 @@ public class ArmModel {
   public void draw() {
     if (type == ARM_TEST) {
       rotateY(segments.get(0).currentRotations[1]);
-      drawModel(segments.get(0));
+      segments.get(0).draw();
       translate(0, -200, 0);
       rotateZ(PI);
       //rotateY(PI/2.0);
-      drawModel(segments.get(1));
+      segments.get(1).draw();
       rotateZ(-PI);
       translate(-25, -130, 0);
       rotateZ(segments.get(1).currentRotations[2]);
       translate(-25, -130, 0);
       rotateZ(PI);
-      drawModel(segments.get(2));
+      segments.get(2).draw();
       rotateZ(-PI);
       translate(0, -120, 0); 
       rotateZ(segments.get(2).currentRotations[2]);
       translate(0, -120, 0);
       rotateZ(PI);
-      drawModel(segments.get(3));
+      segments.get(3).draw();
     } else if (type == ARM_STANDARD) {
       stroke(0);
       fill(200, 200, 0);
@@ -185,7 +174,7 @@ public class ArmModel {
 
       rotateZ(PI);
       rotateY(PI/2);
-      drawModel(segments.get(0));
+      segments.get(0).draw();
       rotateY(-PI/2);
       rotateZ(-PI);
       
@@ -196,7 +185,7 @@ public class ArmModel {
       translate(150, 0, 150);
       rotateY(segments.get(0).currentRotations[1]);
       translate(-150, 0, -150);
-      drawModel(segments.get(1));
+      segments.get(1).draw();
       rotateZ(-PI);
     
       fill(200, 200, 0);
@@ -207,7 +196,7 @@ public class ArmModel {
       translate(0, 62, 62);
       rotateX(segments.get(1).currentRotations[2]);
       translate(0, -62, -62);
-      drawModel(segments.get(2));
+      segments.get(2).draw();
       rotateY(-PI/2);
       rotateZ(-PI);
     
@@ -219,7 +208,7 @@ public class ArmModel {
       translate(0, 75, 75);
       rotateX(segments.get(2).currentRotations[2]);
       translate(0, -75, -75);
-      drawModel(segments.get(3));
+      segments.get(3).draw();
       rotateY(PI/2);
       rotateZ(-PI);
     
@@ -229,7 +218,7 @@ public class ArmModel {
       translate(70, 0, 70);
       rotateY(segments.get(3).currentRotations[0]);
       translate(-70, 0, -70);
-      drawModel(segments.get(4));
+      segments.get(4).draw();
       rotateY(-PI/2);
       rotateZ(-PI/2);
     
@@ -241,7 +230,7 @@ public class ArmModel {
       translate(0, 50, 50);
       rotateX(segments.get(4).currentRotations[2]);
       translate(0, -50, -50);
-      drawModel(segments.get(5));
+      segments.get(5).draw();
       rotateY(PI/2);
       rotateZ(-PI);
     
@@ -253,7 +242,7 @@ public class ArmModel {
       translate(45, 45, 0);
       rotateZ(segments.get(5).currentRotations[0]);
       translate(-45, -45, 0);
-      drawModel(segments.get(6));
+      segments.get(6).draw();
             
       // next, the end effector
     }
@@ -285,7 +274,23 @@ public class ArmModel {
     }
   }
   
+  void moveJoints() {
+    for (Model model : segments) {
+      for (int n = 0; n < 3; n++) {
+        if (model.rotations[n]) {
+          float trialAngle = model.currentRotations[n] + 0.02 * model.jointsMoving[n];
+          trialAngle = clampAngle(trialAngle);
+          if (model.anglePermitted(n, trialAngle))
+            model.currentRotations[n] = trialAngle;
+          else model.jointsMoving[n] = 0;
+        }
+      }
+    }
+  } // end moveJoints
+  
 } // end ArmModel class
+
+
 
 void printCurrentModelCoordinates(String msg) {
   print(msg + ": " );
