@@ -63,7 +63,7 @@ public void draw() {
     readyProgram();
   } else if (frameCount > 20) {
     if (!doneMoving) {
-      doneMoving = executeProgram(currentProgram, testModel);
+      doneMoving = executeProgram(currentProgram, armModel);
     }
   } /* */
   // END TESTING CODE
@@ -83,11 +83,10 @@ public void draw() {
   armModel.draw();
   popMatrix();
   
-  //PVector eep = calculateEndEffectorPosition(testModel, false);
   popMatrix();
   
   // TESTING CODE: DRAW INTERMEDIATE POINTS
-  /*stroke(255, 0, 0);
+  stroke(255, 0, 0);
   pushMatrix();
   if (intermediatePositions != null) {
     for (PVector v : intermediatePositions) {
@@ -97,6 +96,16 @@ public void draw() {
       popMatrix();
     }
   }
+  popMatrix(); /* */
+  // TESTING CODE: DRAW END EFFECTOR POSITION
+  /*pushMatrix();
+  PVector eep = calculateEndEffectorPosition(armModel, false);
+  applyCamera();
+  noFill();
+  stroke(255, 0, 0);
+  translate(eep.x, eep.y, eep.z);
+  println(eep.x + ", " + eep.y + ", " + eep.z);
+  sphere(50);
   popMatrix(); /* */
   // END TESTING CODE
   
