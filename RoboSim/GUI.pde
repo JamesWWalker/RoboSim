@@ -1101,6 +1101,152 @@ public void rotate_shrink(int theValue){
   }
 }
 
+// ADDED BY JAMES: JOINT BUTTONS
+public void JOINT1_NEG(int theValue) {
+  if (armModel.segments.size() >= 1) {
+    Model model = armModel.segments.get(0);
+    for (int n = 0; n < 3; n++) {
+      if (model.rotations[n]) {
+        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = -1;
+        else model.jointsMoving[n] = 0;
+      }
+    }
+  }
+}
+
+public void JOINT1_POS(int theValue) {
+  if (armModel.segments.size() >= 1) {
+    Model model = armModel.segments.get(0);
+    for (int n = 0; n < 3; n++) {
+      if (model.rotations[n]) {
+        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = 1;
+        else model.jointsMoving[n] = 0;
+      }
+    }
+  }
+}
+
+public void JOINT2_NEG(int theValue) {
+  if (armModel.segments.size() >= 2) {
+    Model model = armModel.segments.get(1);
+    for (int n = 0; n < 3; n++) {
+      if (model.rotations[n]) {
+        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = -1;
+        else model.jointsMoving[n] = 0;
+      }
+    }
+  }
+}
+
+public void JOINT2_POS(int theValue) {
+  if (armModel.segments.size() >= 2) {
+    Model model = armModel.segments.get(1);
+    for (int n = 0; n < 3; n++) {
+      if (model.rotations[n]) {
+        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = 1;
+        else model.jointsMoving[n] = 0;
+      }
+    }
+  }
+}
+
+public void JOINT3_NEG(int theValue) {
+  if (armModel.segments.size() >= 3) {
+    Model model = armModel.segments.get(2);
+    for (int n = 0; n < 3; n++) {
+      if (model.rotations[n]) {
+        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = -1;
+        else model.jointsMoving[n] = 0;
+      }
+    }
+  }
+}
+
+public void JOINT3_POS(int theValue) {
+  if (armModel.segments.size() >= 3) {
+    Model model = armModel.segments.get(2);
+    for (int n = 0; n < 3; n++) {
+      if (model.rotations[n]) {
+        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = 1;
+        else model.jointsMoving[n] = 0;
+      }
+    }
+  }
+}
+
+public void JOINT4_NEG(int theValue) {
+  if (armModel.segments.size() >= 4) {
+    Model model = armModel.segments.get(3);
+    for (int n = 0; n < 3; n++) {
+      if (model.rotations[n]) {
+        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = -1;
+        else model.jointsMoving[n] = 0;
+      }
+    }
+  }
+}
+
+public void JOINT4_POS(int theValue) {
+  if (armModel.segments.size() >= 4) {
+    Model model = armModel.segments.get(3);
+    for (int n = 0; n < 3; n++) {
+      if (model.rotations[n]) {
+        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = 1;
+        else model.jointsMoving[n] = 0;
+      }
+    }
+  }
+}
+
+public void JOINT5_NEG(int theValue) {
+  if (armModel.segments.size() >= 5) {
+    Model model = armModel.segments.get(4);
+    for (int n = 0; n < 3; n++) {
+      if (model.rotations[n]) {
+        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = -1;
+        else model.jointsMoving[n] = 0;
+      }
+    }
+  }
+}
+
+public void JOINT5_POS(int theValue) {
+  if (armModel.segments.size() >= 5) {
+    Model model = armModel.segments.get(4);
+    for (int n = 0; n < 3; n++) {
+      if (model.rotations[n]) {
+        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = 1;
+        else model.jointsMoving[n] = 0;
+      }
+    }
+  }
+}
+
+public void JOINT6_NEG(int theValue) {
+  if (armModel.segments.size() >= 6) {
+    Model model = armModel.segments.get(5);
+    for (int n = 0; n < 3; n++) {
+      if (model.rotations[n]) {
+        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = -1;
+        else model.jointsMoving[n] = 0;
+      }
+    }
+  }
+}
+
+public void JOINT6_POS(int theValue) {
+  if (armModel.segments.size() >= 6) {
+    Model model = armModel.segments.get(5);
+    for (int n = 0; n < 3; n++) {
+      if (model.rotations[n]) {
+        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = 1;
+        else model.jointsMoving[n] = 0;
+      }
+    }
+  }
+}
+// END JAMES ADDITION
+
 public void updateScreen(color active, color normal){
    int next_px = display_px;
    int next_py = display_py;

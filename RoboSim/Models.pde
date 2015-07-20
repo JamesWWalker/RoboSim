@@ -1,19 +1,17 @@
 void moveJoints() {
-
-  float trialAngle = testModel.segments.get(0).currentRotations[1] + 0.02 * jointsMoving[0];
-  trialAngle = clampAngle(trialAngle);
-  if (testModel.segments.get(0).anglePermitted(1, trialAngle))
-    testModel.segments.get(0).currentRotations[1] = trialAngle;
   
-  trialAngle = testModel.segments.get(1).currentRotations[2] + 0.02 * jointsMoving[1];
-  trialAngle = clampAngle(trialAngle);
-  if (testModel.segments.get(1).anglePermitted(2, trialAngle))
-    testModel.segments.get(1).currentRotations[2] = trialAngle;
-    
-  trialAngle = testModel.segments.get(2).currentRotations[2] + 0.02 * jointsMoving[2];
-  trialAngle = clampAngle(trialAngle);
-  if (testModel.segments.get(2).anglePermitted(2, trialAngle))
-    testModel.segments.get(2).currentRotations[2] = trialAngle;
+  for (Model model : armModel.segments) {
+    for (int n = 0; n < 3; n++) {
+      if (model.rotations[n]) {
+        float trialAngle = model.currentRotations[n] + 0.02 * model.jointsMoving[n];
+        trialAngle = clampAngle(trialAngle);
+        if (model.anglePermitted(n, trialAngle))
+          model.currentRotations[n] = trialAngle;
+        else model.jointsMoving[n] = 0;
+      }
+    }
+  }
+
 }
 
 void drawModel(Model model) {
@@ -75,6 +73,7 @@ public class Model {
   public int[] rotationDirections = new int[3]; // control rotation direction so we
                                                 // don't "take the long way around"
   public float[] rotationSpeeds = new float[3];
+  public float[] jointsMoving = new float[3]; // for live control using the joint buttons
   
   public Model() {
     for (int n = 0; n < 3; n++) {
@@ -94,7 +93,7 @@ public class Model {
 }
 
 
-final int ARM_TEST = 0;
+final int ARM_TEST = 0, ARM_STANDARD = 1;
 
 
 public class ArmModel {
@@ -122,13 +121,40 @@ public class ArmModel {
       Model link3 = loadSTLModel("Link3.STL");
       link3.rotations[0] = true;
       link3.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      // end effector rotates around X and Y axes
-      // doesn't seem to be included in model files yet
       segments.add(base);
       segments.add(link1);
       segments.add(link2);
       segments.add(link3);
-    } // end if type == ARM_TEST
+    } else if (type == ARM_STANDARD) {
+      // TODO: FILL IN PROPER JOINT RESTRICTION VALUES.
+      motorSpeed = 255.0 / 60.0; // speed in mm divided by the framerate
+      Model base = loadSTLModel("ROBOT_MODEL_1_BASE.STL");
+      base.rotations[1] = true;
+      base.jointRanges[1].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
+      Model axis1 = loadSTLModel("ROBOT_MODEL_1_AXIS1.STL");
+      axis1.rotations[2] = true;
+      axis1.jointRanges[2].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
+      Model axis2 = loadSTLModel("ROBOT_MODEL_1_AXIS2.STL");
+      axis2.rotations[2] = true;
+      axis2.jointRanges[2].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
+      Model axis3 = loadSTLModel("ROBOT_MODEL_1_AXIS3.STL");
+      axis3.rotations[0] = true;
+      axis3.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
+      Model axis4 = loadSTLModel("ROBOT_MODEL_1_AXIS4.STL");
+      Model axis5 = loadSTLModel("ROBOT_MODEL_1_AXIS5.STL");
+      axis5.rotations[2] = true;
+      axis5.jointRanges[2].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
+      Model axis6 = loadSTLModel("ROBOT_MODEL_1_AXIS6.STL");
+      axis6.rotations[0] = true;
+      axis6.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
+      segments.add(base);
+      segments.add(axis1);
+      segments.add(axis2);
+      segments.add(axis3);
+      segments.add(axis4);
+      segments.add(axis5);
+      segments.add(axis6);
+    }
   } // end ArmModel constructor
   
   public void draw() {
@@ -151,6 +177,69 @@ public class ArmModel {
       translate(0, -120, 0);
       rotateZ(PI);
       drawModel(segments.get(3));
+    } else if (type == ARM_STANDARD) {
+      stroke(0);
+      fill(200, 200, 0);
+
+      rotateZ(PI);
+      rotateY(PI/2);
+      rotateY(segments.get(0).currentRotations[1]);
+      drawModel(segments.get(0));
+      rotateY(-PI/2);
+      rotateZ(-PI);
+    
+      fill(50);
+    
+      translate(-50, -166, -358); // -115, -213, -413
+      rotateZ(PI);
+      rotateZ(segments.get(1).currentRotations[2]);
+      drawModel(segments.get(1));
+      rotateZ(-PI);
+    
+      fill(200, 200, 0);
+    
+      translate(-115, -100, 180);
+      rotateZ(PI);
+      rotateY(PI/2);
+      rotateZ(segments.get(2).currentRotations[2]);
+      drawModel(segments.get(2));
+      rotateY(-PI/2);
+      rotateZ(-PI);
+    
+      fill(50);
+    
+      translate(0, -500, -50);
+      rotateZ(PI);
+      rotateY(PI/2);
+      rotateX(segments.get(3).currentRotations[0]);
+      drawModel(segments.get(3));
+      rotateY(PI/2);
+      rotateZ(-PI);
+    
+      translate(750, -150, 150);
+      rotateZ(PI/2);
+      rotateY(PI/2);
+      drawModel(segments.get(4));
+      rotateY(-PI/2);
+      rotateZ(-PI/2);
+    
+      fill(200, 200, 0);
+    
+      translate(-115, 130, -124);
+      rotateZ(PI);
+      rotateY(-PI/2);
+      rotateZ(segments.get(5).currentRotations[2]);
+      drawModel(segments.get(5));
+      rotateY(PI/2);
+      rotateZ(-PI);
+    
+      fill(50);
+    
+      translate(150, -10, 95);
+      rotateY(-PI/2);
+      rotateZ(PI);
+      rotateX(segments.get(6).currentRotations[0]);
+      drawModel(segments.get(6));
     }
   }// end draw arm model
   

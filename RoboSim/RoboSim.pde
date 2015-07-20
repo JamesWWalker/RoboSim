@@ -3,12 +3,11 @@ import controlP5.*;
 import java.util.*;
 import java.nio.*;
 
-ArmModel testModel;
+ArmModel armModel;
 float lastMouseX, lastMouseY;
 float cameraTX = 0, cameraTY = 0, cameraTZ = 0;
 float cameraRX = 0, cameraRY = 0, cameraRZ = 0;
 boolean spacebarDown = false;
-float[] jointsMoving = new float[6];
 
 ControlP5 cp5;
 Textarea myTextarea;
@@ -49,8 +48,7 @@ public void setup() {
   gui();
   for (int n = 0; n < registers.length; n++) registers[n] = new PVector();
   // TESTING CODE
-  for (int n = 0; n < 6; n++) jointsMoving[n] = 0;
-  testModel = new ArmModel(ARM_TEST);
+  armModel = new ArmModel(ARM_TEST);
   createTestProgram();
   // END TESTING CODE
 }
@@ -61,7 +59,7 @@ public void draw() {
   background(127);
   //gui();
   // TESTING CODE
-  if (frameCount == 20) {
+  /*if (frameCount == 20) {
     readyProgram();
   } else if (frameCount > 20) {
     if (!doneMoving) {
@@ -82,14 +80,14 @@ public void draw() {
   applyCamera();
   
   pushMatrix();
-  testModel.draw();
+  armModel.draw();
   popMatrix();
   
   //PVector eep = calculateEndEffectorPosition(testModel, false);
   popMatrix();
   
   // TESTING CODE: DRAW INTERMEDIATE POINTS
-  stroke(255, 0, 0);
+  /*stroke(255, 0, 0);
   pushMatrix();
   if (intermediatePositions != null) {
     for (PVector v : intermediatePositions) {

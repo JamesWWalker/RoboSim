@@ -112,6 +112,8 @@ PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
     translate(0, -120, 0);
     rotateZ(PI);
     translate(0, 102, 0);
+  } else if (model.type == ARM_STANDARD) {
+    // TODO: FILL THIS IN.
   }
   PVector ret = new PVector(
     modelX(0, 0, 0),
@@ -534,7 +536,7 @@ boolean executeProgram(Program program, ArmModel model) {
     
       pushMatrix();
       applyCamera();
-      PVector start = calculateEndEffectorPosition(testModel, false);
+      PVector start = calculateEndEffectorPosition(armModel, false);
       popMatrix();
       if (instruction.getMotionType() == MTYPE_LINEAR ||
           instruction.getMotionType() == MTYPE_JOINT)
