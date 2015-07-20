@@ -75,9 +75,7 @@ public class Model {
   }
   
   public void draw() {
-    println("Got here A");
     shape(mesh);
-    println("Got here B");
   }
 } // end Model class
 
