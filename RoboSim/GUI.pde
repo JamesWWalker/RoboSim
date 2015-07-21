@@ -7,17 +7,22 @@ final int FRAME_JOINT = 0,
 final int SMALL_BUTTON = 20,
           LARGE_BUTTON = 35; 
 final int OFF = 0, ON = 1;      
-final int NONE = 0, PROGRAM = 1, INSTRUCTION = 2;
+final int NONE = 0, 
+          PROGRAM_NAV = 1, 
+          INSTRUCTION_NAV = 2,
+          INSTRUCTION_EDIT = 3;
 
 int frame = FRAME_JOINT;
 //String displayFrame = "JOINT";
 
-//int shift = OFF; 
+ 
 int active_program = -1; // which program is active? Default: no program is active
 int select_program = -1; // which program is in edit mode
 int active_instruction = -1; // which motion instruction is active?
 int select_instruction = -1; // which motion instruction is in edit mode?
 int mode = NONE; 
+int NUM_MODE; // allow for entering numbers?
+int shift = OFF;
  
 int g1_px, g1_py;
 int g1_width, g1_height;
@@ -30,11 +35,15 @@ Button bt_show, bt_hide,
        bt_pan_shrink, bt_pan_normal,
        bt_rotate_shrink, bt_rotate_normal
        ;
-
+Textlabel fn_info, num_info;
 
 // display the contents on screen
 ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>();
+ArrayList<String> options = new ArrayList<String>();
+ArrayList<Integer> nums = new ArrayList<Integer>();
 int active_row = 0, active_col = 0; // which element of contents is on focus?
+int which_option = -1;
+int index_contents = 0, index_options = 100, index_nums = 1000;// screen display label index
 
 void gui(){
    int display_width = 340, display_height = 270;
@@ -68,7 +77,12 @@ void gui(){
    g1_width += 340;
    g1_height += 270;
    
-   
+   // text label to show how to use F1 - F5 keys
+   fn_info = cp5.addTextlabel("fn_info")
+                .hide()
+                ;    
+   num_info = cp5.addTextlabel("num_info")
+                .hide();   
    // button to show g1
    int bt_show_px = 1;
    int bt_show_py = 1;
@@ -364,7 +378,37 @@ void gui(){
        .setCaptionLabel("F5")
        .setColorBackground(color(127,127,255))
        .setColorCaptionLabel(color(255,255,255))  
-       .moveTo(g1);      
+       .moveTo(g1);   
+    
+    int hd_px = f5_px + 41;
+    int hd_py = f5_py;   
+    cp5.addButton("hd")
+       .setPosition(hd_px, hd_py)
+       .setSize(LARGE_BUTTON, LARGE_BUTTON)
+       .setCaptionLabel("HOLD")
+       .setColorBackground(color(127,127,255))
+       .setColorCaptionLabel(color(255,255,255))  
+       .moveTo(g1);    
+       
+    int fd_px = hd_px + 41;
+    int fd_py = hd_py;   
+    cp5.addButton("fd")
+       .setPosition(fd_px, fd_py)
+       .setSize(LARGE_BUTTON, LARGE_BUTTON)
+       .setCaptionLabel("FWD")
+       .setColorBackground(color(127,127,255))
+       .setColorCaptionLabel(color(255,255,255))  
+       .moveTo(g1);   
+      
+    int bd_px = fd_px + 41;
+    int bd_py = fd_py;   
+    cp5.addButton("bd")
+       .setPosition(bd_px, bd_py)
+       .setSize(LARGE_BUTTON, LARGE_BUTTON)
+       .setCaptionLabel("BWD")
+       .setColorBackground(color(127,127,255))
+       .setColorCaptionLabel(color(255,255,255))  
+       .moveTo(g1);    
        
    // adjust group 1's width to include all controllers  
    g1.setWidth(g1_width)
@@ -933,96 +977,431 @@ public void show(int theValue){
    doRotate = false;  
 }
 
+public void NUM0(int theValue){
+   if (NUM_MODE == ON){
+      nums.add(0);
+   }
+   updateScreen(color(255,0,0), color(0,0,0));
+}
+
+public void NUM1(int theValue){
+   println("NUM_MODE="+NUM_MODE+" nums.size()="+nums.size());
+   
+   if (NUM_MODE == ON){
+      nums.add(1);
+   }
+   updateScreen(color(255,0,0), color(0,0,0));}
+
+public void NUM2(int theValue){
+   if (NUM_MODE == ON){
+      nums.add(2);
+   }
+   updateScreen(color(255,0,0), color(0,0,0));
+}
+
+public void NUM3(int theValue){
+   if (NUM_MODE == ON){
+      nums.add(3);
+   }
+   updateScreen(color(255,0,0), color(0,0,0));
+}
+public void NUM4(int theValue){
+   if (NUM_MODE == ON){
+      nums.add(4);
+   }
+   updateScreen(color(255,0,0), color(0,0,0));
+}
+
+public void NUM5(int theValue){
+   if (NUM_MODE == ON){
+      nums.add(5);
+   }
+   updateScreen(color(255,0,0), color(0,0,0));
+}
+
+public void NUM6(int theValue){
+   if (NUM_MODE == ON){
+      nums.add(6);
+   }
+   updateScreen(color(255,0,0), color(0,0,0));
+}
+
+public void NUM7(int theValue){
+   if (NUM_MODE == ON){
+      nums.add(7);
+   }
+   updateScreen(color(255,0,0), color(0,0,0));
+}
+
+public void NUM8(int theValue){
+   if (NUM_MODE == ON){
+      nums.add(8);
+   }
+   updateScreen(color(255,0,0), color(0,0,0));
+}
+
+public void NUM9(int theValue){
+   if (NUM_MODE == ON){
+      nums.add(9);
+   }
+   updateScreen(color(255,0,0), color(0,0,0));
+}
+
+public void PERIOD(int theValue){
+   if (NUM_MODE == ON){
+      nums.add(-1);
+   }
+   updateScreen(color(255,0,0), color(0,0,0));
+}
+
 public void se(int theValue){
+   mode = NONE;
+   options = new ArrayList<String>(); // clear options
+   nums = new ArrayList<Integer>(); // clear numbers
+   clearScreen();
+   
    int size = programs.size();
    if (size <= 0){
       programs.add(new Program("My Program 1"));
    }
-   clearScreen();
+   
    contents = new ArrayList<ArrayList<String>>();  
    for(int i=0;i<size;i++){
       ArrayList<String> temp = new ArrayList<String>();
       temp.add(programs.get(i).getName());
       contents.add(temp);
-      updateScreen(color(255,0,0), color(0,0,0));
    }
-   mode = PROGRAM;
+  
+   updateScreen(color(255,0,0), color(0,0,0));
+   mode = PROGRAM_NAV;
    active_program = 0;
+   active_instruction = 0;
    
 }
 
 public void up(int theValue){
-   if (active_row == 0){
-      // does nothing
-   }else {
-      active_row -= 1;
-      active_col = 0;
-      switch (mode){
-         case PROGRAM:
-            active_program -= 1;
-            break;
-         case INSTRUCTION:
+   switch (mode){
+      case PROGRAM_NAV:
+         options = new ArrayList<String>();
+         clearOptions();
+         if (active_row == 0){
+             // does nothing
+         }else{
+             active_row -= 1;
+             active_col = 0;
+             active_program -= 1;
+         }
+         break;
+      case INSTRUCTION_NAV:
+         options = new ArrayList<String>();
+         clearOptions();
+         if(active_row == 0){
+            // does nothing
+         }else{
+            active_row -= 1;
+            active_col = 0;
             active_instruction -= 1;
-            break;      
-      }
+         }
+         break;
+      case INSTRUCTION_EDIT:
+         if (which_option == 0){
+            // does nothing
+         }else{
+            which_option -= 1;
+         }
+         break;   
    }
+   
    updateScreen(color(255,0,0), color(0,0,0));
 }
 
 public void dn(int theValue){
-   if (active_row == contents.size()-1){
-      // does nothing
-   }else{
-      active_row += 1;
-      active_col = 0;
-      switch (mode){
-         case PROGRAM:
-            active_program += 1;
-            break;
-         case INSTRUCTION:
-            active_instruction += 1;
-            break;      
-      }
-   }
+   switch (mode){
+      case PROGRAM_NAV:
+         options = new ArrayList<String>();
+         clearOptions();
+         if (active_row == contents.size()-1){
+             // does nothing
+         }else{
+             active_row += 1;
+             active_col = 0;
+             active_program += 1;
+         }
+         break;
+      case INSTRUCTION_NAV:
+         options = new ArrayList<String>();
+         clearOptions();
+         if (active_row == contents.size()-1){
+             // does nothing
+         }else{
+             active_row += 1;
+             active_col = 0;
+             active_instruction += 1;
+         }
+         break;
+      case INSTRUCTION_EDIT:
+         if (which_option == options.size() - 1){
+            // does nothing
+         }else{
+            which_option += 1;
+         }
+         break;
+   }  
    updateScreen(color(255,0,0), color(0,0,0));
 }
 
 public void lt(int theValue){
-   if (active_col == 0){
-      // does nothing
-   }else{
-      active_col -= 1;
+   switch (mode){
+      case PROGRAM_NAV:
+          break;
+      case INSTRUCTION_NAV:
+          options = new ArrayList<String>();
+          clearOptions();
+          if (active_col == 0){
+              // does nothing
+          }else{
+              active_col -= 1;
+          }
+          updateScreen(color(255,0,0), color(0,0,0));
+          break;
+      case INSTRUCTION_EDIT:
+          mode = INSTRUCTION_NAV;
+          lt(1);
+          break;
    }
-   updateScreen(color(255,0,0), color(0,0,0));
+   
 }
 
 
 public void rt(int theValue){
-   if (active_col == contents.get(active_row).size()-1){
-      // does nothing
-   }else{
-      active_col += 1;
+  switch (mode){
+      case PROGRAM_NAV:
+          break;
+      case INSTRUCTION_NAV:
+          options = new ArrayList<String>();
+          clearOptions();
+          if (active_col == contents.get(active_row).size()-1){
+             // does nothing
+          }else{
+             active_col += 1;
+          }
+          updateScreen(color(255,0,0), color(0,0,0));
+          break;
+      case INSTRUCTION_EDIT:
+          mode = INSTRUCTION_NAV;
+          rt(1);
+          break;
    }
+}
+
+public void sf(int theValue){
+   if (shift == OFF){
+      shift = ON;
+   }else{
+      shift = OFF;
+   }
+}
+
+public void pr(int theValue){
+   se(1);
+}
+
+public void f1(int theValue){
+   switch (mode){
+      case PROGRAM_NAV:
+         shift = OFF;
+         break;
+      case INSTRUCTION_NAV:
+         if (shift == ON) {
+             MotionInstruction m = new MotionInstruction(MTYPE_JOINT, 0, 0.25, TERM_FINE);
+             Program current_p = programs.get(select_program);
+             current_p.addInstruction(m);
+             loadInstructions(select_program);
+             options = new ArrayList<String>();
+             which_option = -1;
+             clearOptions();
+             updateScreen(color(255,0,0), color(0,0,0));
+         }
+         shift = OFF;
+         break;
+      case INSTRUCTION_EDIT:
+         shift = OFF;
+         break;
+   }
+    
+}
+
+public void f4(int theValue){
+   mode = INSTRUCTION_NAV;
+   switch (mode){
+      case INSTRUCTION_NAV:
+         //MotionInstruction m = (MotionInstruction) programs.get(select_program).getInstructions().get(active_row);
+         switch (active_col){
+             case 0:
+                options = new ArrayList<String>();
+                options.add("1.JOINT");
+                options.add("2.LINEAR");
+                options.add("3.CIRCULAR");
+                //NUM_MODE = ON;
+                select_instruction = active_instruction;
+                mode = INSTRUCTION_EDIT;
+                which_option = 0;
+                break;
+             case 1:
+                //NUM_MODE = ON; 
+                break;
+             case 2:
+                //NUM_MODE = ON;
+                break;
+             case 3:
+                options = new ArrayList<String>();
+                options.add("1.FINE");
+                options.add("2.CONT0");
+                options.add("3.CONT50");
+                options.add("4.CONT75");
+                options.add("5.CONT100");
+                //NUM_MODE = ON;
+                select_instruction = active_instruction;
+                mode = INSTRUCTION_EDIT;
+                which_option = 0;
+                break;   
+         } 
+         break;  
+     case INSTRUCTION_EDIT:
+         break;    
+     case PROGRAM_NAV:
+         break;    
+   }
+   //println("mode="+mode+" active_col"+active_col);
    updateScreen(color(255,0,0), color(0,0,0));
 }
 
+public void hd(int theValue){
 
+}
+
+public void fd(int theValue){
+   if (active_instruction == 0 && shift == ON) {
+      readyProgram();
+      doneMoving = executeProgram(programs.get(select_program), testModel);
+   }
+   shift = OFF;
+}
+
+public void bd(int theValue){
+
+}
 public void ENTER(int theValue){
    switch (mode){
       case NONE:
          break;
-      case PROGRAM:
+      case PROGRAM_NAV:
          select_program = active_program;
+         mode = INSTRUCTION_NAV;
          clearScreen();
+         println("after clear screen");
          loadInstructions(select_program);
+         println("after load instruction");
+         updateScreen(color(255,0,0), color(0,0,0));
+         println("after update screen");
+         break;
+      case INSTRUCTION_NAV:
+         if (active_col == 1 || active_col == 2){
+            select_instruction = active_instruction;
+            mode = INSTRUCTION_EDIT;
+            NUM_MODE = ON;
+            num_info.setText(" ");
+         }
+         break;
+      case INSTRUCTION_EDIT:
+         Program current_p = programs.get(select_program);
+         println("select_instruction="+select_instruction);
+         MotionInstruction m = (MotionInstruction)current_p.getInstructions().get(select_instruction);
+         switch (active_col){
+            case 0:
+               if (which_option == 0){
+                  m.setMotionType(MTYPE_JOINT);
+               }else if (which_option == 1){
+                  m.setMotionType(MTYPE_LINEAR);
+               }else if(which_option == 2){
+                  m.setMotionType(MTYPE_CIRCULAR);
+               }
+               break;
+            case 1:
+               try{
+                  String input = "";
+                  for(int i=0;i<nums.size();i++){
+                     if (nums.get(i) == -1){
+                        input += ".";
+                     }else{
+                        input += nums.get(i).toString();
+                     }
+                  }
+                  m.setRegister(Integer.parseInt(input));
+                  NUM_MODE = OFF; 
+               }catch (NumberFormatException ex){
+                  num_info.setText("Invalid input")
+                             ;
+                  nums = new ArrayList<Integer>();
+                  clearNums();
+                  updateScreen(color(255,0,0), color(0,0,0));
+               }
+               break;
+            case 2:
+               try{
+                  String input = "";
+                  for(int i=0;i<nums.size();i++){
+                     if (nums.get(i) == -1){
+                        input += ".";
+                     }else{
+                        input += nums.get(i).toString();
+                     }
+                  }
+                  float sp = Float.parseFloat(input);
+                  if (sp >= 0 && sp <= 1){
+                     m.setSpeed(sp);
+                     NUM_MODE = OFF;
+                  }else{
+                     num_info.setText("Invalid input")
+                             ;
+                     nums = new ArrayList<Integer>();
+                     clearNums();
+                     updateScreen(color(255,0,0), color(0,0,0));
+                  }
+               }catch (NumberFormatException ex){
+                  num_info.setText("Invalid input")
+                             ;
+                  nums = new ArrayList<Integer>();
+                  clearNums();
+                  updateScreen(color(255,0,0), color(0,0,0));
+               }
+               break;
+            case 3:
+               if (which_option == 0){
+                  m.setTerminationType(TERM_FINE);
+               }else if (which_option == 1){
+                  m.setTerminationType(TERM_CONT0);
+               }else if (which_option == 2){
+                  m.setTerminationType(TERM_CONT50);
+               }else if (which_option == 3){
+                  m.setTerminationType(TERM_CONT75);
+               }else if (which_option == 4){
+                  m.setTerminationType(TERM_CONT100);
+               }
+               break;   
+         }
+         loadInstructions(active_program);
+         mode = INSTRUCTION_NAV;
+         NUM_MODE = OFF;
+         options = new ArrayList<String>();
+         which_option = -1;
+         clearOptions();
+         nums = new ArrayList<Integer>();
+         clearNums();
          updateScreen(color(255,0,0), color(0,0,0));
          break;
-      case INSTRUCTION:
-         select_instruction = active_instruction;
-         //TODO: select the instruction
-         break;
+         
    }
-   mode = INSTRUCTION;
 }
 
 
@@ -1104,52 +1483,208 @@ public void rotate_shrink(int theValue){
 public void updateScreen(color active, color normal){
    int next_px = display_px;
    int next_py = display_py;
-   int index = 0;
+   
+   switch (mode){
+      case INSTRUCTION_NAV:
+         cp5.addTextlabel("-1")
+            .setText(programs.get(select_program).getName()) 
+            .setPosition(next_px, next_py)
+            .setColorValue(normal)
+            .show()
+            .moveTo(g1)
+            ;
+         next_px = display_px;
+         next_py += 14;   
+         break;
+      case INSTRUCTION_EDIT:
+         cp5.addTextlabel("-1")
+            .setText(programs.get(select_program).getName()) 
+            .setPosition(next_px, next_py)
+            .setColorValue(normal)
+            .show()
+            .moveTo(g1)
+            ;
+         next_px = display_px;
+         next_py += 14;   
+         //println("I am in instruction mode");
+         break;
+   }
+   
+   index_contents = 0;
    for(int i=0;i<contents.size();i++){
       ArrayList<String> temp = contents.get(i);
       for (int j=0;j<temp.size();j++){
           if (i == active_row && j == active_col){
-             cp5.addTextlabel(Integer.toString(index))
+             cp5.addTextlabel(Integer.toString(index_contents))
                 .setText(temp.get(j))
                 .setPosition(next_px, next_py)
                 .setColorValue(active)
                 .moveTo(g1)
                 ;
           }else{
-             cp5.addTextlabel(Integer.toString(index))
+             cp5.addTextlabel(Integer.toString(index_contents))
                 .setText(temp.get(j))
                 .setPosition(next_px, next_py)
                 .setColorValue(normal)
                 .moveTo(g1)
                 ;  
           }
-          index++;
+          index_contents++;
           next_px += temp.get(j).length() * 6 + 5; 
       }
       next_px = display_px;
       next_py += 14;
+      
+      
    }
+   
+   switch (mode){
+      case INSTRUCTION_NAV:
+         cp5.addTextlabel("-2")
+            .setText("End") 
+            .setPosition(next_px, next_py)
+            .setColorValue(normal)
+            .moveTo(g1)
+            ;
+         next_px = display_px;
+         next_py += 14;   
+         break;
+      case INSTRUCTION_EDIT:
+         cp5.addTextlabel("-2")
+            .setText("End") 
+            .setPosition(next_px, next_py)
+            .setColorValue(normal)
+            .moveTo(g1)
+            ;
+         next_px = display_px;
+         next_py += 14; 
+         break;
+   }
+   
+   // display options
+   next_py += 14;
+   index_options = 100;
+   if (options.size() > 0){
+      for(int i=0;i<options.size();i++){
+        if (i==which_option){
+           cp5.addTextlabel(Integer.toString(index_options))
+              .setText(options.get(i))
+              .setPosition(next_px, next_py)
+              .setColorValue(active)
+              .moveTo(g1)
+              ;
+        }else{
+            cp5.addTextlabel(Integer.toString(index_options))
+               .setText(options.get(i))
+               .setPosition(next_px, next_py)
+               .setColorValue(normal)
+               .moveTo(g1)
+               ;
+        }
+        
+         index_options++;
+         next_px = display_px;
+         next_py += 14;    
+      }
+   }
+   
+   // display the user input numbers
+   next_py += 14;
+   index_nums = 1000;
+   if (nums.size() > 0){
+      println("nums size is " + nums.size());
+      for(int i=0;i<nums.size();i++){
+         if (nums.get(i) == -1){
+            cp5.addTextlabel(Integer.toString(index_nums))
+               .setText(".")
+               .setPosition(next_px, next_py)
+               .setColorValue(normal)
+               .moveTo(g1)
+               ;
+         }else{
+            cp5.addTextlabel(Integer.toString(index_nums))
+               .setText(Integer.toString(nums.get(i)))
+               .setPosition(next_px, next_py)
+               .setColorValue(normal)
+               .moveTo(g1)
+               ;
+         }
+         
+         index_nums++;
+         next_px += 5;   
+      }
+   }
+   
+   num_info.setPosition(next_px, next_py)
+           .setColorValue(normal) 
+           .show()
+           ;
+   next_px = display_px;
+   next_py += 14;   
+   
+   next_py += 100;
+   if (mode == INSTRUCTION_NAV){
+          fn_info.setText("F4: CHOICE")
+                 .setPosition(next_px, next_py)
+                 .setColorValue(normal)
+                 .show()
+                 .moveTo(g1)
+                 ;
+    } else if (mode == INSTRUCTION_EDIT){
+          fn_info.show()
+                 .moveTo(g1)
+                 ;
+    }
 }
 
 // remove all display buttons on screen
 public void clearScreen(){
-   // remove all display buttons
-   int index = 0;
-   for(int i=0;i<contents.size();i++){
-      ArrayList<String> temp = contents.get(i);
-      for (int j=0;j<temp.size();j++){
-          println("want to remove label: " + cp5.getController(Integer.toString(index)));
-          cp5.getController(Integer.toString(index)).hide();
-          //cp5.remove(cp5.getController(Integer.toString(index)));
-          index++;
+   for(int i=0;i<index_contents;i++){
+      cp5.getController(Integer.toString(i)).hide();
+   }
+   index_contents = 0;
+   
+   clearOptions();
+   
+   if (mode == INSTRUCTION_NAV){
+      
+   } else if (mode == INSTRUCTION_EDIT){
+     
+   }else{
+      if (cp5.getController("-1") != null){
+           cp5.getController("-1")
+              .hide()
+              ;
+      }     
+      if (cp5.getController("-2") != null){
+           cp5.getController("-2")
+              .hide()
+              ;   
       }
-   }  
+      fn_info.hide();
+   }
+   
+  clearNums();
+   
    cp5.update();
    active_row = 0;
    active_col = 0;
    contents = new ArrayList<ArrayList<String>>();
 }
 
+public void clearOptions(){
+   for(int i=100;i<index_options;i++){
+      cp5.getController(Integer.toString(i)).hide();
+   }
+   index_options = 100;
+}
+
+public void clearNums(){
+   for(int i=1000;i<index_nums;i++){
+      cp5.getController(Integer.toString(i)).hide();
+   }
+   index_nums = 1000;
+}
 public void loadInstructions(int programID){
    Program p = programs.get(programID);
    contents = new ArrayList<ArrayList<String>>();
@@ -1197,7 +1732,7 @@ public void loadInstructions(int programID){
             break;   
       }
       contents.add(m);
-      //println("hi " + m.toString());
+      println("hi " + m.toString());
    } 
    
 }
