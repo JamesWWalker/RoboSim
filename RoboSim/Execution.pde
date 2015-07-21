@@ -31,8 +31,10 @@ void createTestProgram() {
   registers[2] = new PVector(675, 200, 50);
   registers[3] = new PVector(725, 225, 50);
   registers[4] = new PVector(775, 300, 50);
+  registers[5] = new PVector(-474, -218, 37);
+  registers[6] = new PVector(-659, -412, -454);
   programs.add(program);
-  //currentProgram = program;
+  currentProgram = program;
   
   Program program2 = new Program("Test Program 2");
   MotionInstruction instruction2 =
@@ -53,7 +55,16 @@ void createTestProgram() {
   instruction3 = new MotionInstruction(MTYPE_LINEAR, 3, 0.25, TERM_CONT0);
   program3.addInstruction(instruction3);
   programs.add(program3);
-  currentProgram = program3;
+  //currentProgram = program3;
+  
+  Program program4 = new Program("New Arm Test");
+  MotionInstruction instruction4 =
+    new MotionInstruction(MTYPE_LINEAR, 5, 1.0, TERM_FINE);
+  program4.addInstruction(instruction4);
+  instruction4 = new MotionInstruction(MTYPE_LINEAR, 6, 1.0, TERM_FINE);
+  program4.addInstruction(instruction4);
+  programs.add(program4);
+  //currentProgram = program4;
 }
 
 
@@ -112,6 +123,57 @@ PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
     translate(0, -120, 0);
     rotateZ(PI);
     translate(0, 102, 0);
+  } else if (model.type == ARM_STANDARD) {
+    translate(600, 200, 0);
+    translate(-50, -166, -358); // -115, -213, -413
+    rotateZ(PI);
+    translate(150, 0, 150);
+    if (!test) rotateY(model.segments.get(0).currentRotations[1]);
+    else rotateY(model.segments.get(0).testRotations[1]);
+    translate(-150, 0, -150);
+    rotateZ(-PI);    
+    translate(-115, -85, 180);
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(0, 62, 62);
+    if (!test) rotateX(model.segments.get(1).currentRotations[2]);
+    else rotateX(model.segments.get(1).testRotations[2]);
+    translate(0, -62, -62);
+    rotateY(-PI/2);
+    rotateZ(-PI);   
+    translate(0, -500, -50);
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(0, 75, 75);
+    if (!test) rotateX(model.segments.get(2).currentRotations[2]);
+    else rotateX(model.segments.get(2).testRotations[2]);
+    translate(0, -75, -75);
+    rotateY(PI/2);
+    rotateZ(-PI);
+    translate(745, -150, 150);
+    rotateZ(PI/2);
+    rotateY(PI/2);
+    translate(70, 0, 70);
+    if (!test) rotateY(model.segments.get(3).currentRotations[0]);
+    else rotateY(model.segments.get(3).testRotations[0]);
+    translate(-70, 0, -70);
+    rotateY(-PI/2);
+    rotateZ(-PI/2);    
+    translate(-115, 130, -124);
+    rotateZ(PI);
+    rotateY(-PI/2);
+    translate(0, 50, 50);
+    if (!test) rotateX(model.segments.get(4).currentRotations[2]);
+    else rotateX(model.segments.get(4).testRotations[2]);
+    translate(0, -50, -50);
+    rotateY(PI/2);
+    rotateZ(-PI);    
+    translate(150, -10, 95);
+    rotateY(-PI/2);
+    rotateZ(PI);
+    translate(45, 45, 0);
+    if (!test) rotateZ(model.segments.get(5).currentRotations[0]);
+    else rotateZ(model.segments.get(5).testRotations[0]);
   }
   PVector ret = new PVector(
     modelX(0, 0, 0),
@@ -534,7 +596,7 @@ boolean executeProgram(Program program, ArmModel model) {
     
       pushMatrix();
       applyCamera();
-      PVector start = calculateEndEffectorPosition(testModel, false);
+      PVector start = calculateEndEffectorPosition(armModel, false);
       popMatrix();
       if (instruction.getMotionType() == MTYPE_LINEAR ||
           instruction.getMotionType() == MTYPE_JOINT)

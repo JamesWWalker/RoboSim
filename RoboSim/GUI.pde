@@ -1283,7 +1283,7 @@ public void hd(int theValue){
 public void fd(int theValue){
    if (active_instruction == 0 && shift == ON) {
       readyProgram();
-      doneMoving = executeProgram(programs.get(select_program), testModel);
+      doneMoving = executeProgram(programs.get(select_program), armModel);
    }
    shift = OFF;
 }

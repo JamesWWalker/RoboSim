@@ -3,7 +3,7 @@ import controlP5.*;
 import java.util.*;
 import java.nio.*;
 
-ArmModel testModel;
+ArmModel armModel;
 float lastMouseX, lastMouseY;
 float cameraTX = 0, cameraTY = 0, cameraTZ = 0;
 float cameraRX = 0, cameraRY = 0, cameraRZ = 0;
@@ -50,7 +50,7 @@ public void setup() {
   for (int n = 0; n < registers.length; n++) registers[n] = new PVector();
   // TESTING CODE
   for (int n = 0; n < 6; n++) jointsMoving[n] = 0;
-  testModel = new ArmModel(ARM_TEST);
+  armModel = new ArmModel(ARM_STANDARD);
   createTestProgram();
   // END TESTING CODE
 }
@@ -65,12 +65,12 @@ public void draw() {
     readyProgram();
   } else if (frameCount > 20) {
     if (!doneMoving) {
-      doneMoving = executeProgram(currentProgram, testModel);
+      doneMoving = executeProgram(currentProgram, armModel);
     }
   } /* */
   // END TESTING CODE
   
-  moveJoints(); // respond to manual movement from J button presses
+  armModel.moveJoints(); // respond to manual movement from J button presses
   
   cursor(cursorMode);
   hint(ENABLE_DEPTH_TEST);
@@ -82,7 +82,7 @@ public void draw() {
   applyCamera();
   
   pushMatrix();
-  testModel.draw();
+  armModel.draw();
   popMatrix();
   
   //PVector eep = calculateEndEffectorPosition(testModel, false);
