@@ -1,4 +1,9 @@
 
+//To-do list:
+//Recolorize it
+//Proper joint constraints for the new arm
+//Collision detection
+
 public class Triangle {
   // normal, vertex 1, vertex 2, vertex 3
   public PVector[] components = new PVector[4];
@@ -16,17 +21,17 @@ public class Model {
   public float[] rotationSpeeds = new float[3];
   public float[] jointsMoving = new float[3]; // for live control using the joint buttons
   
-  public Model(String filename) {
+  public Model(String filename, color col) {
     for (int n = 0; n < 3; n++) {
       rotations[n] = false;
       currentRotations[n] = 0;
       jointRanges[n] = new ArrayList<PVector>();
       rotationSpeeds[n] = 0.01;
     }
-    loadSTLModel(filename);
+    loadSTLModel(filename, col);
   }
   
-  void loadSTLModel(String filename) {
+  void loadSTLModel(String filename, color col) {
     ArrayList<Triangle> triangles = new ArrayList<Triangle>();
     byte[] data = loadBytes(filename);
     int n = 84; // skip header and number of triangles
@@ -57,6 +62,8 @@ public class Model {
     }
     mesh = createShape();
     mesh.beginShape(TRIANGLES);
+    mesh.noStroke();
+    mesh.fill(col);
     for (Triangle t : triangles) {
       mesh.normal(t.components[0].x, t.components[0].y, t.components[0].z);
       mesh.vertex(t.components[1].x, t.components[1].y, t.components[1].z);
@@ -94,18 +101,18 @@ public class ArmModel {
     type = in;
     if (type == ARM_TEST) {
       motorSpeed = 255.0 / 60.0; // speed in mm divided by the framerate
-      Model base = new Model("Base.STL");
+      Model base = new Model("Base.STL", color(180, 180, 180));
       base.rotations[1] = true;
       base.jointRanges[1].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model link1 = new Model("Link1.STL");
+      Model link1 = new Model("Link1.STL", color(180, 180, 180));
       link1.rotations[2] = true;
       link1.jointRanges[2].add(new PVector(0, 2.4));
       link1.jointRanges[2].add(new PVector(3.88, PI*2));
-      Model link2 = new Model("Link2.STL");
+      Model link2 = new Model("Link2.STL", color(180, 180, 180));
       link2.rotations[2] = true;
       link2.jointRanges[2].add(new PVector(0, 2));
       link2.jointRanges[2].add(new PVector(4.28, PI*2));
-      Model link3 = new Model("Link3.STL");
+      Model link3 = new Model("Link3.STL", color(180, 180, 180));
       link3.rotations[0] = true;
       link3.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
       segments.add(base);
@@ -115,25 +122,25 @@ public class ArmModel {
     } else if (type == ARM_STANDARD) {
       // TODO: FILL IN PROPER JOINT RESTRICTION VALUES.
       motorSpeed = 255.0 / 60.0; // speed in mm divided by the framerate
-      Model base = new Model("ROBOT_MODEL_1_BASE.STL");
+      Model base = new Model("ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
       base.rotations[1] = true;
       base.jointRanges[1].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model axis1 = new Model("ROBOT_MODEL_1_AXIS1.STL");
+      Model axis1 = new Model("ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40));
       axis1.rotations[2] = true;
       axis1.jointRanges[2].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model axis2 = new Model("ROBOT_MODEL_1_AXIS2.STL");
+      Model axis2 = new Model("ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0));
       axis2.rotations[2] = true;
       axis2.jointRanges[2].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model axis3 = new Model("ROBOT_MODEL_1_AXIS3.STL");
+      Model axis3 = new Model("ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40));
       axis3.rotations[0] = true;
       axis3.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model axis4 = new Model("ROBOT_MODEL_1_AXIS4.STL");
+      Model axis4 = new Model("ROBOT_MODEL_1_AXIS4.STL", color(200, 200, 0));
       axis4.rotations[2] = true;
       axis4.jointRanges[2].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model axis5 = new Model("ROBOT_MODEL_1_AXIS5.STL");
+      Model axis5 = new Model("ROBOT_MODEL_1_AXIS5.STL", color(40, 40, 40));
       axis5.rotations[0] = true;
       axis5.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model axis6 = new Model("ROBOT_MODEL_1_AXIS6.STL");
+      Model axis6 = new Model("ROBOT_MODEL_1_AXIS6.STL", color(200, 200, 0));
       segments.add(base);
       segments.add(axis1);
       segments.add(axis2);
@@ -146,6 +153,7 @@ public class ArmModel {
   
   public void draw() {
     if (type == ARM_TEST) {
+      noStroke();
       rotateY(segments.get(0).currentRotations[1]);
       segments.get(0).draw();
       translate(0, -200, 0);
@@ -165,7 +173,7 @@ public class ArmModel {
       rotateZ(PI);
       segments.get(3).draw();
     } else if (type == ARM_STANDARD) {
-      stroke(0);
+      noStroke();
       fill(200, 200, 0);
       
       translate(600, 200, 0);

@@ -56,6 +56,10 @@ public void setup() {
 boolean doneMoving = false; // TESTING CODE
 
 public void draw() {
+  
+  //lights();
+  directionalLight(255, 255, 255, 1, 1, 0);
+  ambientLight(150, 150, 150);
 
   background(127);
   //gui();
@@ -74,7 +78,7 @@ public void draw() {
   cursor(cursorMode);
   hint(ENABLE_DEPTH_TEST);
   background(255);
-  stroke(100, 100, 255);
+  noStroke();
   noFill();
   pushMatrix();
   
@@ -86,8 +90,10 @@ public void draw() {
 
   popMatrix();
   
+  noLights();
+  
   // TESTING CODE: DRAW INTERMEDIATE POINTS
-  stroke(255, 0, 0);
+  noStroke();
   pushMatrix();
   if (intermediatePositions != null) {
     for (PVector v : intermediatePositions) {

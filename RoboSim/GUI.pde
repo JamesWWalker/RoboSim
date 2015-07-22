@@ -1283,7 +1283,7 @@ public void hd(int theValue){
 public void fd(int theValue){
    if (active_instruction == 0 && shift == ON) {
       readyProgram();
-      doneMoving = executeProgram(programs.get(select_program), testModel);
+      doneMoving = executeProgram(programs.get(select_program), armModel);
    }
    shift = OFF;
 }
@@ -1480,6 +1480,7 @@ public void rotate_shrink(int theValue){
   }
 }
 
+
 // ADDED BY JAMES: JOINT BUTTONS
 public void JOINT1_NEG(int theValue) {
   if (armModel.segments.size() >= 1) {
@@ -1625,6 +1626,8 @@ public void JOINT6_POS(int theValue) {
   }
 }
 // END JAMES ADDITION
+
+
 
 public void updateScreen(color active, color normal){
    int next_px = display_px;
