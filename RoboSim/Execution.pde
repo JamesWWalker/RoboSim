@@ -4,7 +4,6 @@
 //
 // -> The speed control for executing motion instructions is pretty rough.
 //    Make it better.
-// -> Continuous motion seems to be working, but needs more thorough testing
 // -> Add more sophisticated handling of failure possibility when calculating IK
 
 ArrayList<PVector> intermediatePositions;
@@ -484,7 +483,7 @@ ArrayList<PVector> createCircleCircumference(PVector a,
   // circle, so detect when we're close to those points to decide
   // when to start and stop adding points.
   float angle = 0;
-  float angleInc = (PI*2.0)/(float)numPoints;
+  float angleInc = (TWO_PI)/(float)numPoints;
   ArrayList<PVector> points = new ArrayList<PVector>();
   boolean start = false, grace = false;
   for (int iter = 0; iter < numPoints; iter++) {
@@ -658,7 +657,7 @@ boolean executeProgram(Program program, ArmModel model) {
 
 
 float clampAngle(float angle) {
-  while (angle > PI*2.0) angle -= (PI*2.0);
-  while (angle < 0) angle += (PI*2.0);
+  while (angle > TWO_PI) angle -= (TWO_PI);
+  while (angle < 0) angle += (TWO_PI);
   return angle;
 }

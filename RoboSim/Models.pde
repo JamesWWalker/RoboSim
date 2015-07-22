@@ -1,7 +1,5 @@
 
 //To-do list:
-//Recolorize it
-//Proper joint constraints for the new arm
 //Collision detection
 
 public class Triangle {
@@ -127,20 +125,22 @@ public class ArmModel {
       base.jointRanges[1].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
       Model axis1 = new Model("ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40));
       axis1.rotations[2] = true;
-      axis1.jointRanges[2].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
+      axis1.jointRanges[2].add(new PVector(0, 2.01));
+      axis1.jointRanges[2].add(new PVector(4.34, TWO_PI));
       Model axis2 = new Model("ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0));
       axis2.rotations[2] = true;
       axis2.jointRanges[2].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
       Model axis3 = new Model("ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40));
       axis3.rotations[0] = true;
       axis3.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model axis4 = new Model("ROBOT_MODEL_1_AXIS4.STL", color(200, 200, 0));
+      Model axis4 = new Model("ROBOT_MODEL_1_AXIS4.STL", color(40, 40, 40));
       axis4.rotations[2] = true;
-      axis4.jointRanges[2].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model axis5 = new Model("ROBOT_MODEL_1_AXIS5.STL", color(40, 40, 40));
+      axis4.jointRanges[2].add(new PVector(0, 1.8));
+      axis4.jointRanges[2].add(new PVector(4.62, TWO_PI));
+      Model axis5 = new Model("ROBOT_MODEL_1_AXIS5.STL", color(200, 200, 0));
       axis5.rotations[0] = true;
       axis5.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model axis6 = new Model("ROBOT_MODEL_1_AXIS6.STL", color(200, 200, 0));
+      Model axis6 = new Model("ROBOT_MODEL_1_AXIS6.STL", color(40, 40, 40));
       segments.add(base);
       segments.add(axis1);
       segments.add(axis2);
