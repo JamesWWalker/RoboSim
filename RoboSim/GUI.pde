@@ -12,21 +12,21 @@ final int NONE = 0,
           INSTRUCTION_NAV = 2,
           INSTRUCTION_EDIT = 3;
 
-int frame = FRAME_JOINT;
+int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
 
  
-int active_program = -1; // which program is active? Default: no program is active
-int select_program = -1; // which program is in edit mode
-int active_instruction = -1; // which motion instruction is active?
-int select_instruction = -1; // which motion instruction is in edit mode?
+int active_program = -1; // which program is on focus when in PROGRAM_NAV mode?
+int select_program = -1; // which program is being edited when in INSTRUCTION_NAV or INSTRUCTION_EDIT mode?
+int active_instruction = -1; // which motion instruction is on focus when in INSTRUCTION_NAV mode?
+int select_instruction = -1; // which motion instruction is being edited when in INSTRUCTION_EDIT mode?
 int mode = NONE; 
-int NUM_MODE; // allow for entering numbers?
-int shift = OFF;
+int NUM_MODE; // When NUM_MODE is ON, allows for entering numbers
+int shift = OFF; // Does shift button is pressed or not?
  
-int g1_px, g1_py;
-int g1_width, g1_height;
-int display_px, display_py;
+int g1_px, g1_py; // the left-top corner of group1
+int g1_width, g1_height; // group 1's width and height
+int display_px, display_py; // the left-top corner of display screen
 
 Group g1;
 Button bt_show, bt_hide, 
@@ -37,13 +37,13 @@ Button bt_show, bt_hide,
        ;
 Textlabel fn_info, num_info;
 
-// display the contents on screen
-ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>();
-ArrayList<String> options = new ArrayList<String>();
-ArrayList<Integer> nums = new ArrayList<Integer>();
-int active_row = 0, active_col = 0; // which element of contents is on focus?
-int which_option = -1;
-int index_contents = 0, index_options = 100, index_nums = 1000;// screen display label index
+// display on screen
+ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>(); // display list of programs or motion instructions
+ArrayList<String> options = new ArrayList<String>(); // display options for an element in a motion instruction
+ArrayList<Integer> nums = new ArrayList<Integer>(); // store numbers pressed by the user
+int active_row = 0, active_col = 0; // which element is on focus now?
+int which_option = -1; // which option is on focus now?
+int index_contents = 0, index_options = 100, index_nums = 1000; // how many textlabels have been created for display
 
 void gui(){
    int display_width = 340, display_height = 270;
@@ -58,6 +58,7 @@ void gui(){
    ControlFont font = new ControlFont(pfont, 9);
    cp5.setFont(font);
    */
+   
    // group 1: display and function buttons
    g1 = cp5.addGroup("DISPLAY")
                  .setPosition(g1_px, g1_py)
@@ -816,8 +817,7 @@ void gui(){
       .moveTo(g2);      
 }   
 
-// events
-
+/* mouse events */
 public void mousePressed(){
    if ((clickPan % 2) == 1 ) { // pan button is pressed
       if (doPan) {
@@ -918,9 +918,11 @@ public void keyPressed(){
    }
 }
 
-// buttons event
+/* buttons event */
+
+// need this function to call buttons' event
 public void controlEvent(ControlEvent theEvent){
-   println(theEvent.getController().getName());
+   //println(theEvent.getController().getName());
    
 }
 
@@ -1404,18 +1406,18 @@ public void ENTER(int theValue){
    }
 }
 
-
-// zoomin button
+/* navigation buttons */
+// zoomin button when interface is at full size
 public void zoomin_normal(int theValue){
    myscale *= 1.1;
 }
 
-// zoomout button
+// zoomout button when interface is at full size
 public void zoomout_normal(int theValue){
    myscale *= 0.9;
 }
 
-// pan button
+// pan button when interface is at full size
 public void pan_normal(int theValue){
   clickPan += 1;
   if ((clickPan % 2) == 1){
@@ -1432,6 +1434,7 @@ public void pan_normal(int theValue){
   }
 }
 
+// pan button when interface is minimized
 public void pan_shrink(int theValue){
   clickPan += 1;
   if ((clickPan % 2) == 1){
@@ -1448,6 +1451,7 @@ public void pan_shrink(int theValue){
   }
 }
 
+// rotate button when interface is at full size
 public void rotate_normal(int theValue){
    clickRotate += 1;
    if ((clickRotate % 2) == 1){
@@ -1464,6 +1468,7 @@ public void rotate_normal(int theValue){
   }
 }
 
+// rotate button when interface is minized
 public void rotate_shrink(int theValue){
    clickRotate += 1;
    if ((clickRotate % 2) == 1){
@@ -1628,11 +1633,12 @@ public void JOINT6_POS(int theValue) {
 // END JAMES ADDITION
 
 
-
+// update what displayed on screen
 public void updateScreen(color active, color normal){
    int next_px = display_px;
    int next_py = display_py;
    
+   // display the name of the program that is being edited 
    switch (mode){
       case INSTRUCTION_NAV:
          cp5.addTextlabel("-1")
@@ -1659,6 +1665,7 @@ public void updateScreen(color active, color normal){
          break;
    }
    
+   // display the main list on screen
    index_contents = 0;
    for(int i=0;i<contents.size();i++){
       ArrayList<String> temp = contents.get(i);
@@ -1687,6 +1694,7 @@ public void updateScreen(color active, color normal){
       
    }
    
+   // display 'END' at the end of the program 
    switch (mode){
       case INSTRUCTION_NAV:
          cp5.addTextlabel("-2")
@@ -1710,7 +1718,7 @@ public void updateScreen(color active, color normal){
          break;
    }
    
-   // display options
+   // display options for an element being edited
    next_py += 14;
    index_options = 100;
    if (options.size() > 0){
@@ -1737,7 +1745,7 @@ public void updateScreen(color active, color normal){
       }
    }
    
-   // display the user input numbers
+   // display the numbers that the user has typed
    next_py += 14;
    index_nums = 1000;
    if (nums.size() > 0){
@@ -1764,6 +1772,7 @@ public void updateScreen(color active, color normal){
       }
    }
    
+   // display the comment for the user's input
    num_info.setPosition(next_px, next_py)
            .setColorValue(normal) 
            .show()
@@ -1771,6 +1780,7 @@ public void updateScreen(color active, color normal){
    next_px = display_px;
    next_py += 14;   
    
+   // display hints for function keys
    next_py += 100;
    if (mode == INSTRUCTION_NAV){
           fn_info.setText("F4: CHOICE")
@@ -1786,15 +1796,12 @@ public void updateScreen(color active, color normal){
     }
 }
 
-// remove all display buttons on screen
+// clear screen
 public void clearScreen(){
-   for(int i=0;i<index_contents;i++){
-      cp5.getController(Integer.toString(i)).hide();
-   }
-   index_contents = 0;
-   
+   clearContents();
    clearOptions();
    
+   // hide the text labels that show the start and end of a program
    if (mode == INSTRUCTION_NAV){
       
    } else if (mode == INSTRUCTION_EDIT){
@@ -1821,6 +1828,13 @@ public void clearScreen(){
    contents = new ArrayList<ArrayList<String>>();
 }
 
+public void clearContents(){
+   for(int i=0;i<index_contents;i++){
+      cp5.getController(Integer.toString(i)).hide();
+   }
+   index_contents = 0;
+}
+
 public void clearOptions(){
    for(int i=100;i<index_options;i++){
       cp5.getController(Integer.toString(i)).hide();
@@ -1834,6 +1848,8 @@ public void clearNums(){
    }
    index_nums = 1000;
 }
+
+// prepare for displaying motion instructions on screen
 public void loadInstructions(int programID){
    Program p = programs.get(programID);
    contents = new ArrayList<ArrayList<String>>();
