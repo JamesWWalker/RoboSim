@@ -6,14 +6,16 @@ final float SPEED_FINE = 0.0025;
 final float SPEED_VFINE = 0.001;
 
 
-PVector[] registers = new PVector[999];
+PVector[] pr = new PVector[999]; // global registers
 
 public class Program {
   private String name;
   private ArrayList<Instruction> instructions;
+  private PVector[] p = new PVector[999]; // local registers
   
   public Program(String theName) {
     instructions = new ArrayList<Instruction>();
+    for (int n = 0; n < p.length; n++) p[n] = new PVector();
     name = theName;
   }
   
@@ -24,6 +26,7 @@ public class Program {
   public String getName(){
     return name;
   }
+  
   public void addInstruction(Instruction i) {
     instructions.add(i);
   }
@@ -32,7 +35,16 @@ public class Program {
     instructions.add(idx, i);
   }
   
-}
+  public void addRegister(PVector in, int idx) {
+    if (idx >= 0 && idx < p.length) p[idx] = in;
+  }
+  
+  public PVector getRegister(int idx) {
+    if (idx >= 0 && idx < p.length) return p[idx];
+    else return null;
+  }
+  
+} // end Program class
 
 public class Instruction {
 }
@@ -40,12 +52,14 @@ public class Instruction {
 public class MotionInstruction extends Instruction {
   private int motionType;
   private int register;
+  private boolean globalRegister;
   private float speed;
   private int terminationType;
   
-  public MotionInstruction(int m, int r, float s, int t) {
+  public MotionInstruction(int m, int r, boolean g, float s, int t) {
     motionType = m;
     register = r;
+    globalRegister = g;
     speed = s;
     terminationType = t;
   }
@@ -54,10 +68,17 @@ public class MotionInstruction extends Instruction {
   public void setMotionType(int in) { motionType = in; }
   public int getRegister() { return register; }
   public void setRegister(int in) { register = in; }
+  public boolean getGlobal() { return globalRegister; }
+  public void setGlobal(boolean in) { globalRegister = in; }
   public float getSpeed() { return speed; }
   public void setSpeed(float in) { speed = in; }
   public int getTerminationType() { return terminationType; }
   public void setTerminationType(int in) { terminationType = in; }
+  
+  public PVector getVector(Program parent) {
+    if (globalRegister) return pr[register];
+    else return parent.p[register];
+  }
   
   public String toString(){
      String me = "";
@@ -73,7 +94,9 @@ public class MotionInstruction extends Instruction {
            break;
      }
      
-     me += "P["+Integer.toString(register)+"] ";
+     if (globalRegister) me += "PR[";
+     else me += "P[";
+     me += Integer.toString(register)+"] ";
      me += Float.toString(speed * 100) + "% ";
      switch (terminationType){
         case TERM_FINE:
@@ -93,8 +116,9 @@ public class MotionInstruction extends Instruction {
            break;   
      } 
      return me;
-  }
-}
+  } // end toString()
+  
+} // end MotionInstruction class
 
 public class FrameInstruction extends Instruction {
 }
@@ -107,4 +131,4 @@ public class CoordinateFrame {
   public void setOrigin(PVector in) { origin = in; }
   public PVector getRotation() { return rotation; }
   public void setRotation(PVector in) { rotation = in; }
-}
+} // end FrameInstruction class

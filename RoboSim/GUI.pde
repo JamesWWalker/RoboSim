@@ -1215,7 +1215,7 @@ public void f1(int theValue){
          break;
       case INSTRUCTION_NAV:
          if (shift == ON) {
-             MotionInstruction m = new MotionInstruction(MTYPE_JOINT, 0, 0.25, TERM_FINE);
+             MotionInstruction m = new MotionInstruction(MTYPE_JOINT, 0, false, 0.25, TERM_FINE);
              Program current_p = programs.get(select_program);
              current_p.addInstruction(m);
              loadInstructions(select_program);
