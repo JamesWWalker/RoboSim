@@ -1,7 +1,5 @@
 
 final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
-final int TERM_FINE = 0, TERM_CONT0 = 1, TERM_CONT50 = 2,
-          TERM_CONT75 = 3, TERM_CONT100 = 4;
 final float SPEED_FINE = 0.0025;
 final float SPEED_VFINE = 0.001;
 
@@ -54,14 +52,14 @@ public class MotionInstruction extends Instruction {
   private int register;
   private boolean globalRegister;
   private float speed;
-  private int terminationType;
+  private float termination;
   
-  public MotionInstruction(int m, int r, boolean g, float s, int t) {
+  public MotionInstruction(int m, int r, boolean g, float s, float t) {
     motionType = m;
     register = r;
     globalRegister = g;
     speed = s;
-    terminationType = t;
+    termination = t;
   }
   
   public int getMotionType() { return motionType; }
@@ -72,8 +70,13 @@ public class MotionInstruction extends Instruction {
   public void setGlobal(boolean in) { globalRegister = in; }
   public float getSpeed() { return speed; }
   public void setSpeed(float in) { speed = in; }
-  public int getTerminationType() { return terminationType; }
-  public void setTerminationType(int in) { terminationType = in; }
+  public float getTermination() { return termination; }
+  public void setTermination(float in) { termination = in; }
+  
+  public float getSpeedForExec(ArmModel model) {
+    if (motionType == MTYPE_JOINT) return speed;
+    else return (speed / model.motorSpeed);
+  }
   
   public PVector getVector(Program parent) {
     if (globalRegister) return pr[register];
@@ -93,28 +96,13 @@ public class MotionInstruction extends Instruction {
            me += "C ";
            break;
      }
-     
      if (globalRegister) me += "PR[";
      else me += "P[";
      me += Integer.toString(register)+"] ";
-     me += Float.toString(speed * 100) + "% ";
-     switch (terminationType){
-        case TERM_FINE:
-           me += "FINE ";
-           break;
-        case TERM_CONT0:
-           me += "CONT0 ";
-           break;
-        case TERM_CONT50:
-           me += "CONT50 ";
-           break;
-        case TERM_CONT75:
-           me += "CONT75 ";
-           break;   
-        case TERM_CONT100:
-           me += "CONT100 ";
-           break;   
-     } 
+     if (motionType == MTYPE_JOINT) me += Float.toString(speed * 100) + "%";
+     else me += Integer.toString((int)speed) + "mm/s";
+     if (termination == 0) me += "FINE";
+     else me += "CONT" + (int)(termination*100);
      return me;
   } // end toString()
   

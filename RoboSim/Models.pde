@@ -98,7 +98,7 @@ public class ArmModel {
   public ArmModel(int in) {
     type = in;
     if (type == ARM_TEST) {
-      motorSpeed = 255.0 / 60.0; // speed in mm divided by the framerate
+      motorSpeed = 255.0; // speed in mm
       Model base = new Model("Base.STL", color(180, 180, 180));
       base.rotations[1] = true;
       base.jointRanges[1].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
@@ -119,7 +119,7 @@ public class ArmModel {
       segments.add(link3);
     } else if (type == ARM_STANDARD) {
       // TODO: FILL IN PROPER JOINT RESTRICTION VALUES.
-      motorSpeed = 255.0 / 60.0; // speed in mm divided by the framerate
+      motorSpeed = 4000.0; // speed in mm
       Model base = new Model("ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
       base.rotations[1] = true;
       base.jointRanges[1].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));

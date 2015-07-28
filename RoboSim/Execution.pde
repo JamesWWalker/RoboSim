@@ -15,15 +15,15 @@ int interMotionIdx = -1;
 void createTestProgram() {
   Program program = new Program("Test Program");
   MotionInstruction instruction =
-    new MotionInstruction(MTYPE_LINEAR, 0, true, 1.0, TERM_CONT100);
+    new MotionInstruction(MTYPE_LINEAR, 0, true, 4000, 1.0);
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 1, true, 1.0, TERM_CONT75);
+  instruction = new MotionInstruction(MTYPE_LINEAR, 1, true, 4000, 0.75);
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 2, true, 1.0, TERM_CONT50);
+  instruction = new MotionInstruction(MTYPE_LINEAR, 2, true, 4000, 0.5);
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 3, true, 0.25, TERM_CONT0);
+  instruction = new MotionInstruction(MTYPE_LINEAR, 3, true, 1000, 0);
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 4, true, 0.25, TERM_FINE);
+  instruction = new MotionInstruction(MTYPE_LINEAR, 4, true, 1000, 0);
   program.addInstruction(instruction);
   pr[0] = new PVector(575, 300, 50);
   pr[1] = new PVector(625, 225, 50);
@@ -37,30 +37,30 @@ void createTestProgram() {
   
   Program program2 = new Program("Test Program 2");
   MotionInstruction instruction2 =
-    new MotionInstruction(MTYPE_LINEAR, 0, true, 1.0, TERM_CONT100);
+    new MotionInstruction(MTYPE_LINEAR, 0, true, 1.0, 1.0);
   program2.addInstruction(instruction2);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 1, true, 1.0, TERM_CONT75);
+  instruction = new MotionInstruction(MTYPE_LINEAR, 1, true, 1.0, 0.75);
   programs.add(program2);
   //currentProgram = program;
   
   Program program3 = new Program("Circular Test");
   MotionInstruction instruction3 =
-    new MotionInstruction(MTYPE_LINEAR, 0, true, 1.0, TERM_FINE);
+    new MotionInstruction(MTYPE_LINEAR, 0, true, 1.0, 0);
   program3.addInstruction(instruction3);
-  instruction3 = new MotionInstruction(MTYPE_CIRCULAR, 1, true, 1.0, TERM_FINE);
+  instruction3 = new MotionInstruction(MTYPE_CIRCULAR, 1, true, 1.0, 0);
   program3.addInstruction(instruction3);
-  instruction3 = new MotionInstruction(MTYPE_LINEAR, 2, true, 1.0, TERM_FINE);
+  instruction3 = new MotionInstruction(MTYPE_LINEAR, 2, true, 1.0, 0);
   program3.addInstruction(instruction3);
-  instruction3 = new MotionInstruction(MTYPE_LINEAR, 3, true, 0.25, TERM_CONT0);
+  instruction3 = new MotionInstruction(MTYPE_LINEAR, 3, true, 0.25, 0);
   program3.addInstruction(instruction3);
   programs.add(program3);
   //currentProgram = program3;
   
   Program program4 = new Program("New Arm Test");
   MotionInstruction instruction4 =
-    new MotionInstruction(MTYPE_LINEAR, 5, true, 1.0, TERM_FINE);
+    new MotionInstruction(MTYPE_LINEAR, 5, true, 1.0, 0);
   program4.addInstruction(instruction4);
-  instruction4 = new MotionInstruction(MTYPE_LINEAR, 6, true, 1.0, TERM_FINE);
+  instruction4 = new MotionInstruction(MTYPE_LINEAR, 6, true, 1.0, 0);
   program4.addInstruction(instruction4);
   programs.add(program4);
   //currentProgram = program4;
@@ -392,15 +392,6 @@ boolean executeMotion(ArmModel model, float speedMult) {
 } // end execute linear motion
 
 
-float getContinuousPercentage(int term) {
-  if (term == TERM_CONT50) return 0.5;
-  else if (term == TERM_CONT75) return 0.75;
-  else if (term == TERM_CONT100) return 1.0;
-  return 0;
-}
-
-
-
 PVector vectorConvertTo(PVector point, PVector xAxis,
                         PVector yAxis, PVector zAxis)
 {
@@ -600,7 +591,7 @@ boolean executeProgram(Program program, ArmModel model) {
       if (instruction.getMotionType() == MTYPE_LINEAR ||
           instruction.getMotionType() == MTYPE_JOINT)
       {
-        if (instruction.getTerminationType() == TERM_FINE) {
+        if (instruction.getTermination() == 0) {
           beginNewLinearMotion(model, start, instruction.getVector(program));
         } else {
           PVector nextPoint = null;
@@ -613,13 +604,8 @@ boolean executeProgram(Program program, ArmModel model) {
           }
           if (nextPoint == null) {
             beginNewLinearMotion(model, start, instruction.getVector(program));
-          } else {
-            float percentage = getContinuousPercentage(instruction.getTerminationType());
-            if (percentage <= 0) beginNewLinearMotion(
-                                 model, start, instruction.getVector(program));
-            else beginNewContinuousMotion(model, start, instruction.getVector(program),
-                                          nextPoint, percentage);
-          }
+          } else beginNewContinuousMotion(model, start, instruction.getVector(program),
+                                          nextPoint, instruction.getTermination());
         } // end if termination type is continuous
       } else if (instruction.getMotionType() == MTYPE_CIRCULAR) {
         // If it is a circular instruction, the current instruction holds the intermediate point.
@@ -641,7 +627,7 @@ boolean executeProgram(Program program, ArmModel model) {
       
     } else { // continue executing current instruction
     
-      executingInstruction = !(executeMotion(model, instruction.speed));
+      executingInstruction = !(executeMotion(model, instruction.getSpeedForExec(model)));
       if (!executingInstruction) {
         currentInstruction++;
         if (currentInstruction >= program.getInstructions().size()) return true;
