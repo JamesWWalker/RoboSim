@@ -10,7 +10,9 @@ final int OFF = 0, ON = 1;
 final int NONE = 0, 
           PROGRAM_NAV = 1, 
           INSTRUCTION_NAV = 2,
-          INSTRUCTION_EDIT = 3;
+          INSTRUCTION_EDIT = 3,
+          SET_INSTRUCTION_SPEED = 4,
+          SET_INSTRUCTION_REGISTER = 5;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
@@ -36,6 +38,9 @@ Button bt_show, bt_hide,
        bt_rotate_shrink, bt_rotate_normal
        ;
 Textlabel fn_info, num_info;
+
+int setSpeed; // for setting the speed of instructions
+String workingNum; // when entering a number with the number keys
 
 // display on screen
 ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>(); // display list of programs or motion instructions
@@ -980,73 +985,115 @@ public void show(int theValue){
 }
 
 public void NUM0(int theValue){
-   if (NUM_MODE == ON){
+   /*if (NUM_MODE == ON){
       nums.add(0);
+   } /* */
+   if (mode == SET_INSTRUCTION_REGISTER) {
+     workingNum += "0";
+     options.set(1, workingNum);
+     updateScreen(color(255,0,0), color(0,0,0));
    }
-   updateScreen(color(255,0,0), color(0,0,0));
+   
 }
 
 public void NUM1(int theValue){
-   println("NUM_MODE="+NUM_MODE+" nums.size()="+nums.size());
+   /*println("NUM_MODE="+NUM_MODE+" nums.size()="+nums.size());
    
    if (NUM_MODE == ON){
       nums.add(1);
+   } /* */
+   if (mode == SET_INSTRUCTION_REGISTER) {
+     workingNum += "1";
+     options.set(1, workingNum);
+     updateScreen(color(255,0,0), color(0,0,0));
    }
-   updateScreen(color(255,0,0), color(0,0,0));}
+}
 
 public void NUM2(int theValue){
-   if (NUM_MODE == ON){
+   /*if (NUM_MODE == ON){
       nums.add(2);
+   } /* */
+   if (mode == SET_INSTRUCTION_REGISTER) {
+     workingNum += "2";
+     options.set(1, workingNum);
+     updateScreen(color(255,0,0), color(0,0,0));
    }
-   updateScreen(color(255,0,0), color(0,0,0));
 }
 
 public void NUM3(int theValue){
-   if (NUM_MODE == ON){
+   /*if (NUM_MODE == ON){
       nums.add(3);
+   } /* */
+   if (mode == SET_INSTRUCTION_REGISTER) {
+     workingNum += "3";
+     options.set(1, workingNum);
+     updateScreen(color(255,0,0), color(0,0,0));
    }
-   updateScreen(color(255,0,0), color(0,0,0));
 }
 public void NUM4(int theValue){
-   if (NUM_MODE == ON){
+   /*if (NUM_MODE == ON){
       nums.add(4);
+   } /* */
+   if (mode == SET_INSTRUCTION_REGISTER) {
+     workingNum += "4";
+     options.set(1, workingNum);
+     updateScreen(color(255,0,0), color(0,0,0));
    }
-   updateScreen(color(255,0,0), color(0,0,0));
 }
 
 public void NUM5(int theValue){
-   if (NUM_MODE == ON){
+   /*if (NUM_MODE == ON){
       nums.add(5);
+   } /* */
+   if (mode == SET_INSTRUCTION_REGISTER) {
+     workingNum += "5";
+     options.set(1, workingNum);
+     updateScreen(color(255,0,0), color(0,0,0));
    }
-   updateScreen(color(255,0,0), color(0,0,0));
 }
 
 public void NUM6(int theValue){
-   if (NUM_MODE == ON){
+   /*if (NUM_MODE == ON){
       nums.add(6);
+   } /* */
+   if (mode == SET_INSTRUCTION_REGISTER) {
+     workingNum += "6";
+     options.set(1, workingNum);
+     updateScreen(color(255,0,0), color(0,0,0));
    }
-   updateScreen(color(255,0,0), color(0,0,0));
 }
 
 public void NUM7(int theValue){
-   if (NUM_MODE == ON){
+   /*if (NUM_MODE == ON){
       nums.add(7);
+   } /* */
+   if (mode == SET_INSTRUCTION_REGISTER) {
+     workingNum += "7";
+     options.set(1, workingNum);
+     updateScreen(color(255,0,0), color(0,0,0));
    }
-   updateScreen(color(255,0,0), color(0,0,0));
 }
 
 public void NUM8(int theValue){
-   if (NUM_MODE == ON){
+   /*if (NUM_MODE == ON){
       nums.add(8);
+   } /* */
+   if (mode == SET_INSTRUCTION_REGISTER) {
+     workingNum += "8";
+     options.set(1, workingNum);
+     updateScreen(color(255,0,0), color(0,0,0));
    }
-   updateScreen(color(255,0,0), color(0,0,0));
 }
 
 public void NUM9(int theValue){
-   if (NUM_MODE == ON){
+   /*if (NUM_MODE == ON){
       nums.add(9);
+   } /* */
+   if (mode == SET_INSTRUCTION_REGISTER) {
+     workingNum += "9";
+     options.set(1, workingNum);
+     updateScreen(color(255,0,0), color(0,0,0));
    }
-   updateScreen(color(255,0,0), color(0,0,0));
 }
 
 public void PERIOD(int theValue){
@@ -1170,6 +1217,12 @@ public void lt(int theValue){
           mode = INSTRUCTION_NAV;
           lt(1);
           break;
+      case SET_INSTRUCTION_SPEED:
+          setSpeed -= 5;
+          if (setSpeed < 5) setSpeed = 5;
+          options.set(1, String.valueOf(setSpeed) + "%");
+          updateScreen(color(255,0,0), color(0,0,0));
+          break;
    }
    
 }
@@ -1192,6 +1245,12 @@ public void rt(int theValue){
       case INSTRUCTION_EDIT:
           mode = INSTRUCTION_NAV;
           rt(1);
+          break;
+      case SET_INSTRUCTION_SPEED:
+          setSpeed += 5;
+          if (setSpeed > 100) setSpeed = 100;
+          options.set(1, String.valueOf(setSpeed) + "%");
+          updateScreen(color(255,0,0), color(0,0,0));
           break;
    }
 }
@@ -1239,7 +1298,7 @@ public void f4(int theValue){
       case INSTRUCTION_NAV:
          //MotionInstruction m = (MotionInstruction) programs.get(select_program).getInstructions().get(active_row);
          switch (active_col){
-             case 0:
+             case 0: // motion type
                 options = new ArrayList<String>();
                 options.add("1.JOINT");
                 options.add("2.LINEAR");
@@ -1249,13 +1308,36 @@ public void f4(int theValue){
                 mode = INSTRUCTION_EDIT;
                 which_option = 0;
                 break;
-             case 1:
-                //NUM_MODE = ON; 
-                break;
-             case 2:
+             case 1: // register type
+                options = new ArrayList<String>();
+                options.add("1.LOCAL(P)");
+                options.add("2.GLOBAL(PR)");
                 //NUM_MODE = ON;
+                select_instruction = active_instruction;
+                mode = INSTRUCTION_EDIT;
+                which_option = 0;
                 break;
-             case 3:
+             case 2: // register
+                select_instruction = active_instruction;
+                options = new ArrayList<String>();
+                options.add("Use number keys to enter a register number (0-999)");
+                workingNum = "";
+                options.add(workingNum);
+                mode = SET_INSTRUCTION_REGISTER;
+                which_option = 0;
+                break;
+             case 3: // speed
+                select_instruction = active_instruction;
+                options = new ArrayList<String>();
+                options.add("Use left and right arrow keys to adjust speed");
+                MotionInstruction castIns = (MotionInstruction)(programs.get(select_program).getInstructions().get(select_instruction));
+                float tempSpeed = castIns.getSpeed();
+                setSpeed = (int)(tempSpeed * 100);
+                options.add(String.valueOf(setSpeed) + "%");
+                mode = SET_INSTRUCTION_SPEED;
+                which_option = 0;
+                break;
+             case 4: // termination type
                 options = new ArrayList<String>();
                 options.add("1.FINE");
                 options.add("2.CONT0");
@@ -1320,7 +1402,7 @@ public void ENTER(int theValue){
          println("select_instruction="+select_instruction);
          MotionInstruction m = (MotionInstruction)current_p.getInstructions().get(select_instruction);
          switch (active_col){
-            case 0:
+            case 0: // motion type
                if (which_option == 0){
                   m.setMotionType(MTYPE_JOINT);
                }else if (which_option == 1){
@@ -1329,7 +1411,11 @@ public void ENTER(int theValue){
                   m.setMotionType(MTYPE_CIRCULAR);
                }
                break;
-            case 1:
+            case 1: // register type
+               if (which_option == 0) m.setGlobal(false);
+               else m.setGlobal(true);
+               break;
+            case 2: // register
                try{
                   String input = "";
                   for(int i=0;i<nums.size();i++){
@@ -1349,36 +1435,9 @@ public void ENTER(int theValue){
                   updateScreen(color(255,0,0), color(0,0,0));
                }
                break;
-            case 2:
-               try{
-                  String input = "";
-                  for(int i=0;i<nums.size();i++){
-                     if (nums.get(i) == -1){
-                        input += ".";
-                     }else{
-                        input += nums.get(i).toString();
-                     }
-                  }
-                  float sp = Float.parseFloat(input);
-                  if (sp >= 0 && sp <= 1){
-                     m.setSpeed(sp);
-                     NUM_MODE = OFF;
-                  }else{
-                     num_info.setText("Invalid input")
-                             ;
-                     nums = new ArrayList<Integer>();
-                     clearNums();
-                     updateScreen(color(255,0,0), color(0,0,0));
-                  }
-               }catch (NumberFormatException ex){
-                  num_info.setText("Invalid input")
-                             ;
-                  nums = new ArrayList<Integer>();
-                  clearNums();
-                  updateScreen(color(255,0,0), color(0,0,0));
-               }
+            case 3: // speed
                break;
-            case 3:
+            case 4: // termination type
                if (which_option == 0){
                   m.setTerminationType(TERM_FINE);
                }else if (which_option == 1){
@@ -1402,7 +1461,30 @@ public void ENTER(int theValue){
          clearNums();
          updateScreen(color(255,0,0), color(0,0,0));
          break;
-         
+      case SET_INSTRUCTION_SPEED:
+         float tempSpeed = ((float)setSpeed/100.0);
+         MotionInstruction castIns = (MotionInstruction)(programs.get(select_program).getInstructions().get(select_instruction));
+         castIns.setSpeed(tempSpeed);
+         loadInstructions(active_program);
+         mode = INSTRUCTION_NAV;
+         options = new ArrayList<String>();
+         which_option = -1;
+         clearOptions();
+         updateScreen(color(255,0,0), color(0,0,0));
+         break;
+      case SET_INSTRUCTION_REGISTER:
+         int tempRegister = Integer.parseInt(workingNum);
+         if (tempRegister >= 0 && tempRegister < pr.length) {
+           castIns = (MotionInstruction)(programs.get(select_program).getInstructions().get(select_instruction));
+           castIns.setRegister(tempRegister);
+         }
+         loadInstructions(active_program);
+         mode = INSTRUCTION_NAV;
+         options = new ArrayList<String>();
+         which_option = -1;
+         clearOptions();
+         updateScreen(color(255,0,0), color(0,0,0));
+         break;
    }
 }
 
@@ -1486,7 +1568,6 @@ public void rotate_shrink(int theValue){
 }
 
 
-// ADDED BY JAMES: JOINT BUTTONS
 public void JOINT1_NEG(int theValue) {
   if (armModel.segments.size() >= 1) {
     Model model = armModel.segments.get(0);
@@ -1630,7 +1711,6 @@ public void JOINT6_POS(int theValue) {
     }
   }
 }
-// END JAMES ADDITION
 
 
 // update what displayed on screen
@@ -1652,6 +1732,8 @@ public void updateScreen(color active, color normal){
          next_py += 14;   
          break;
       case INSTRUCTION_EDIT:
+      case SET_INSTRUCTION_SPEED:
+      case SET_INSTRUCTION_REGISTER:
          cp5.addTextlabel("-1")
             .setText(programs.get(select_program).getName()) 
             .setPosition(next_px, next_py)
@@ -1707,6 +1789,8 @@ public void updateScreen(color active, color normal){
          next_py += 14;   
          break;
       case INSTRUCTION_EDIT:
+      case SET_INSTRUCTION_SPEED:
+      case SET_INSTRUCTION_REGISTER:
          cp5.addTextlabel("-2")
             .setText("End") 
             .setPosition(next_px, next_py)
@@ -1875,10 +1959,10 @@ public void loadInstructions(int programID){
       }
       
       // load register no, speed and termination type
-      String temp = "P["+a.getRegister()+"]";
-      m.add(temp);
-      temp = a.getSpeed() * 100 + "%";
-      m.add(temp);
+      if (a.getGlobal()) m.add("PR[");
+      else m.add("P[");
+      m.add(a.getRegister()+"]");
+      m.add(a.getSpeed() * 100 + "%");
       switch (a.getTerminationType()){
          case TERM_FINE:
             m.add("FINE");

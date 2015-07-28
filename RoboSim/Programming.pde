@@ -6,12 +6,12 @@ final float SPEED_FINE = 0.0025;
 final float SPEED_VFINE = 0.001;
 
 
-PVector[] pr = new PVector[999]; // global registers
+PVector[] pr = new PVector[1000]; // global registers
 
 public class Program {
   private String name;
   private ArrayList<Instruction> instructions;
-  private PVector[] p = new PVector[999]; // local registers
+  private PVector[] p = new PVector[1000]; // local registers
   
   public Program(String theName) {
     instructions = new ArrayList<Instruction>();

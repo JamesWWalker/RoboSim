@@ -46,7 +46,7 @@ public void setup() {
   size(1200, 800, P3D);
   cp5 = new ControlP5(this);
   gui();
-  for (int n = 0; n < pr.length; n++) pr[n] = new PVector(); //
+  for (int n = 0; n < pr.length; n++) pr[n] = new PVector();
   armModel = new ArmModel(ARM_STANDARD);
   // TESTING CODE
   createTestProgram();
@@ -118,7 +118,7 @@ public void draw() {
 
   hint(DISABLE_DEPTH_TEST);
   
-  println(frameRate + " fps");
+  //println(frameRate + " fps");
 }
 
 void applyCamera() {
