@@ -44,7 +44,8 @@ Textlabel fn_info, num_info;
 String workingNum; // when entering a number with the number keys
 String workingNumSuffix;
 boolean speedInPercentage;
-final int ITEMS_TO_SHOW = 8; // how many items (instructions, programs, etc.) to show onscreen at a time
+final int ITEMS_TO_SHOW = 8; // how many instructions to show onscreen at a time
+final int PROGRAMS_TO_SHOW = 18; // how many programs to show onscreen at a time
 
 // display on screen
 ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>(); // display list of programs or motion instructions
@@ -1148,28 +1149,13 @@ public void PERIOD(int theValue){
 }
 
 public void se(int theValue){
-   mode = NONE;
-   options = new ArrayList<String>(); // clear options
-   nums = new ArrayList<Integer>(); // clear numbers
-   clearScreen();
-   
-   int size = programs.size();
-   if (size <= 0){
-      programs.add(new Program("My Program 1"));
-   }
-   
-   contents = new ArrayList<ArrayList<String>>();  
-   for(int i=0;i<size;i++){
-      ArrayList<String> temp = new ArrayList<String>();
-      temp.add(programs.get(i).getName());
-      contents.add(temp);
-   }
-  
-   updateScreen(color(255,0,0), color(0,0,0));
-   mode = PROGRAM_NAV;
    active_program = 0;
    active_instruction = 0;
-   
+   active_row = 0;
+   mode = PROGRAM_NAV;
+   clearScreen();
+   loadPrograms();
+   updateScreen(color(255,0,0), color(0,0,0));
 }
 
 public void up(int theValue){
@@ -1177,13 +1163,12 @@ public void up(int theValue){
       case PROGRAM_NAV:
          options = new ArrayList<String>();
          clearOptions();
-         if (active_row == 0){
-             // does nothing
-         }else{
-             active_row -= 1;
-             active_col = 0;
-             active_program -= 1;
+         if (active_program > 0) {
+           active_program--;
+           select_program = active_program;
+           active_col = 0;
          }
+         loadPrograms();
          break;
       case INSTRUCTION_NAV:
          options = new ArrayList<String>();
@@ -1212,19 +1197,18 @@ public void dn(int theValue){
       case PROGRAM_NAV:
          options = new ArrayList<String>();
          clearOptions();
-         if (active_row == contents.size()-1){
-             // does nothing
-         }else{
-             active_row += 1;
-             active_col = 0;
-             active_program += 1;
+         if (active_program < programs.size()-1) {
+           active_program++;
+           select_program = active_program;
+           active_col = 0;
          }
+         loadPrograms();
          break;
       case INSTRUCTION_NAV:
          options = new ArrayList<String>();
          clearOptions();
          int size = programs.get(select_program).getInstructions().size();
-         if (active_instruction < size-2) {
+         if (active_instruction < size-1) {
            active_instruction++;
            select_instruction = active_instruction;
            active_col = 0;
@@ -1324,7 +1308,6 @@ public void f1(int theValue){
 }
 
 public void f4(int theValue){
-   mode = INSTRUCTION_NAV;
    switch (mode){
       case INSTRUCTION_NAV:
          //MotionInstruction m = (MotionInstruction) programs.get(select_program).getInstructions().get(active_row);
@@ -1740,6 +1723,8 @@ public void updateScreen(color active, color normal){
    int next_px = display_px;
    int next_py = display_py;
    
+   if (cp5.getController("-1") != null) cp5.getController("-1").hide();
+   
    // display the name of the program that is being edited 
    switch (mode){
       case INSTRUCTION_NAV:
@@ -1771,12 +1756,12 @@ public void updateScreen(color active, color normal){
    }
    
    // clear main list
-   for (int i = 0; i < ITEMS_TO_SHOW*7; i++) {
+   for (int i = 0; i < PROGRAMS_TO_SHOW*7; i++) {
      if (cp5.getController(Integer.toString(i)) != null){
            cp5.getController(Integer.toString(i))
               .hide()
               ;
-      }   
+      }
    }
 
    // display the main list on screen
@@ -1811,27 +1796,19 @@ public void updateScreen(color active, color normal){
    // display 'END' at the end of the program 
    switch (mode){
       case INSTRUCTION_NAV:
-         cp5.addTextlabel("-2")
+         /*cp5.addTextlabel("-2")
             .setText("End") 
             .setPosition(next_px, next_py)
             .setColorValue(normal)
             .moveTo(g1)
             ;
          next_px = display_px;
-         next_py += 14;   
+         next_py += 14;   .* */
          break;
       case INSTRUCTION_EDIT:
       case SET_INSTRUCTION_SPEED:
       case SET_INSTRUCTION_REGISTER:
       case SET_INSTRUCTION_TERMINATION:
-         cp5.addTextlabel("-2")
-            .setText("End") 
-            .setPosition(next_px, next_py)
-            .setColorValue(normal)
-            .moveTo(g1)
-            ;
-         next_px = display_px;
-         next_py += 14; 
          break;
    }
    
@@ -1977,7 +1954,7 @@ public void loadInstructions(int programID){
    
    int start = active_instruction;
    int end = start + ITEMS_TO_SHOW;
-   if (end >= size-1) end = size-1;
+   if (end >= size) end = size;
    for(int i=start;i<end;i++){
       ArrayList<String> m = new ArrayList<String>();
       m.add(Integer.toString(i+1) + ")");
@@ -2005,8 +1982,34 @@ public void loadInstructions(int programID){
       else m.add("CONT" + (int)(a.getTermination()*100));
       contents.add(m);
       println("hi " + m.toString());
+   } 
+}
+
+
+void loadPrograms() {
+   options = new ArrayList<String>(); // clear options
+   nums = new ArrayList<Integer>(); // clear numbers
+   
+   if (cp5.getController("-2") != null) cp5.getController("-2").hide();
+   fn_info.setText("");
+   
+   int size = programs.size();
+   if (size <= 0){
+      programs.add(new Program("My Program 1"));
    }
    
+   active_instruction = 0;
+   active_row = 0;
+   
+   contents = new ArrayList<ArrayList<String>>();  
+   int start = active_program;
+   int end = start + PROGRAMS_TO_SHOW;
+   if (end >= size) end = size;
+   for(int i=start;i<end;i++){
+      ArrayList<String> temp = new ArrayList<String>();
+      temp.add(programs.get(i).getName());
+      contents.add(temp);
+   }
 }
 
 
