@@ -94,6 +94,7 @@ public class ArmModel {
   public int type;
   //public boolean calculatingArms = false, movingArms = false;
   public float motorSpeed;
+  public float[] linearMoveSpeeds = new float[3];
   
   public ArmModel(int in) {
     type = in;
@@ -280,19 +281,44 @@ public class ArmModel {
     }
   }
   
-  void moveJoints() {
-    for (Model model : segments) {
-      for (int n = 0; n < 3; n++) {
-        if (model.rotations[n]) {
-          float trialAngle = model.currentRotations[n] + 0.02 * model.jointsMoving[n];
-          trialAngle = clampAngle(trialAngle);
-          if (model.anglePermitted(n, trialAngle))
-            model.currentRotations[n] = trialAngle;
-          else model.jointsMoving[n] = 0;
+  void executeLiveMotion() {
+    if (curCoordFrame == CURCOORD_JOINT) {
+      for (Model model : segments) {
+        for (int n = 0; n < 3; n++) {
+          if (model.rotations[n]) {
+            float trialAngle = model.currentRotations[n] + 0.02 * model.jointsMoving[n];
+            trialAngle = clampAngle(trialAngle);
+            if (model.anglePermitted(n, trialAngle))
+              model.currentRotations[n] = trialAngle;
+            else model.jointsMoving[n] = 0;
+          }
         }
       }
+    } else if (curCoordFrame == CURCOORD_WORLD) {
+      // FLAG
+      if (linearMoveSpeeds[0] != 0 || linearMoveSpeeds[1] != 0 || linearMoveSpeeds[2] != 0) {
+        PVector startFrom = new PVector(0,0,0);
+        if (intermediatePositions.size() == 1) startFrom = intermediatePositions.get(0);
+        else {
+          pushMatrix();
+          applyCamera();
+          startFrom = calculateEndEffectorPosition(armModel, false);
+          popMatrix();
+        }
+        intermediatePositions.clear();
+        float distance = motorSpeed/60.0 * liveSpeed;
+        intermediatePositions.add(new PVector(startFrom.x + linearMoveSpeeds[0] * distance,
+                                              startFrom.y + linearMoveSpeeds[1] * distance,
+                                              startFrom.z + linearMoveSpeeds[2] * distance));
+        int result = calculateIK(this, intermediatePositions.get(0), 720, 25);
+        // TODO: FLAG: MIGHT NEED TO UPDATE THIS LATER TO ACCOUNT FOR FAILURE POSSIBILITY.
+        while (result != EXEC_SUCCESS) {
+         result = calculateIK(this, intermediatePositions.get(0), 720, 25);
+        }
+        instantRotation();
+      }
     }
-  } // end moveJoints
+  } // end execute live motion
   
 } // end ArmModel class
 

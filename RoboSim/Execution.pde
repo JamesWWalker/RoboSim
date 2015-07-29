@@ -11,6 +11,10 @@ int motionFrameCounter = 0;
 float DISTANCE_BETWEEN_POINTS = 5.0;
 int interMotionIdx = -1;
 
+final int CURCOORD_JOINT = 0, CURCOORD_WORLD = 1, CURCOORD_TOOL = 2, CURCOORD_USER = 3;
+int curCoordFrame = CURCOORD_JOINT;
+float liveSpeed = 0.1;
+
 
 void createTestProgram() {
   Program program = new Program("Test Program");
@@ -78,10 +82,22 @@ void createTestProgram() {
 PVector convertWorldToNative(PVector in) {
   pushMatrix();
   applyCamera();
-  translate(-in.x, -in.z, in.y);
-  PVector out = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
+  float outx = modelX(0,0,0)-in.x;
+  float outy = modelY(0,0,0)-in.z;
+  float outz = -(modelZ(0,0,0)-in.y);
+  popMatrix(); /* */
+  return new PVector(outx, outy, outz);
+}
+
+
+PVector convertNativeToWorld(PVector in) {
+  pushMatrix();
+  applyCamera();
+  float outx = modelX(0,0,0)-in.x;
+  float outy = in.z+modelZ(0,0,0);
+  float outz = modelY(0,0,0)-in.y;
   popMatrix();
-  return out;
+  return new PVector(outx, outy, outz);
 }
 
 
@@ -249,7 +265,7 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
 
 
 void calculateIntermediatePositions(PVector start, PVector end) {
-  intermediatePositions = new ArrayList<PVector>();
+  intermediatePositions.clear();
   float mu = 0;
   int numberOfPoints = (int)
     (dist(start.x, start.y, start.z, end.x, end.y, end.z) / DISTANCE_BETWEEN_POINTS);
@@ -279,7 +295,7 @@ void calculateContinuousPositions(PVector p1, PVector p2, PVector p3, float perc
   percentage /= 2;
   percentage = 1 - percentage;
   percentage = constrain(percentage, 0, 1);
-  intermediatePositions = new ArrayList<PVector>();
+  intermediatePositions.clear();
   ArrayList<PVector> secondaryTargets = new ArrayList<PVector>();
   float mu = 0;
   int numberOfPoints = 0;

@@ -1449,6 +1449,25 @@ public void ITEM(int theValue) {
 }
 
 
+public void COORD(int theValue) {
+  // TODO: enable cycling through all the kinds of coordinate frames
+  curCoordFrame++;
+  if (curCoordFrame > CURCOORD_WORLD) curCoordFrame = CURCOORD_JOINT;
+}
+
+
+public void SPEEDUP(int theValue) {
+  if (liveSpeed < 0.5) liveSpeed += 0.05;
+  else if (liveSpeed < 1) liveSpeed += 0.1;
+}
+
+
+public void SLOWDOWN(int theValue) {
+  if (liveSpeed > 0.5) liveSpeed -= 0.1;
+  else if (liveSpeed > 0) liveSpeed -= 0.05;
+}
+
+
 /* navigation buttons */
 // zoomin button when interface is at full size
 public void zoomin_normal(int theValue){
@@ -1529,148 +1548,96 @@ public void rotate_shrink(int theValue){
 }
 
 
-public void JOINT1_NEG(int theValue) {
-  if (armModel.segments.size() >= 1) {
-    Model model = armModel.segments.get(0);
-    for (int n = 0; n < 3; n++) {
-      if (model.rotations[n]) {
-        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = -1;
-        else model.jointsMoving[n] = 0;
+// axis: 0 = -x, 1= +x, 2 = -y, 3 = +y, 4 = -z, 5 = +z
+public void activateLiveMotion(int joint, int dir, int axis) {
+  if (curCoordFrame == CURCOORD_JOINT) {
+    if (armModel.segments.size() >= joint+1) {
+      Model model = armModel.segments.get(joint);
+      for (int n = 0; n < 3; n++) {
+        if (model.rotations[n]) {
+          if (model.jointsMoving[n] == 0) model.jointsMoving[n] = dir;
+          else model.jointsMoving[n] = 0;
+        }
       }
     }
+  } else if (curCoordFrame == CURCOORD_WORLD) {
+    switch (axis) {
+      // account for different axes in native Processing vs. RoboSim world coordinate systems
+      case 0: 
+        if (armModel.linearMoveSpeeds[0] == 0) armModel.linearMoveSpeeds[0] =  1;
+        else armModel.linearMoveSpeeds[0] = 0;
+        break;
+      case 1:
+        if (armModel.linearMoveSpeeds[0] == 0) armModel.linearMoveSpeeds[0] = -1;
+        else armModel.linearMoveSpeeds[0] = 0;
+        break;
+      case 2:
+        if (armModel.linearMoveSpeeds[2] == 0) armModel.linearMoveSpeeds[2] = -1;
+        else armModel.linearMoveSpeeds[2] = 0;
+        break;
+      case 3:
+        if (armModel.linearMoveSpeeds[2] == 0) armModel.linearMoveSpeeds[2] =  1;
+        else armModel.linearMoveSpeeds[2] = 0;
+        break;
+      case 4:
+        if (armModel.linearMoveSpeeds[1] == 0) armModel.linearMoveSpeeds[1] =  1;
+        else armModel.linearMoveSpeeds[1] = 0;
+        break;
+      case 5:
+        if (armModel.linearMoveSpeeds[1] == 0) armModel.linearMoveSpeeds[1] = -1;
+        else armModel.linearMoveSpeeds[1] = 0;
+        break;
+    }
   }
+} // end activateLiveMotion
+
+
+public void JOINT1_NEG(int theValue) {
+  activateLiveMotion(0, -1, 0);
 }
 
 public void JOINT1_POS(int theValue) {
-  if (armModel.segments.size() >= 1) {
-    Model model = armModel.segments.get(0);
-    for (int n = 0; n < 3; n++) {
-      if (model.rotations[n]) {
-        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = 1;
-        else model.jointsMoving[n] = 0;
-      }
-    }
-  }
+  activateLiveMotion(0, 1, 1);
 }
 
 public void JOINT2_NEG(int theValue) {
-  if (armModel.segments.size() >= 2) {
-    Model model = armModel.segments.get(1);
-    for (int n = 0; n < 3; n++) {
-      if (model.rotations[n]) {
-        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = -1;
-        else model.jointsMoving[n] = 0;
-      }
-    }
-  }
+  activateLiveMotion(1, -1, 2);
 }
 
 public void JOINT2_POS(int theValue) {
-  if (armModel.segments.size() >= 2) {
-    Model model = armModel.segments.get(1);
-    for (int n = 0; n < 3; n++) {
-      if (model.rotations[n]) {
-        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = 1;
-        else model.jointsMoving[n] = 0;
-      }
-    }
-  }
+  activateLiveMotion(1, 1, 3);
 }
 
 public void JOINT3_NEG(int theValue) {
-  if (armModel.segments.size() >= 3) {
-    Model model = armModel.segments.get(2);
-    for (int n = 0; n < 3; n++) {
-      if (model.rotations[n]) {
-        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = -1;
-        else model.jointsMoving[n] = 0;
-      }
-    }
-  }
+  activateLiveMotion(2, -1, 4);
 }
 
 public void JOINT3_POS(int theValue) {
-  if (armModel.segments.size() >= 3) {
-    Model model = armModel.segments.get(2);
-    for (int n = 0; n < 3; n++) {
-      if (model.rotations[n]) {
-        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = 1;
-        else model.jointsMoving[n] = 0;
-      }
-    }
-  }
+  activateLiveMotion(2, 1, 5);
 }
 
 public void JOINT4_NEG(int theValue) {
-  if (armModel.segments.size() >= 4) {
-    Model model = armModel.segments.get(3);
-    for (int n = 0; n < 3; n++) {
-      if (model.rotations[n]) {
-        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = -1;
-        else model.jointsMoving[n] = 0;
-      }
-    }
-  }
+  activateLiveMotion(3, -1, 0);
 }
 
 public void JOINT4_POS(int theValue) {
-  if (armModel.segments.size() >= 4) {
-    Model model = armModel.segments.get(3);
-    for (int n = 0; n < 3; n++) {
-      if (model.rotations[n]) {
-        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = 1;
-        else model.jointsMoving[n] = 0;
-      }
-    }
-  }
+  activateLiveMotion(3, 1, 1);
 }
 
 public void JOINT5_NEG(int theValue) {
-  if (armModel.segments.size() >= 5) {
-    Model model = armModel.segments.get(4);
-    for (int n = 0; n < 3; n++) {
-      if (model.rotations[n]) {
-        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = -1;
-        else model.jointsMoving[n] = 0;
-      }
-    }
-  }
+  activateLiveMotion(4, -1, 2);
 }
 
 public void JOINT5_POS(int theValue) {
-  if (armModel.segments.size() >= 5) {
-    Model model = armModel.segments.get(4);
-    for (int n = 0; n < 3; n++) {
-      if (model.rotations[n]) {
-        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = 1;
-        else model.jointsMoving[n] = 0;
-      }
-    }
-  }
+  activateLiveMotion(4, 1, 3);
 }
 
 public void JOINT6_NEG(int theValue) {
-  if (armModel.segments.size() >= 6) {
-    Model model = armModel.segments.get(5);
-    for (int n = 0; n < 3; n++) {
-      if (model.rotations[n]) {
-        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = -1;
-        else model.jointsMoving[n] = 0;
-      }
-    }
-  }
+  activateLiveMotion(5, -1, 4);
 }
 
 public void JOINT6_POS(int theValue) {
-  if (armModel.segments.size() >= 6) {
-    Model model = armModel.segments.get(5);
-    for (int n = 0; n < 3; n++) {
-      if (model.rotations[n]) {
-        if (model.jointsMoving[n] == 0) model.jointsMoving[n] = 1;
-        else model.jointsMoving[n] = 0;
-      }
-    }
-  }
+  activateLiveMotion(5, 1, 5);
 }
 
 
