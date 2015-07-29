@@ -30,6 +30,7 @@ int shift = OFF; // Does shift button is pressed or not?
 int g1_px, g1_py; // the left-top corner of group1
 int g1_width, g1_height; // group 1's width and height
 int display_px, display_py; // the left-top corner of display screen
+int display_width = 340, display_height = 270; // height and width of display screen
 
 Group g1;
 Button bt_show, bt_hide, 
@@ -43,6 +44,7 @@ Textlabel fn_info, num_info;
 String workingNum; // when entering a number with the number keys
 String workingNumSuffix;
 boolean speedInPercentage;
+final int ITEMS_TO_SHOW = 8; // how many items (instructions, programs, etc.) to show onscreen at a time
 
 // display on screen
 ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>(); // display list of programs or motion instructions
@@ -53,7 +55,6 @@ int which_option = -1; // which option is on focus now?
 int index_contents = 0, index_options = 100, index_nums = 1000; // how many textlabels have been created for display
 
 void gui(){
-   int display_width = 340, display_height = 270;
    g1_px = 0;
    g1_py = 0;
    g1_width = 100;
@@ -1187,13 +1188,12 @@ public void up(int theValue){
       case INSTRUCTION_NAV:
          options = new ArrayList<String>();
          clearOptions();
-         if(active_row == 0){
-            // does nothing
-         }else{
-            active_row -= 1;
-            active_col = 0;
-            active_instruction -= 1;
+         if (active_instruction > 0) {
+           active_instruction--;
+           select_instruction = active_instruction;
+           active_col = 0;
          }
+         loadInstructions(select_program);
          break;
       case INSTRUCTION_EDIT:
          if (which_option == 0){
@@ -1223,13 +1223,13 @@ public void dn(int theValue){
       case INSTRUCTION_NAV:
          options = new ArrayList<String>();
          clearOptions();
-         if (active_row == contents.size()-1){
-             // does nothing
-         }else{
-             active_row += 1;
-             active_col = 0;
-             active_instruction += 1;
+         int size = programs.get(select_program).getInstructions().size();
+         if (active_instruction < size-2) {
+           active_instruction++;
+           select_instruction = active_instruction;
+           active_col = 0;
          }
+         loadInstructions(select_program);
          break;
       case INSTRUCTION_EDIT:
          if (which_option == options.size() - 1){
@@ -1770,6 +1770,15 @@ public void updateScreen(color active, color normal){
          break;
    }
    
+   // clear main list
+   for (int i = 0; i < ITEMS_TO_SHOW*7; i++) {
+     if (cp5.getController(Integer.toString(i)) != null){
+           cp5.getController(Integer.toString(i))
+              .hide()
+              ;
+      }   
+   }
+
    // display the main list on screen
    index_contents = 0;
    for(int i=0;i<contents.size();i++){
@@ -1892,7 +1901,7 @@ public void updateScreen(color active, color normal){
    next_py += 100;
    if (mode == INSTRUCTION_NAV){
           fn_info.setText("F4: CHOICE")
-                 .setPosition(next_px, next_py)
+                 .setPosition(next_px, display_py+display_height-15)
                  .setColorValue(normal)
                  .show()
                  .moveTo(g1)
@@ -1928,7 +1937,7 @@ public void clearScreen(){
       fn_info.hide();
    }
    
-  clearNums();
+   clearNums();
    
    cp5.update();
    active_row = 0;
@@ -1966,7 +1975,10 @@ public void loadInstructions(int programID){
    //TODO: TEST
    println("programID="+programID+" instructions size = "+size);
    
-   for(int i=0;i<size;i++){
+   int start = active_instruction;
+   int end = start + ITEMS_TO_SHOW;
+   if (end >= size-1) end = size-1;
+   for(int i=start;i<end;i++){
       ArrayList<String> m = new ArrayList<String>();
       m.add(Integer.toString(i+1) + ")");
       MotionInstruction a = (MotionInstruction)p.getInstructions().get(i);
@@ -1996,3 +2008,5 @@ public void loadInstructions(int programID){
    }
    
 }
+
+

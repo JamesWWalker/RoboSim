@@ -25,6 +25,8 @@ void createTestProgram() {
   program.addInstruction(instruction);
   instruction = new MotionInstruction(MTYPE_LINEAR, 4, true, 1000, 0);
   program.addInstruction(instruction);
+  for (int n = 0; n < 15; n++) program.addInstruction(
+    new MotionInstruction(MTYPE_JOINT, 1, true, 0.5, 0));
   pr[0] = new PVector(575, 300, 50);
   pr[1] = new PVector(625, 225, 50);
   pr[2] = new PVector(675, 200, 50);
