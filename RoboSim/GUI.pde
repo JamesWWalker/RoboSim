@@ -13,7 +13,8 @@ final int NONE = 0,
           INSTRUCTION_EDIT = 3,
           SET_INSTRUCTION_SPEED = 4,
           SET_INSTRUCTION_REGISTER = 5,
-          SET_INSTRUCTION_TERMINATION = 6;
+          SET_INSTRUCTION_TERMINATION = 6,
+          JUMP_TO_LINE = 7;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
@@ -989,156 +990,57 @@ public void show(int theValue){
 }
 
 public void NUM0(int theValue){
-   /*if (NUM_MODE == ON){
-      nums.add(0);
-   } /* */
-   if (mode == SET_INSTRUCTION_REGISTER || mode == SET_INSTRUCTION_TERMINATION) {
-     workingNum += "0";
-     options.set(1, workingNum);
-     updateScreen(color(255,0,0), color(0,0,0));
-   } else if (mode == SET_INSTRUCTION_SPEED) {
-     workingNum += "0";
-     options.set(1, workingNum + workingNumSuffix);
-     updateScreen(color(255,0,0), color(0,0,0));
-   }
-   
+   addNumber("0");
 }
 
 public void NUM1(int theValue){
-   /*println("NUM_MODE="+NUM_MODE+" nums.size()="+nums.size());
-   
-   if (NUM_MODE == ON){
-      nums.add(1);
-   } /* */
-   if (mode == SET_INSTRUCTION_REGISTER || mode == SET_INSTRUCTION_TERMINATION) {
-     workingNum += "1";
-     options.set(1, workingNum);
-     updateScreen(color(255,0,0), color(0,0,0));
-   } else if (mode == SET_INSTRUCTION_SPEED) {
-     workingNum += "1";
-     options.set(1, workingNum + workingNumSuffix);
-     updateScreen(color(255,0,0), color(0,0,0));
-   }
+   addNumber("1");
 }
 
 public void NUM2(int theValue){
-   /*if (NUM_MODE == ON){
-      nums.add(2);
-   } /* */
-   if (mode == SET_INSTRUCTION_REGISTER || mode == SET_INSTRUCTION_TERMINATION) {
-     workingNum += "2";
-     options.set(1, workingNum);
-     updateScreen(color(255,0,0), color(0,0,0));
-   } else if (mode == SET_INSTRUCTION_SPEED) {
-     workingNum += "2";
-     options.set(1, workingNum + workingNumSuffix);
-     updateScreen(color(255,0,0), color(0,0,0));
-   }
+   addNumber("2");
 }
 
 public void NUM3(int theValue){
-   /*if (NUM_MODE == ON){
-      nums.add(3);
-   } /* */
-   if (mode == SET_INSTRUCTION_REGISTER || mode == SET_INSTRUCTION_TERMINATION) {
-     workingNum += "3";
-     options.set(1, workingNum);
-     updateScreen(color(255,0,0), color(0,0,0));
-   } else if (mode == SET_INSTRUCTION_SPEED) {
-     workingNum += "3";
-     options.set(1, workingNum + workingNumSuffix);
-     updateScreen(color(255,0,0), color(0,0,0));
-   }
+   addNumber("3");
 }
 
 public void NUM4(int theValue){
-   /*if (NUM_MODE == ON){
-      nums.add(4);
-   } /* */
-   if (mode == SET_INSTRUCTION_REGISTER || mode == SET_INSTRUCTION_TERMINATION) {
-     workingNum += "4";
-     options.set(1, workingNum);
-     updateScreen(color(255,0,0), color(0,0,0));
-   } else if (mode == SET_INSTRUCTION_SPEED) {
-     workingNum += "4";
-     options.set(1, workingNum + workingNumSuffix);
-     updateScreen(color(255,0,0), color(0,0,0));
-   }
+   addNumber("4");
 }
 
 public void NUM5(int theValue){
-   /*if (NUM_MODE == ON){
-      nums.add(5);
-   } /* */
-   if (mode == SET_INSTRUCTION_REGISTER || mode == SET_INSTRUCTION_TERMINATION) {
-     workingNum += "5";
-     options.set(1, workingNum);
-     updateScreen(color(255,0,0), color(0,0,0));
-   } else if (mode == SET_INSTRUCTION_SPEED) {
-     workingNum += "5";
-     options.set(1, workingNum + workingNumSuffix);
-     updateScreen(color(255,0,0), color(0,0,0));
-   }
+   addNumber("5");
 }
 
 public void NUM6(int theValue){
-   /*if (NUM_MODE == ON){
-      nums.add(6);
-   } /* */
-   if (mode == SET_INSTRUCTION_REGISTER || mode == SET_INSTRUCTION_TERMINATION) {
-     workingNum += "6";
-     options.set(1, workingNum);
-     updateScreen(color(255,0,0), color(0,0,0));
-   } else if (mode == SET_INSTRUCTION_SPEED) {
-     workingNum += "6";
-     options.set(1, workingNum + workingNumSuffix);
-     updateScreen(color(255,0,0), color(0,0,0));
-   }
+   addNumber("6");
 }
 
 public void NUM7(int theValue){
-   /*if (NUM_MODE == ON){
-      nums.add(7);
-   } /* */
-   if (mode == SET_INSTRUCTION_REGISTER || mode == SET_INSTRUCTION_TERMINATION) {
-     workingNum += "7";
-     options.set(1, workingNum);
-     updateScreen(color(255,0,0), color(0,0,0));
-   } else if (mode == SET_INSTRUCTION_SPEED) {
-     workingNum += "7";
-     options.set(1, workingNum + workingNumSuffix);
-     updateScreen(color(255,0,0), color(0,0,0));
-   }
+   addNumber("7");
 }
 
 public void NUM8(int theValue){
-   /*if (NUM_MODE == ON){
-      nums.add(8);
-   } /* */
-   if (mode == SET_INSTRUCTION_REGISTER || mode == SET_INSTRUCTION_TERMINATION) {
-     workingNum += "8";
-     options.set(1, workingNum);
-     updateScreen(color(255,0,0), color(0,0,0));
-   } else if (mode == SET_INSTRUCTION_SPEED) {
-     workingNum += "8";
-     options.set(1, workingNum + workingNumSuffix);
-     updateScreen(color(255,0,0), color(0,0,0));
-   }
+   addNumber("8");
 }
 
 public void NUM9(int theValue){
-   /*if (NUM_MODE == ON){
-      nums.add(9);
-   } /* */
-   if (mode == SET_INSTRUCTION_REGISTER || mode == SET_INSTRUCTION_TERMINATION) {
-     workingNum += "9";
-     options.set(1, workingNum);
-     updateScreen(color(255,0,0), color(0,0,0));
-   } else if (mode == SET_INSTRUCTION_SPEED) {
-     workingNum += "9";
-     options.set(1, workingNum + workingNumSuffix);
-     updateScreen(color(255,0,0), color(0,0,0));
-   }
+   addNumber("9");
+}
+
+public void addNumber(String number) {
+  if (mode == SET_INSTRUCTION_REGISTER || mode == SET_INSTRUCTION_TERMINATION ||
+      mode == JUMP_TO_LINE)
+  {
+    workingNum += number;
+    options.set(1, workingNum);
+    updateScreen(color(255,0,0), color(0,0,0));
+  } else if (mode == SET_INSTRUCTION_SPEED) {
+    workingNum += number;
+    options.set(1, workingNum + workingNumSuffix);
+    updateScreen(color(255,0,0), color(0,0,0));
+  }
 }
 
 public void PERIOD(int theValue){
@@ -1490,8 +1392,34 @@ public void ENTER(int theValue){
          clearOptions();
          updateScreen(color(255,0,0), color(0,0,0));
          break;
+      case JUMP_TO_LINE:
+         active_instruction = Integer.parseInt(workingNum)-1;
+         if (active_instruction < 0) active_instruction = 0;
+         if (active_instruction >= programs.get(select_program).getInstructions().size())
+           active_instruction = programs.get(select_program).getInstructions().size()-1;
+         mode = INSTRUCTION_NAV;
+         options = new ArrayList<String>();
+         which_option = -1;
+         clearOptions();
+         loadInstructions(select_program);
+         updateScreen(color(255,0,0), color(0,0,0));
+         break;
    }
 }
+
+
+public void ITEM(int theValue) {
+  if (mode == INSTRUCTION_NAV) {
+    options = new ArrayList<String>();
+    options.add("Use number keys to enter line number to jump to");
+    workingNum = "";
+    options.add(workingNum);
+    mode = JUMP_TO_LINE;
+    which_option = 0;
+    updateScreen(color(255,0,0), color(0,0,0));
+  }
+}
+
 
 /* navigation buttons */
 // zoomin button when interface is at full size
