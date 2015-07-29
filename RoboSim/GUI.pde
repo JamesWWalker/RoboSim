@@ -14,7 +14,8 @@ final int NONE = 0,
           SET_INSTRUCTION_SPEED = 4,
           SET_INSTRUCTION_REGISTER = 5,
           SET_INSTRUCTION_TERMINATION = 6,
-          JUMP_TO_LINE = 7;
+          JUMP_TO_LINE = 7,
+          VIEW_REGISTER = 8;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
@@ -1279,6 +1280,24 @@ public void f4(int theValue){
    updateScreen(color(255,0,0), color(0,0,0));
 }
 
+public void f5(int theValue) {
+  if (mode == INSTRUCTION_NAV) {
+    Instruction ins = programs.get(select_program).getInstructions().get(select_instruction);
+    if (ins instanceof MotionInstruction) {
+      MotionInstruction castIns = (MotionInstruction)ins;      
+      Point p = castIns.getVector(programs.get(select_program));
+      options = new ArrayList<String>();
+      options.add("Data of the point in this register (press ENTER to exit):");
+      options.add("x: " + p.c.x + "  y: " + p.c.y + "  z: " + p.c.z);
+      options.add("w: " + p.a.x + "  p: " + p.a.y + "  r: " + p.a.z);
+      mode = VIEW_REGISTER;
+      which_option = 0;
+      loadInstructions(select_program);
+    }
+  }
+  updateScreen(color(255,0,0), color(0,0,0));
+}
+
 public void hd(int theValue){
 
 }
@@ -1301,6 +1320,7 @@ public void ENTER(int theValue){
          break;
       case PROGRAM_NAV:
          select_program = active_program;
+         select_instruction = active_instruction = 0;
          mode = INSTRUCTION_NAV;
          clearScreen();
          println("after clear screen");
@@ -1397,6 +1417,14 @@ public void ENTER(int theValue){
          if (active_instruction < 0) active_instruction = 0;
          if (active_instruction >= programs.get(select_program).getInstructions().size())
            active_instruction = programs.get(select_program).getInstructions().size()-1;
+         mode = INSTRUCTION_NAV;
+         options = new ArrayList<String>();
+         which_option = -1;
+         clearOptions();
+         loadInstructions(select_program);
+         updateScreen(color(255,0,0), color(0,0,0));
+         break;
+      case VIEW_REGISTER:
          mode = INSTRUCTION_NAV;
          options = new ArrayList<String>();
          which_option = -1;
@@ -1805,7 +1833,7 @@ public void updateScreen(color active, color normal){
    // display hints for function keys
    next_py += 100;
    if (mode == INSTRUCTION_NAV){
-          fn_info.setText("F4: CHOICE")
+          fn_info.setText("F4: CHOICE     F5: VIEW REG")
                  .setPosition(next_px, display_py+display_height-15)
                  .setColorValue(normal)
                  .show()

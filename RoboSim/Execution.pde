@@ -27,13 +27,13 @@ void createTestProgram() {
   program.addInstruction(instruction);
   for (int n = 0; n < 15; n++) program.addInstruction(
     new MotionInstruction(MTYPE_JOINT, 1, true, 0.5, 0));
-  pr[0] = new PVector(575, 300, 50);
-  pr[1] = new PVector(625, 225, 50);
-  pr[2] = new PVector(675, 200, 50);
-  pr[3] = new PVector(725, 225, 50);
-  pr[4] = new PVector(775, 300, 50);
-  pr[5] = new PVector(-474, -218, 37);
-  pr[6] = new PVector(-659, -412, -454);
+  pr[0] = new Point(575, 300, 50, 0, 0, 0);
+  pr[1] = new Point(625, 225, 50, 0, 0, 0);
+  pr[2] = new Point(675, 200, 50, 0, 0, 0);
+  pr[3] = new Point(725, 225, 50, 0, 0, 0);
+  pr[4] = new Point(775, 300, 50, 0, 0, 0);
+  pr[5] = new Point(-474, -218, 37, 0, 0, 0);
+  pr[6] = new Point(-659, -412, -454, 0, 0, 0);
   programs.add(program);
   currentProgram = program;
   
@@ -596,9 +596,9 @@ boolean executeProgram(Program program, ArmModel model) {
           instruction.getMotionType() == MTYPE_JOINT)
       {
         if (instruction.getTermination() == 0) {
-          beginNewLinearMotion(model, start, instruction.getVector(program));
+          beginNewLinearMotion(model, start, instruction.getVector(program).c);
         } else {
-          PVector nextPoint = null;
+          Point nextPoint = null;
           for (int n = currentInstruction+1; n < program.getInstructions().size(); n++) {
             Instruction nextIns = program.getInstructions().get(n);
             if (nextIns instanceof MotionInstruction) {
@@ -607,15 +607,15 @@ boolean executeProgram(Program program, ArmModel model) {
             }
           }
           if (nextPoint == null) {
-            beginNewLinearMotion(model, start, instruction.getVector(program));
-          } else beginNewContinuousMotion(model, start, instruction.getVector(program),
-                                          nextPoint, instruction.getTermination());
+            beginNewLinearMotion(model, start, instruction.getVector(program).c);
+          } else beginNewContinuousMotion(model, start, instruction.getVector(program).c,
+                                          nextPoint.c, instruction.getTermination());
         } // end if termination type is continuous
       } else if (instruction.getMotionType() == MTYPE_CIRCULAR) {
         // If it is a circular instruction, the current instruction holds the intermediate point.
         // There must be another instruction after this that holds the end point.
         // If this isn't the case, the instruction is invalid, so return immediately.
-        PVector nextPoint = null;
+        Point nextPoint = null;
         if (program.getInstructions().size() >= currentInstruction + 2) {
           Instruction nextIns = program.getInstructions().get(currentInstruction+1);
           if (!(nextIns instanceof MotionInstruction)) return true;
@@ -624,7 +624,7 @@ boolean executeProgram(Program program, ArmModel model) {
             nextPoint = castIns.getVector(program);
           }
         } else return true; // invalid instruction
-        beginNewCircularMotion(model, start, instruction.getVector(program), nextPoint);
+        beginNewCircularMotion(model, start, instruction.getVector(program).c, nextPoint.c);
         
       } // end if motion type is circular
       executingInstruction = true;

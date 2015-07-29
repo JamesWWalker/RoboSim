@@ -46,7 +46,7 @@ public void setup() {
   size(1200, 800, P3D);
   cp5 = new ControlP5(this);
   gui();
-  for (int n = 0; n < pr.length; n++) pr[n] = new PVector();
+  for (int n = 0; n < pr.length; n++) pr[n] = new Point();
   armModel = new ArmModel(ARM_STANDARD);
   // TESTING CODE
   createTestProgram();

@@ -1,19 +1,31 @@
 
 final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
-final float SPEED_FINE = 0.0025;
-final float SPEED_VFINE = 0.001;
 
 
-PVector[] pr = new PVector[1000]; // global registers
+public class Point {
+  public PVector c; // coordinates
+  public PVector a; // angles
+  public Point() {
+    c = new PVector(0,0,0);
+    a = new PVector(0,0,0);
+  }
+  public Point(float x, float y, float z, float w, float p, float r) {
+    c = new PVector(x,y,z);
+    a = new PVector(w,p,r);
+  }
+}
+
+
+Point[] pr = new Point[1000]; // global registers
 
 public class Program {
   private String name;
   private ArrayList<Instruction> instructions;
-  private PVector[] p = new PVector[1000]; // local registers
+  private Point[] p = new Point[1000]; // local registers
   
   public Program(String theName) {
     instructions = new ArrayList<Instruction>();
-    for (int n = 0; n < p.length; n++) p[n] = new PVector();
+    for (int n = 0; n < p.length; n++) p[n] = new Point();
     name = theName;
   }
   
@@ -33,11 +45,11 @@ public class Program {
     instructions.add(idx, i);
   }
   
-  public void addRegister(PVector in, int idx) {
+  public void addRegister(Point in, int idx) {
     if (idx >= 0 && idx < p.length) p[idx] = in;
   }
   
-  public PVector getRegister(int idx) {
+  public Point getRegister(int idx) {
     if (idx >= 0 && idx < p.length) return p[idx];
     else return null;
   }
@@ -78,7 +90,7 @@ public class MotionInstruction extends Instruction {
     else return (speed / model.motorSpeed);
   }
   
-  public PVector getVector(Program parent) {
+  public Point getVector(Program parent) {
     if (globalRegister) return pr[register];
     else return parent.p[register];
   }
