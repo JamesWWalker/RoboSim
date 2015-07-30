@@ -1226,11 +1226,12 @@ public void f1(int theValue){
            prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
                                       j[0], j[1], j[2], j[3], j[4], j[5]), reg);
            MotionInstruction insert = new MotionInstruction(
-             (curCoordFrame == CURCOORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
+             (curCoordFrame == COORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
              reg,
              false,
-             (curCoordFrame == CURCOORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
-             0);
+             (curCoordFrame == COORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
+             0,
+             curCoordFrame);
            prog.addInstruction(insert);
            active_instruction = select_instruction = prog.getInstructions().size()-1;
            active_col = 0;
@@ -1458,11 +1459,12 @@ public void f5(int theValue) {
       prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
                                  j[0], j[1], j[2], j[3], j[4], j[5]), reg);
       MotionInstruction insert = new MotionInstruction(
-        (curCoordFrame == CURCOORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
+        (curCoordFrame == COORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
         reg,
         false,
-        (curCoordFrame == CURCOORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
-        0);
+        (curCoordFrame == COORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
+        0,
+        curCoordFrame);
       prog.overwriteInstruction(active_instruction, insert);
       active_col = 0;
       loadInstructions(select_program);
@@ -1660,7 +1662,7 @@ public void ITEM(int theValue) {
 public void COORD(int theValue) {
   // TODO: enable cycling through all the kinds of coordinate frames
   curCoordFrame++;
-  if (curCoordFrame > CURCOORD_WORLD) curCoordFrame = CURCOORD_JOINT;
+  if (curCoordFrame > COORD_WORLD) curCoordFrame = COORD_JOINT;
   liveSpeed = 0.1;
 }
 
@@ -1759,7 +1761,7 @@ public void rotate_shrink(int theValue){
 
 // axis: 0 = -x, 1= +x, 2 = -y, 3 = +y, 4 = -z, 5 = +z
 public void activateLiveMotion(int joint, int dir, int axis) {
-  if (curCoordFrame == CURCOORD_JOINT) {
+  if (curCoordFrame == COORD_JOINT) {
     if (armModel.segments.size() >= joint+1) {
       Model model = armModel.segments.get(joint);
       for (int n = 0; n < 3; n++) {
@@ -1769,7 +1771,7 @@ public void activateLiveMotion(int joint, int dir, int axis) {
         }
       }
     }
-  } else if (curCoordFrame == CURCOORD_WORLD) {
+  } else if (curCoordFrame == COORD_WORLD) {
     switch (axis) {
       // account for different axes in native Processing vs. RoboSim world coordinate systems
       case 0: 

@@ -11,62 +11,63 @@ int motionFrameCounter = 0;
 float DISTANCE_BETWEEN_POINTS = 5.0;
 int interMotionIdx = -1;
 
-final int CURCOORD_JOINT = 0, CURCOORD_WORLD = 1, CURCOORD_TOOL = 2, CURCOORD_USER = 3;
-int curCoordFrame = CURCOORD_JOINT;
+final int COORD_JOINT = 0, COORD_WORLD = 1, COORD_TOOL = 2, COORD_USER = 3;
+int curCoordFrame = COORD_JOINT;
 float liveSpeed = 0.1;
 
 
 void createTestProgram() {
   Program program = new Program("Test Program");
   MotionInstruction instruction =
-    new MotionInstruction(MTYPE_LINEAR, 0, true, 4000, 1.0);
+    new MotionInstruction(MTYPE_LINEAR, 0, true, 4000, 1.0, COORD_WORLD); //1.0
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 1, true, 4000, 0.75);
+  instruction = new MotionInstruction(MTYPE_LINEAR, 1, true, 4000, 0.75, COORD_WORLD); //0.75
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 2, true, 4000, 0.5);
+  instruction = new MotionInstruction(MTYPE_LINEAR, 2, true, 4000, 0.5, COORD_WORLD); //0.5
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 3, true, 1000, 0);
-  program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 4, true, 1000, 0);
-  program.addInstruction(instruction);
-  for (int n = 0; n < 15; n++) program.addInstruction(
-    new MotionInstruction(MTYPE_JOINT, 1, true, 0.5, 0));
-  pr[0] = new Point(575, 300, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-  pr[1] = new Point(625, 225, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-  pr[2] = new Point(675, 200, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-  pr[3] = new Point(725, 225, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+//  instruction = new MotionInstruction(MTYPE_LINEAR, 3, true, 1000, 0);
+//  program.addInstruction(instruction);
+//  instruction = new MotionInstruction(MTYPE_LINEAR, 4, true, 1000, 0);
+//  program.addInstruction(instruction);
+  //for (int n = 0; n < 15; n++) program.addInstruction(
+  //  new MotionInstruction(MTYPE_JOINT, 1, true, 0.5, 0));
+  pr[0] = new Point(165, 116, -5, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  pr[1] = new Point(166, -355, 120, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  pr[2] = new Point(171, -113, 445, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  pr[3] = new Point(725, 225, 50, 0, 0, 0, 5.6, 1.12, 5.46, 0, 5.6, 0);
   pr[4] = new Point(775, 300, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0);
   pr[5] = new Point(-474, -218, 37, 0, 0, 0, 0, 0, 0, 0, 0, 0);
   pr[6] = new Point(-659, -412, -454, 0, 0, 0, 0, 0, 0, 0, 0, 0);
   programs.add(program);
-  currentProgram = program;
+  //currentProgram = program;
   
   Program program2 = new Program("Test Program 2");
   MotionInstruction instruction2 =
-    new MotionInstruction(MTYPE_LINEAR, 0, true, 1.0, 1.0);
+    new MotionInstruction(MTYPE_JOINT, 3, true, 1.0, 0, COORD_JOINT);
   program2.addInstruction(instruction2);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 1, true, 1.0, 0.75);
+  instruction2 = new MotionInstruction(MTYPE_JOINT, 4, true, 1.0, 0, COORD_JOINT);
+  program2.addInstruction(instruction2);
   programs.add(program2);
-  //currentProgram = program;
+  currentProgram = program2;
   
   Program program3 = new Program("Circular Test");
   MotionInstruction instruction3 =
-    new MotionInstruction(MTYPE_LINEAR, 0, true, 1.0, 0);
+    new MotionInstruction(MTYPE_LINEAR, 0, true, 1.0, 0, COORD_WORLD);
   program3.addInstruction(instruction3);
-  instruction3 = new MotionInstruction(MTYPE_CIRCULAR, 1, true, 1.0, 0);
+  instruction3 = new MotionInstruction(MTYPE_CIRCULAR, 1, true, 1.0, 0, COORD_WORLD);
   program3.addInstruction(instruction3);
-  instruction3 = new MotionInstruction(MTYPE_LINEAR, 2, true, 1.0, 0);
+  instruction3 = new MotionInstruction(MTYPE_LINEAR, 2, true, 1.0, 0, COORD_WORLD);
   program3.addInstruction(instruction3);
-  instruction3 = new MotionInstruction(MTYPE_LINEAR, 3, true, 0.25, 0);
+  instruction3 = new MotionInstruction(MTYPE_LINEAR, 3, true, 0.25, 0, COORD_WORLD);
   program3.addInstruction(instruction3);
   programs.add(program3);
   //currentProgram = program3;
   
   Program program4 = new Program("New Arm Test");
   MotionInstruction instruction4 =
-    new MotionInstruction(MTYPE_LINEAR, 5, true, 1.0, 0);
+    new MotionInstruction(MTYPE_LINEAR, 5, true, 1.0, 0, COORD_WORLD);
   program4.addInstruction(instruction4);
-  instruction4 = new MotionInstruction(MTYPE_LINEAR, 6, true, 1.0, 0);
+  instruction4 = new MotionInstruction(MTYPE_LINEAR, 6, true, 1.0, 0, COORD_WORLD);
   program4.addInstruction(instruction4);
   programs.add(program4);
   //currentProgram = program4;
@@ -79,9 +80,9 @@ void createTestProgram() {
 void showMainDisplayText() {
 fill(0);
   textAlign(RIGHT, TOP);
-  text("Coordinate Frame: " + (curCoordFrame == CURCOORD_JOINT ? "Joint" : "World"), width-20, 20);
+  text("Coordinate Frame: " + (curCoordFrame == COORD_JOINT ? "Joint" : "World"), width-20, 20);
   text("Speed: " + (Integer.toString((int)(Math.round(liveSpeed*100)))) + "%", width-20, 40);
-  if (curCoordFrame == CURCOORD_JOINT) {
+  if (curCoordFrame == COORD_JOINT) {
     float j[] = armModel.getJointRotations();
     text("Joints: J1: " + j[0] + " J2: " + j[1] + " J3: " + j[2] +
                 " J4: " + j[3] + " J5: " + j[4] + " J6: " + j[5], width-20, 60);
@@ -324,7 +325,8 @@ Here's how this works:
     The mu for this is from 0 to 0.5 instead of 0 to 1.0.
 */
 void calculateContinuousPositions(PVector p1, PVector p2, PVector p3, float percentage) {
-  percentage /= 2;
+  //percentage /= 2;
+  percentage /= 1.5;
   percentage = 1 - percentage;
   percentage = constrain(percentage, 0, 1);
   intermediatePositions.clear();
@@ -638,11 +640,28 @@ boolean executeProgram(Program program, ArmModel model) {
     
       pushMatrix();
       applyCamera();
-      PVector start = calculateEndEffectorPosition(armModel, false);
+      PVector start = calculateEndEffectorPosition(model, false);
       popMatrix();
-      if (instruction.getMotionType() == MTYPE_LINEAR ||
-          instruction.getMotionType() == MTYPE_JOINT)
-      {
+      if (instruction.getMotionType() == MTYPE_JOINT) {
+        float[] j = instruction.getVector(program).j;
+        for (int n = 0; n < j.length; n++) {
+          for (int r = 0; r < 3; r++) {
+            if (model.segments.get(n).rotations[r])
+              model.segments.get(n).targetRotations[r] = j[n];
+          }
+        }
+        // calculate whether it's faster to turn CW or CCW
+        for (Model a : model.segments) {
+          for (int r = 0; r < 3; r++) {
+            if (a.rotations[r]) {
+              float blueAngle = a.targetRotations[r] - a.currentRotations[r];
+              blueAngle = clampAngle(blueAngle);
+              if (blueAngle < PI) a.rotationDirections[r] = 1;
+              else a.rotationDirections[r] = -1;
+            }
+          }
+        }
+      } else if (instruction.getMotionType() == MTYPE_LINEAR) {
         if (instruction.getTermination() == 0) {
           beginNewLinearMotion(model, start, instruction.getVector(program).c);
         } else {
@@ -652,6 +671,7 @@ boolean executeProgram(Program program, ArmModel model) {
             if (nextIns instanceof MotionInstruction) {
               MotionInstruction castIns = (MotionInstruction)nextIns;
               nextPoint = castIns.getVector(program);
+              break;
             }
           }
           if (nextPoint == null) {
@@ -675,11 +695,14 @@ boolean executeProgram(Program program, ArmModel model) {
         beginNewCircularMotion(model, start, instruction.getVector(program).c, nextPoint.c);
         
       } // end if motion type is circular
+      
       executingInstruction = true;
       
     } else { // continue executing current instruction
-    
-      executingInstruction = !(executeMotion(model, instruction.getSpeedForExec(model)));
+      
+      if (instruction.getMotionType() != MTYPE_JOINT)
+        executingInstruction = !(executeMotion(model, instruction.getSpeedForExec(model)));
+      else executingInstruction = !(model.interpolateRotation());
       if (!executingInstruction) {
         currentInstruction++;
         if (currentInstruction >= program.getInstructions().size()) return true;

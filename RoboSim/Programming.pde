@@ -6,11 +6,13 @@ public class Point {
   public PVector c; // coordinates
   public PVector a; // angles
   public float[] j = new float[6]; // joint values
+  
   public Point() {
     c = new PVector(0,0,0);
     a = new PVector(0,0,0);
     for (int n = 0; n < j.length; n++) j[n] = 0;
   }
+  
   public Point(float x, float y, float z, float w, float p, float r,
                float j1, float j2, float j3, float j4, float j5, float j6)
   {
@@ -23,7 +25,12 @@ public class Point {
     j[4] = j5;
     j[5] = j6;
   }
-}
+  
+  public Point clone() {
+    return new Point(c.x, c.y, c.z, a.x, a.y, a.z, j[0], j[1], j[2], j[3], j[4], j[5]);
+  }
+  
+} // end Point class
 
 
 Point[] pr = new Point[1000]; // global registers
@@ -93,15 +100,15 @@ public class MotionInstruction extends Instruction {
   private boolean globalRegister;
   private float speed;
   private float termination;
+  private int coordinateFrame;
   
-  public MotionInstruction(int m, int r, boolean g, float s, float t) {
-    println("Entered motion instruction constructor");
+  public MotionInstruction(int m, int r, boolean g, float s, float t, int c) {
     motionType = m;
     register = r;
     globalRegister = g;
     speed = s;
     termination = t;
-    println(motionType + " " + register + " " + globalRegister + " " + speed + " " + termination);
+    coordinateFrame = c;
   }
   
   public int getMotionType() { return motionType; }
@@ -120,10 +127,19 @@ public class MotionInstruction extends Instruction {
     else return (speed / model.motorSpeed);
   }
   
+  // TODO: Fix to account for user/tool frames
   public Point getVector(Program parent) {
-    if (globalRegister) return pr[register];
-    else return parent.p[register];
-  }
+    if (coordinateFrame == COORD_WORLD ) {
+      Point out;
+      if (globalRegister) out = pr[register].clone();
+      else out = parent.p[register].clone();
+      out.c = convertWorldToNative(out.c);
+      return out;
+    } else {
+      if (globalRegister) return pr[register];
+      else return parent.p[register];
+    }
+  } // end getVector()
   
   public String toString(){
      String me = "";

@@ -286,8 +286,7 @@ public class ArmModel {
     for (Model a : segments) {
       for (int r = 0; r < 3; r++) {
         if (a.rotations[r]) {
-          if (abs(a.currentRotations[r] - a.targetRotations[r]) >
-              a.rotationSpeeds[r])
+          if (abs(a.currentRotations[r] - a.targetRotations[r]) > a.rotationSpeeds[r]*2)
           {
             allDone = false;
             a.currentRotations[r] += a.rotationSpeeds[r] * a.rotationDirections[r];
@@ -308,7 +307,7 @@ public class ArmModel {
   }
   
   void executeLiveMotion() {
-    if (curCoordFrame == CURCOORD_JOINT) {
+    if (curCoordFrame == COORD_JOINT) {
       for (Model model : segments) {
         for (int n = 0; n < 3; n++) {
           if (model.rotations[n]) {
@@ -320,7 +319,7 @@ public class ArmModel {
           }
         }
       }
-    } else if (curCoordFrame == CURCOORD_WORLD) {
+    } else if (curCoordFrame == COORD_WORLD) {
       // FLAG
       if (linearMoveSpeeds[0] != 0 || linearMoveSpeeds[1] != 0 || linearMoveSpeeds[2] != 0) {
         PVector startFrom = new PVector(0,0,0);
