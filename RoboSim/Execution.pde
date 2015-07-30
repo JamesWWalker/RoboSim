@@ -25,9 +25,9 @@ void createTestProgram() {
   program.addInstruction(instruction);
   instruction = new MotionInstruction(MTYPE_LINEAR, 2, true, 4000, 0.5, COORD_WORLD); //0.5
   program.addInstruction(instruction);
-//  instruction = new MotionInstruction(MTYPE_LINEAR, 3, true, 1000, 0);
+//  instruction = new MotionInstruction(MTYPE_JOINT, 3, true, 1.0, 0, COORD_JOINT);
 //  program.addInstruction(instruction);
-//  instruction = new MotionInstruction(MTYPE_LINEAR, 4, true, 1000, 0);
+//  instruction = new MotionInstruction(MTYPE_JOINT, 4, true, 1.0, 0, COORD_JOINT);
 //  program.addInstruction(instruction);
   //for (int n = 0; n < 15; n++) program.addInstruction(
   //  new MotionInstruction(MTYPE_JOINT, 1, true, 0.5, 0));
@@ -78,7 +78,7 @@ void createTestProgram() {
 
 
 void showMainDisplayText() {
-fill(0);
+  fill(0);
   textAlign(RIGHT, TOP);
   text("Coordinate Frame: " + (curCoordFrame == COORD_JOINT ? "Joint" : "World"), width-20, 20);
   text("Speed: " + (Integer.toString((int)(Math.round(liveSpeed*100)))) + "%", width-20, 40);
@@ -97,7 +97,8 @@ fill(0);
     text("Coordinates: X: " + concor.x + " Y: " + concor.y + " Z: " + concor.z +
                      " W: " + wpr.x + " P: " + wpr.y + " R: " + wpr.z, width-20, 60);
   }
-  text((shift == ON ? "Shift ON" : "Shift OFF"), width-20, 80);
+  text((shift == ON ? "Shift ON" : "Shift OFF"), width-120, 80);
+  text((step == ON ? "Step ON" : "Step OFF"), width-20, 80);
 /*  text("Coordinates: Native: " + eep.x + " Y: " + eep.y + " Z: " + eep.z, width-20, 40);
 //  text("Camera base at: X: " + cam.x + " Y: " + cam.y + " Z: " + cam.z, width-20, 60);
   text("Coordinates: World: " + concor.x + " Y: " + concor.y + " Z: " + concor.z, width-20, 60);
@@ -420,6 +421,7 @@ boolean executingInstruction = false;
 void readyProgram() {
   currentInstruction = 0;
   executingInstruction = false;
+  doneMoving = false;
 }
 
 
@@ -633,11 +635,37 @@ float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
 boolean executeProgram(Program program, ArmModel model) {
   if (program == null || currentInstruction >= program.getInstructions().size())
     return true;
-  Instruction ins =  program.getInstructions().get(currentInstruction);
+  Instruction ins = program.getInstructions().get(currentInstruction);
   if (ins instanceof MotionInstruction) {
     MotionInstruction instruction = (MotionInstruction)ins;
     if (!executingInstruction) { // start executing new instruction
     
+      if (setUpInstruction(program, model, instruction)) return true;
+      executingInstruction = true;
+      
+    } else { // continue executing current instruction
+      
+      if (instruction.getMotionType() != MTYPE_JOINT)
+        executingInstruction = !(executeMotion(model, instruction.getSpeedForExec(model)));
+      else executingInstruction = !(model.interpolateRotation());
+      if (!executingInstruction) {
+        currentInstruction++;
+        if (currentInstruction >= program.getInstructions().size()) return true;
+      }
+    }
+  } // end of if instruction==motion instruction
+  return false;
+} // end executeProgram
+
+
+boolean executeSingleInstruction(MotionInstruction instruction) {
+  if (instruction.getMotionType() != MTYPE_JOINT)
+    return executeMotion(armModel, instruction.getSpeedForExec(armModel));
+  else return armModel.interpolateRotation();
+}
+
+
+boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
       pushMatrix();
       applyCamera();
       PVector start = calculateEndEffectorPosition(model, false);
@@ -695,25 +723,8 @@ boolean executeProgram(Program program, ArmModel model) {
         beginNewCircularMotion(model, start, instruction.getVector(program).c, nextPoint.c);
         
       } // end if motion type is circular
-      
-      executingInstruction = true;
-      
-    } else { // continue executing current instruction
-      
-      if (instruction.getMotionType() != MTYPE_JOINT)
-        executingInstruction = !(executeMotion(model, instruction.getSpeedForExec(model)));
-      else executingInstruction = !(model.interpolateRotation());
-      if (!executingInstruction) {
-        currentInstruction++;
-        if (currentInstruction >= program.getInstructions().size()) return true;
-      }
-      //
-    }
-    //
-  } // end of if instruction==motion instruction
-  //
-  return false;
-} // end executeProgram
+      return false;
+} // end setUpInstruction
 
 
 

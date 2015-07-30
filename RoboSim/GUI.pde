@@ -29,7 +29,8 @@ int active_instruction = -1; // which motion instruction is on focus when in INS
 int select_instruction = -1; // which motion instruction is being edited when in INSTRUCTION_EDIT mode?
 int mode = NONE; 
 int NUM_MODE; // When NUM_MODE is ON, allows for entering numbers
-int shift = OFF; // Does shift button is pressed or not?
+int shift = OFF; // Is shift button pressed or not?
+int step = OFF; // Is step button pressed or not?
  
 int g1_px, g1_py; // the left-top corner of group1
 int g1_width, g1_height; // group 1's width and height
@@ -1177,11 +1178,13 @@ public void rt(int theValue){
 }
 
 public void sf(int theValue){
-   if (shift == OFF){
-      shift = ON;
-   }else{
-      shift = OFF;
-   }
+   if (shift == OFF) shift = ON;
+   else shift = OFF;
+}
+
+public void st(int theValue) {
+  if (step == OFF) step = ON;
+  else step = OFF;
 }
 
 public void pr(int theValue){
@@ -1501,12 +1504,23 @@ public void hd(int theValue){
 
 }
 
-public void fd(int theValue){
-   if (active_instruction == 0 && shift == ON) {
-      readyProgram();
-      doneMoving = executeProgram(programs.get(select_program), armModel);
-   }
-   //shift = OFF;
+public void fd(int theValue) {
+  if (shift == ON) {
+    currentProgram = programs.get(select_program);
+    if (step == OFF) readyProgram();
+    else {
+      Instruction ins = programs.get(active_program).getInstructions().get(active_instruction);
+      if (ins instanceof MotionInstruction) {
+        singleInstruction = (MotionInstruction)ins;
+        setUpInstruction(programs.get(active_program), armModel, singleInstruction);
+        if (active_instruction < programs.get(active_program).getInstructions().size()-1)
+          select_instruction = active_instruction = (active_instruction+1);
+        loadInstructions(select_program);
+        updateScreen(color(255,0,0), color(0));
+      }
+    }
+  }
+  //shift = OFF;
 }
 
 public void bd(int theValue){

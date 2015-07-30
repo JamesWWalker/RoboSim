@@ -37,6 +37,7 @@ float myscale = 0.5;
 
 // for Execution
 Program currentProgram;
+MotionInstruction singleInstruction = null;
 int currentInstruction;
 int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
 
@@ -54,7 +55,7 @@ public void setup() {
   // END TESTING CODE
 }
 
-boolean doneMoving = false; // TESTING CODE
+boolean doneMoving = true; // TESTING CODE
 
 public void draw() {
   
@@ -65,14 +66,16 @@ public void draw() {
   background(127);
   //gui();
   // TESTING CODE
-  if (frameCount == 20) {
+  /*if (frameCount == 20) {
     readyProgram();
-  } else if (frameCount > 20) {
-    if (!doneMoving) {
-      doneMoving = executeProgram(currentProgram, armModel);
-    }
   } /* */
   // END TESTING CODE
+  
+  if (!doneMoving) doneMoving = executeProgram(currentProgram, armModel);
+  else if (singleInstruction != null) {
+    println("Here " + frameCount);
+    if (executeSingleInstruction(singleInstruction)) singleInstruction = null;
+  }
 
   armModel.executeLiveMotion(); // respond to manual movement from J button presses
 
