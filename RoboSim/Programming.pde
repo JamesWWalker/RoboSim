@@ -60,6 +60,11 @@ public class Program {
     }
   }
   
+  public void overwriteInstruction(int idx, Instruction i) {
+    instructions.set(idx, i);
+    nextRegister++;
+  }
+  
   public void addInstruction(int idx, Instruction i) {
     instructions.add(idx, i);
   }

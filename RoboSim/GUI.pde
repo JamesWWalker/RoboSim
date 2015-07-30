@@ -1446,6 +1446,27 @@ public void f5(int theValue) {
       }
     } else {
       // overwrite current instruction
+      pushMatrix();
+      applyCamera();
+      PVector eep = calculateEndEffectorPosition(armModel, false);
+      popMatrix();
+      eep = convertNativeToWorld(eep);
+      Program prog = programs.get(select_program);
+      int reg = prog.nextRegister();
+      PVector r = armModel.getWpr();
+      float[] j = armModel.getJointRotations();
+      prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
+                                 j[0], j[1], j[2], j[3], j[4], j[5]), reg);
+      MotionInstruction insert = new MotionInstruction(
+        (curCoordFrame == CURCOORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
+        reg,
+        false,
+        (curCoordFrame == CURCOORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
+        0);
+      prog.overwriteInstruction(active_instruction, insert);
+      active_col = 0;
+      loadInstructions(select_program);
+      updateScreen(color(255,0,0), color(0,0,0));
     }
   } else if (mode == ENTER_TEXT) {
       clearScreen();
