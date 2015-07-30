@@ -31,13 +31,13 @@ void createTestProgram() {
   program.addInstruction(instruction);
   for (int n = 0; n < 15; n++) program.addInstruction(
     new MotionInstruction(MTYPE_JOINT, 1, true, 0.5, 0));
-  pr[0] = new Point(575, 300, 50, 0, 0, 0);
-  pr[1] = new Point(625, 225, 50, 0, 0, 0);
-  pr[2] = new Point(675, 200, 50, 0, 0, 0);
-  pr[3] = new Point(725, 225, 50, 0, 0, 0);
-  pr[4] = new Point(775, 300, 50, 0, 0, 0);
-  pr[5] = new Point(-474, -218, 37, 0, 0, 0);
-  pr[6] = new Point(-659, -412, -454, 0, 0, 0);
+  pr[0] = new Point(575, 300, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  pr[1] = new Point(625, 225, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  pr[2] = new Point(675, 200, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  pr[3] = new Point(725, 225, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  pr[4] = new Point(775, 300, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  pr[5] = new Point(-474, -218, 37, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  pr[6] = new Point(-659, -412, -454, 0, 0, 0, 0, 0, 0, 0, 0, 0);
   programs.add(program);
   currentProgram = program;
   

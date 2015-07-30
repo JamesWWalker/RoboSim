@@ -5,13 +5,23 @@ final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
 public class Point {
   public PVector c; // coordinates
   public PVector a; // angles
+  public float[] j = new float[6]; // joint values
   public Point() {
     c = new PVector(0,0,0);
     a = new PVector(0,0,0);
+    for (int n = 0; n < j.length; n++) j[n] = 0;
   }
-  public Point(float x, float y, float z, float w, float p, float r) {
+  public Point(float x, float y, float z, float w, float p, float r,
+               float j1, float j2, float j3, float j4, float j5, float j6)
+  {
     c = new PVector(x,y,z);
     a = new PVector(w,p,r);
+    j[0] = j1;
+    j[1] = j2;
+    j[2] = j3;
+    j[3] = j4;
+    j[4] = j5;
+    j[5] = j6;
   }
 }
 

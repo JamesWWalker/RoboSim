@@ -15,7 +15,9 @@ final int NONE = 0,
           SET_INSTRUCTION_REGISTER = 5,
           SET_INSTRUCTION_TERMINATION = 6,
           JUMP_TO_LINE = 7,
-          VIEW_REGISTER = 8;
+          VIEW_REGISTER = 8,
+          ENTER_TEXT = 9,
+          PICK_LETTER = 10;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
@@ -43,11 +45,12 @@ Button bt_show, bt_hide,
        ;
 Textlabel fn_info, num_info;
 
-String workingNum; // when entering a number with the number keys
-String workingNumSuffix;
+String workingText; // when entering text or a number
+String workingTextSuffix;
 boolean speedInPercentage;
 final int ITEMS_TO_SHOW = 8; // how many instructions to show onscreen at a time
-final int PROGRAMS_TO_SHOW = 18; // how many programs to show onscreen at a time
+final int PROGRAMS_TO_SHOW = 16; // how many programs to show onscreen at a time
+int letterSet; // which letter group to enter
 
 // display on screen
 ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>(); // display list of programs or motion instructions
@@ -1034,12 +1037,12 @@ public void addNumber(String number) {
   if (mode == SET_INSTRUCTION_REGISTER || mode == SET_INSTRUCTION_TERMINATION ||
       mode == JUMP_TO_LINE)
   {
-    workingNum += number;
-    options.set(1, workingNum);
+    workingText += number;
+    options.set(1, workingText);
     updateScreen(color(255,0,0), color(0,0,0));
   } else if (mode == SET_INSTRUCTION_SPEED) {
-    workingNum += number;
-    options.set(1, workingNum + workingNumSuffix);
+    workingText += number;
+    options.set(1, workingText + workingTextSuffix);
     updateScreen(color(255,0,0), color(0,0,0));
   }
 }
@@ -1185,6 +1188,25 @@ public void pr(int theValue){
    se(1);
 }
 
+
+public void goToEnterTextMode() {
+    clearScreen();
+    options = new ArrayList<String>();
+    options.add("Enter a name for your program:");
+    options.add("F1: ABCDE");
+    options.add("F2: FGHIJ");
+    options.add("F3: KLMNO");
+    options.add("F4: PQRST");
+    options.add("F5: UVWXY");
+    options.add("ENTER: Finish");
+    options.add("");
+    options.add(workingText);
+    mode = ENTER_TEXT;
+    which_option = 0;
+    updateScreen(color(0), color(0));
+}
+
+
 public void f1(int theValue){
    switch (mode){
       case PROGRAM_NAV:
@@ -1206,9 +1228,94 @@ public void f1(int theValue){
       case INSTRUCTION_EDIT:
          shift = OFF;
          break;
+      case ENTER_TEXT:
+         clearScreen();
+         options = new ArrayList<String>();
+         options.add("F1: A");
+         options.add("F2: B");
+         options.add("F3: C");
+         options.add("F4: D");
+         options.add("F5: E");
+         options.add("");
+         options.add(workingText);
+         letterSet = 1;
+         mode = PICK_LETTER;
+         which_option = 0;
+         updateScreen(color(0), color(0));
+         break;
+      case PICK_LETTER:
+         switch (letterSet) {
+            case 1: workingText += "A"; break;
+            case 2: workingText += "F"; break;
+            case 3: workingText += "K"; break;
+            case 4: workingText += "P"; break;
+            case 5: workingText += "U"; break;
+         }
+         goToEnterTextMode();
+         break;
    }
     
 }
+
+
+public void f2(int theValue) {
+  if (mode == PROGRAM_NAV) {
+    workingText = "";
+    goToEnterTextMode();
+  } else if (mode == ENTER_TEXT) {
+    clearScreen();
+    options = new ArrayList<String>();
+    options.add("F1: F");
+    options.add("F2: G");
+    options.add("F3: H");
+    options.add("F4: I");
+    options.add("F5: J");
+    options.add("");
+    options.add(workingText);
+    letterSet = 2;
+    mode = PICK_LETTER;
+    which_option = 0;
+    updateScreen(color(0), color(0));
+  } else if (mode == PICK_LETTER) {
+    switch (letterSet) {
+      case 1: workingText += "B"; break;
+      case 2: workingText += "G"; break;
+      case 3: workingText += "L"; break;
+      case 4: workingText += "Q"; break;
+      case 5: workingText += "V"; break;
+    }
+    goToEnterTextMode();
+  }
+}
+
+
+public void f3(int theValue) {
+  if (mode == ENTER_TEXT) {
+    clearScreen();
+    options = new ArrayList<String>();
+    options.add("F1: K");
+    options.add("F2: L");
+    options.add("F3: M");
+    options.add("F4: N");
+    options.add("F5: O");
+    options.add("");
+    options.add(workingText);
+    letterSet = 3;
+    mode = PICK_LETTER;
+    which_option = 0;
+    updateScreen(color(0), color(0));
+  } else if (mode == PICK_LETTER) {
+    switch (letterSet) {
+      case 1: workingText += "C"; break;
+      case 2: workingText += "H"; break;
+      case 3: workingText += "M"; break;
+      case 4: workingText += "R"; break;
+      case 5: workingText += "W"; break;
+    }
+    goToEnterTextMode();
+  }
+}
+
 
 public void f4(int theValue){
    switch (mode){
@@ -1238,8 +1345,8 @@ public void f4(int theValue){
                 select_instruction = active_instruction;
                 options = new ArrayList<String>();
                 options.add("Use number keys to enter a register number (0-999)");
-                workingNum = "";
-                options.add(workingNum);
+                workingText = "";
+                options.add(workingText);
                 mode = SET_INSTRUCTION_REGISTER;
                 which_option = 0;
                 break;
@@ -1250,13 +1357,13 @@ public void f4(int theValue){
                 MotionInstruction castIns = (MotionInstruction)(programs.get(select_program).getInstructions().get(select_instruction));
                 if (castIns.getMotionType() == MTYPE_JOINT) {
                   speedInPercentage = true;
-                  workingNumSuffix = "%";
+                  workingTextSuffix = "%";
                 } else {
-                  workingNumSuffix = "mm/s";
+                  workingTextSuffix = "mm/s";
                   speedInPercentage = false;
                 }
-                workingNum = "";
-                options.add(workingNum + workingNumSuffix);
+                workingText = "";
+                options.add(workingText + workingTextSuffix);
                 mode = SET_INSTRUCTION_SPEED;
                 which_option = 0;
                 break;
@@ -1264,17 +1371,38 @@ public void f4(int theValue){
                 select_instruction = active_instruction;
                 options = new ArrayList<String>();
                 options.add("Use number keys to enter termination percentage (0-100; 0=FINE)");
-                workingNum = "";
-                options.add(workingNum);
+                workingText = "";
+                options.add(workingText);
                 mode = SET_INSTRUCTION_TERMINATION;
                 which_option = 0;
                 break;
          } 
          break;  
-     case INSTRUCTION_EDIT:
-         break;    
-     case PROGRAM_NAV:
-         break;    
+     case ENTER_TEXT:
+         clearScreen();
+         options = new ArrayList<String>();
+         options.add("F1: P");
+         options.add("F2: Q");
+         options.add("F3: R");
+         options.add("F4: S");
+         options.add("F5: T");
+         options.add("");
+         options.add(workingText);
+         letterSet = 4;
+         mode = PICK_LETTER;
+         which_option = 0;
+         updateScreen(color(0), color(0));
+         return;
+     case PICK_LETTER:
+         switch (letterSet) {
+           case 1: workingText += "D"; break;
+           case 2: workingText += "I"; break;
+           case 3: workingText += "N"; break;
+           case 4: workingText += "S"; break;
+           case 5: workingText += "X"; break;
+         }
+         goToEnterTextMode();
+         return;
    }
    //println("mode="+mode+" active_col"+active_col);
    updateScreen(color(255,0,0), color(0,0,0));
@@ -1293,9 +1421,33 @@ public void f5(int theValue) {
       mode = VIEW_REGISTER;
       which_option = 0;
       loadInstructions(select_program);
+      updateScreen(color(255,0,0), color(0,0,0));
     }
+  } else if (mode == ENTER_TEXT) {
+      clearScreen();
+      options = new ArrayList<String>();
+      options.add("F1: U");
+      options.add("F2: V");
+      options.add("F3: W");
+      options.add("F4: X");
+      options.add("F5: Y");
+      options.add("");
+      options.add(workingText);
+      letterSet = 5;
+      mode = PICK_LETTER;
+      which_option = 0;
+      updateScreen(color(0), color(0));
+  } else if (mode == PICK_LETTER) {
+    switch (letterSet) {
+      case 1: workingText += "E"; break;
+      case 2: workingText += "J"; break;
+      case 3: workingText += "O"; break;
+      case 4: workingText += "T"; break;
+      case 5: workingText += "Y"; break;
+    }
+    goToEnterTextMode();
   }
-  updateScreen(color(255,0,0), color(0,0,0));
+  
 }
 
 public void hd(int theValue){
@@ -1376,7 +1528,7 @@ public void ENTER(int theValue){
          updateScreen(color(255,0,0), color(0,0,0));
          break;
       case SET_INSTRUCTION_SPEED:
-         float tempSpeed = Float.parseFloat(workingNum);
+         float tempSpeed = Float.parseFloat(workingText);
          if (speedInPercentage) tempSpeed /= 100.0;
          MotionInstruction castIns = (MotionInstruction)(programs.get(select_program).getInstructions().get(select_instruction));
          castIns.setSpeed(tempSpeed);
@@ -1388,7 +1540,7 @@ public void ENTER(int theValue){
          updateScreen(color(255,0,0), color(0,0,0));
          break;
       case SET_INSTRUCTION_REGISTER:
-         int tempRegister = Integer.parseInt(workingNum);
+         int tempRegister = Integer.parseInt(workingText);
          if (tempRegister >= 0 && tempRegister < pr.length) {
            castIns = (MotionInstruction)(programs.get(select_program).getInstructions().get(select_instruction));
            castIns.setRegister(tempRegister);
@@ -1401,7 +1553,7 @@ public void ENTER(int theValue){
          updateScreen(color(255,0,0), color(0,0,0));
          break;
       case SET_INSTRUCTION_TERMINATION:
-         float tempTerm = Float.parseFloat(workingNum);
+         float tempTerm = Float.parseFloat(workingText);
          tempTerm /= 100.0;
          castIns = (MotionInstruction)(programs.get(select_program).getInstructions().get(select_instruction));
          castIns.setTermination(tempTerm);
@@ -1413,7 +1565,7 @@ public void ENTER(int theValue){
          updateScreen(color(255,0,0), color(0,0,0));
          break;
       case JUMP_TO_LINE:
-         active_instruction = Integer.parseInt(workingNum)-1;
+         active_instruction = Integer.parseInt(workingText)-1;
          if (active_instruction < 0) active_instruction = 0;
          if (active_instruction >= programs.get(select_program).getInstructions().size())
            active_instruction = programs.get(select_program).getInstructions().size()-1;
@@ -1432,6 +1584,17 @@ public void ENTER(int theValue){
          loadInstructions(select_program);
          updateScreen(color(255,0,0), color(0,0,0));
          break;
+      case ENTER_TEXT:
+         programs.add(new Program(workingText));
+         workingText = "";
+         select_program = active_program = programs.size()-1;
+         select_instruction = active_instruction = 0;
+         mode = INSTRUCTION_NAV;
+         clearScreen();
+         options = new ArrayList<String>();
+         loadInstructions(select_program);
+         updateScreen(color(255,0,0), color(0,0,0));
+         break;
    }
 }
 
@@ -1440,8 +1603,8 @@ public void ITEM(int theValue) {
   if (mode == INSTRUCTION_NAV) {
     options = new ArrayList<String>();
     options.add("Use number keys to enter line number to jump to");
-    workingNum = "";
-    options.add(workingNum);
+    workingText = "";
+    options.add(workingText);
     mode = JUMP_TO_LINE;
     which_option = 0;
     updateScreen(color(255,0,0), color(0,0,0));
@@ -1453,6 +1616,7 @@ public void COORD(int theValue) {
   // TODO: enable cycling through all the kinds of coordinate frames
   curCoordFrame++;
   if (curCoordFrame > CURCOORD_WORLD) curCoordFrame = CURCOORD_JOINT;
+  liveSpeed = 0.1;
 }
 
 
@@ -1799,18 +1963,25 @@ public void updateScreen(color active, color normal){
    
    // display hints for function keys
    next_py += 100;
-   if (mode == INSTRUCTION_NAV){
+   if (mode == PROGRAM_NAV) {
+          fn_info.setText("F2: CREATE")
+                 .setPosition(next_px, display_py+display_height-15)
+                 .setColorValue(normal)
+                 .show()
+                 .moveTo(g1)
+                 ;
+   } else if (mode == INSTRUCTION_NAV) {
           fn_info.setText("F4: CHOICE     F5: VIEW REG")
                  .setPosition(next_px, display_py+display_height-15)
                  .setColorValue(normal)
                  .show()
                  .moveTo(g1)
                  ;
-    } else if (mode == INSTRUCTION_EDIT){
+   } else {
           fn_info.show()
                  .moveTo(g1)
                  ;
-    }
+   }
 }
 
 // clear screen
