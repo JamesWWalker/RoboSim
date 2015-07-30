@@ -255,6 +255,32 @@ public class ArmModel {
     }
   }// end draw arm model
   
+  public PVector getWpr() {
+    PVector out = new PVector(0,0,0);
+    for (Model a : segments) {
+      out.x += a.currentRotations[0];
+      out.y += a.currentRotations[1];
+      out.z += a.currentRotations[2];
+    }
+    out.x = clampAngle(out.x);
+    out.y = clampAngle(out.y);
+    out.z = clampAngle(out.z);
+    return out;
+  } // end get WPR
+  
+  public float[] getJointRotations() {
+    float[] j = new float[6];
+    for (int n = 0; n < 6; n++) {
+      for (int r = 0; r < 3; r++) {
+        if (segments.get(n).rotations[r]) {
+          j[n] = segments.get(n).currentRotations[r];
+          break;
+        }
+      }
+    }
+    return j;
+  } // end get joint rotations
+  
   public boolean interpolateRotation() {
     boolean allDone = true;
     for (Model a : segments) {

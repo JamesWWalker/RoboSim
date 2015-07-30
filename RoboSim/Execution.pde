@@ -76,6 +76,38 @@ void createTestProgram() {
 
 
 
+void showMainDisplayText() {
+fill(0);
+  textAlign(RIGHT, TOP);
+  text("Coordinate Frame: " + (curCoordFrame == CURCOORD_JOINT ? "Joint" : "World"), width-20, 20);
+  text("Speed: " + (Integer.toString((int)(Math.round(liveSpeed*100)))) + "%", width-20, 40);
+  if (curCoordFrame == CURCOORD_JOINT) {
+    float j[] = armModel.getJointRotations();
+    text("Joints: J1: " + j[0] + " J2: " + j[1] + " J3: " + j[2] +
+                " J4: " + j[3] + " J5: " + j[4] + " J6: " + j[5], width-20, 60);
+  } else {
+    pushMatrix();
+    applyCamera();
+    PVector cam = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
+    PVector eep = calculateEndEffectorPosition(armModel, false);
+    popMatrix();
+    PVector concor = convertNativeToWorld(eep);
+    PVector wpr = armModel.getWpr();
+    text("Coordinates: X: " + concor.x + " Y: " + concor.y + " Z: " + concor.z +
+                     " W: " + wpr.x + " P: " + wpr.y + " R: " + wpr.z, width-20, 60);
+  }
+  text((shift == ON ? "Shift ON" : "Shift OFF"), width-20, 80);
+/*  text("Coordinates: Native: " + eep.x + " Y: " + eep.y + " Z: " + eep.z, width-20, 40);
+//  text("Camera base at: X: " + cam.x + " Y: " + cam.y + " Z: " + cam.z, width-20, 60);
+  text("Coordinates: World: " + concor.x + " Y: " + concor.y + " Z: " + concor.z, width-20, 60);
+  PVector conbak = convertWorldToNative(concor);
+  text("Coordinates: Back: " + conbak.x + " Y: " + conbak.y + " Z: " + conbak.z, width-20, 80);
+  text("Coordinates: Camera: " + cam.x + " Y: " + cam.y + " Z: " + cam.z, width-20, 100);
+  text("Current speed: " + (Integer.toString((int)(Math.round(liveSpeed*100)))) + "%", width-20, 120); /* */
+}
+
+
+
 // converts from RoboSim-defined world coordinates into
 // Processing's coordinate system.
 // Assumes that the robot starts out facing toward the LEFT.
@@ -85,7 +117,7 @@ PVector convertWorldToNative(PVector in) {
   float outx = modelX(0,0,0)-in.x;
   float outy = modelY(0,0,0)-in.z;
   float outz = -(modelZ(0,0,0)-in.y);
-  popMatrix(); /* */
+  popMatrix();
   return new PVector(outx, outy, outz);
 }
 

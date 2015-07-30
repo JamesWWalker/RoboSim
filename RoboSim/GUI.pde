@@ -1210,23 +1210,38 @@ public void goToEnterTextMode() {
 public void f1(int theValue){
    switch (mode){
       case PROGRAM_NAV:
-         shift = OFF;
+         //shift = OFF;
          break;
       case INSTRUCTION_NAV:
          if (shift == ON) {
-             MotionInstruction m = new MotionInstruction(MTYPE_JOINT, 0, false, 0.25, 0);
-             Program current_p = programs.get(select_program);
-             current_p.addInstruction(m);
-             loadInstructions(select_program);
-             options = new ArrayList<String>();
-             which_option = -1;
-             clearOptions();
-             updateScreen(color(255,0,0), color(0,0,0));
+           pushMatrix();
+           applyCamera();
+           PVector eep = calculateEndEffectorPosition(armModel, false);
+           popMatrix();
+           eep = convertNativeToWorld(eep);
+           Program prog = programs.get(select_program);
+           int reg = prog.nextRegister();
+           PVector r = armModel.getWpr();
+           float[] j = armModel.getJointRotations();
+           prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
+                                      j[0], j[1], j[2], j[3], j[4], j[5]), reg);
+           MotionInstruction insert = new MotionInstruction(
+             (curCoordFrame == CURCOORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
+             reg,
+             false,
+             (curCoordFrame == CURCOORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
+             0);
+           prog.addInstruction(insert);
+           active_instruction = select_instruction = prog.getInstructions().size()-1;
+           active_col = 0;
+           loadInstructions(select_program);
+           active_row = contents.size()-1;
+           updateScreen(color(255,0,0), color(0,0,0));
          }
-         shift = OFF;
+         //shift = OFF;
          break;
       case INSTRUCTION_EDIT:
-         shift = OFF;
+         //shift = OFF;
          break;
       case ENTER_TEXT:
          clearScreen();
@@ -1410,18 +1425,27 @@ public void f4(int theValue){
 
 public void f5(int theValue) {
   if (mode == INSTRUCTION_NAV) {
-    Instruction ins = programs.get(select_program).getInstructions().get(select_instruction);
-    if (ins instanceof MotionInstruction) {
-      MotionInstruction castIns = (MotionInstruction)ins;      
-      Point p = castIns.getVector(programs.get(select_program));
-      options = new ArrayList<String>();
-      options.add("Data of the point in this register (press ENTER to exit):");
-      options.add("x: " + p.c.x + "  y: " + p.c.y + "  z: " + p.c.z);
-      options.add("w: " + p.a.x + "  p: " + p.a.y + "  r: " + p.a.z);
-      mode = VIEW_REGISTER;
-      which_option = 0;
-      loadInstructions(select_program);
-      updateScreen(color(255,0,0), color(0,0,0));
+    if (shift == OFF) {
+      Instruction ins = programs.get(select_program).getInstructions().get(select_instruction);
+      if (ins instanceof MotionInstruction) {
+        MotionInstruction castIns = (MotionInstruction)ins;
+        Point p = castIns.getVector(programs.get(select_program));
+        options = new ArrayList<String>();
+        options.add("Data of the point in this register (press ENTER to exit):");
+        if (castIns.getMotionType() != MTYPE_JOINT) {
+          options.add("x: " + p.c.x + "  y: " + p.c.y + "  z: " + p.c.z);
+          options.add("w: " + p.a.x + "  p: " + p.a.y + "  r: " + p.a.z);
+        } else {
+          options.add("j1: " + p.j[0] + "  j2: " + p.j[1] + "  j3: " + p.j[2]);
+          options.add("j4: " + p.j[3] + "  j5: " + p.j[4] + "  j6: " + p.j[5]);
+        }
+        mode = VIEW_REGISTER;
+        which_option = 0;
+        loadInstructions(select_program);
+        updateScreen(color(255,0,0), color(0,0,0));
+      }
+    } else {
+      // overwrite current instruction
     }
   } else if (mode == ENTER_TEXT) {
       clearScreen();
@@ -1459,7 +1483,7 @@ public void fd(int theValue){
       readyProgram();
       doneMoving = executeProgram(programs.get(select_program), armModel);
    }
-   shift = OFF;
+   //shift = OFF;
 }
 
 public void bd(int theValue){
@@ -1971,7 +1995,7 @@ public void updateScreen(color active, color normal){
                  .moveTo(g1)
                  ;
    } else if (mode == INSTRUCTION_NAV) {
-          fn_info.setText("F4: CHOICE     F5: VIEW REG")
+          fn_info.setText("SHIFT+F1: NEW PT     F4: CHOICE     F5: VIEW REG     SHIFT+F5: OVERWRITE")
                  .setPosition(next_px, display_py+display_height-15)
                  .setColorValue(normal)
                  .show()

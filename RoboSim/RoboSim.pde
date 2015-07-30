@@ -119,23 +119,7 @@ public void draw() {
 
   hint(DISABLE_DEPTH_TEST);
   
-  fill(0);
-  textAlign(RIGHT, TOP);
-  text("Current Coordinate Frame: " + (curCoordFrame == CURCOORD_JOINT ? "Joint" : "World"), width-20, 20);
-  pushMatrix();
-  applyCamera();
-  PVector cam = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
-  //sphere(50);
-  PVector eep = calculateEndEffectorPosition(armModel, false);
-  popMatrix();
-  PVector concor = convertNativeToWorld(eep);
-  text("Coordinates: Native: " + eep.x + " Y: " + eep.y + " Z: " + eep.z, width-20, 40);
-  //text("Camera base at: X: " + cam.x + " Y: " + cam.y + " Z: " + cam.z, width-20, 60);
-  text("Coordinates: World: " + concor.x + " Y: " + concor.y + " Z: " + concor.z, width-20, 60);
-  PVector conbak = convertWorldToNative(concor);
-  text("Coordinates: Back: " + conbak.x + " Y: " + conbak.y + " Z: " + conbak.z, width-20, 80);
-  text("Coordinates: Camera: " + cam.x + " Y: " + cam.y + " Z: " + cam.z, width-20, 100);
-  text("Current speed: " + (Integer.toString((int)(Math.round(liveSpeed*100)))) + "%", width-20, 120);
+  showMainDisplayText();
   //println(frameRate + " fps");
 }
 

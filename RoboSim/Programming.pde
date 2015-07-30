@@ -32,11 +32,13 @@ public class Program {
   private String name;
   private ArrayList<Instruction> instructions;
   private Point[] p = new Point[1000]; // local registers
+  private int nextRegister;
   
   public Program(String theName) {
     instructions = new ArrayList<Instruction>();
     for (int n = 0; n < p.length; n++) p[n] = new Point();
     name = theName;
+    nextRegister = 0;
   }
   
   public ArrayList<Instruction> getInstructions() {
@@ -49,6 +51,13 @@ public class Program {
   
   public void addInstruction(Instruction i) {
     instructions.add(i);
+    if (i instanceof MotionInstruction ) {
+      MotionInstruction castIns = (MotionInstruction)i;
+      if (!castIns.getGlobal() && castIns.getRegister() >= nextRegister) {
+        nextRegister = castIns.getRegister()+1;
+        if (nextRegister >= p.length) nextRegister = p.length-1;
+      }
+    }
   }
   
   public void addInstruction(int idx, Instruction i) {
@@ -57,6 +66,10 @@ public class Program {
   
   public void addRegister(Point in, int idx) {
     if (idx >= 0 && idx < p.length) p[idx] = in;
+  }
+  
+  public int nextRegister() {
+    return nextRegister;
   }
   
   public Point getRegister(int idx) {
@@ -77,11 +90,13 @@ public class MotionInstruction extends Instruction {
   private float termination;
   
   public MotionInstruction(int m, int r, boolean g, float s, float t) {
+    println("Entered motion instruction constructor");
     motionType = m;
     register = r;
     globalRegister = g;
     speed = s;
     termination = t;
+    println(motionType + " " + register + " " + globalRegister + " " + speed + " " + termination);
   }
   
   public int getMotionType() { return motionType; }
