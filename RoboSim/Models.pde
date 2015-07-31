@@ -320,7 +320,6 @@ public class ArmModel {
         }
       }
     } else if (curCoordFrame == COORD_WORLD) {
-      // FLAG
       if (linearMoveSpeeds[0] != 0 || linearMoveSpeeds[1] != 0 || linearMoveSpeeds[2] != 0) {
         PVector startFrom = new PVector(0,0,0);
         if (intermediatePositions.size() == 1) startFrom = intermediatePositions.get(0);
@@ -335,11 +334,7 @@ public class ArmModel {
         intermediatePositions.add(new PVector(startFrom.x + linearMoveSpeeds[0] * distance,
                                               startFrom.y + linearMoveSpeeds[1] * distance,
                                               startFrom.z + linearMoveSpeeds[2] * distance));
-        int result = calculateIK(this, intermediatePositions.get(0), 720, 25);
-        // TODO: FLAG: MIGHT NEED TO UPDATE THIS LATER TO ACCOUNT FOR FAILURE POSSIBILITY.
-        while (result != EXEC_SUCCESS) {
-         result = calculateIK(this, intermediatePositions.get(0), 720, 25);
-        }
+        attemptIK(this, 0);
         instantRotation();
       }
     }

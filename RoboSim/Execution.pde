@@ -2,13 +2,10 @@
 // To-do list:
 // -> Make motion instructions follow different coordinate systems
 //
-// -> The speed control for executing motion instructions is pretty rough.
-//    Make it better.
-// -> Add more sophisticated handling of failure possibility when calculating IK
 
 ArrayList<PVector> intermediatePositions;
 int motionFrameCounter = 0;
-float DISTANCE_BETWEEN_POINTS = 5.0;
+float distanceBetweenPoints = 5.0;
 int interMotionIdx = -1;
 
 final int COORD_JOINT = 0, COORD_WORLD = 1, COORD_TOOL = 2, COORD_USER = 3;
@@ -19,16 +16,16 @@ float liveSpeed = 0.1;
 void createTestProgram() {
   Program program = new Program("Test Program");
   MotionInstruction instruction =
-    new MotionInstruction(MTYPE_LINEAR, 0, true, 4000, 1.0, COORD_WORLD); //1.0
+    new MotionInstruction(MTYPE_LINEAR, 0, true, 800, 1.0, COORD_WORLD); //1.0
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 1, true, 4000, 0.75, COORD_WORLD); //0.75
+  instruction = new MotionInstruction(MTYPE_LINEAR, 1, true, 1600, 0.75, COORD_WORLD); //0.75
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 2, true, 4000, 0.5, COORD_WORLD); //0.5
+  instruction = new MotionInstruction(MTYPE_LINEAR, 2, true, 400, 0.5, COORD_WORLD); //0.5
   program.addInstruction(instruction);
-//  instruction = new MotionInstruction(MTYPE_JOINT, 3, true, 1.0, 0, COORD_JOINT);
-//  program.addInstruction(instruction);
-//  instruction = new MotionInstruction(MTYPE_JOINT, 4, true, 1.0, 0, COORD_JOINT);
-//  program.addInstruction(instruction);
+  instruction = new MotionInstruction(MTYPE_JOINT, 3, true, 1.0, 0, COORD_JOINT);
+  program.addInstruction(instruction);
+  instruction = new MotionInstruction(MTYPE_JOINT, 4, true, 1.0, 0, COORD_JOINT);
+  program.addInstruction(instruction);
   //for (int n = 0; n < 15; n++) program.addInstruction(
   //  new MotionInstruction(MTYPE_JOINT, 1, true, 0.5, 0));
   pr[0] = new Point(165, 116, -5, 0, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -238,12 +235,30 @@ PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
 
 /* */
 
+
+int attemptIK(ArmModel model, int idx) {
+  int iter = 0;
+  int slices = 540, closeEnough = 10;
+  int result = EXEC_PROCESSING;
+  while (result != EXEC_SUCCESS) {
+    result = calculateIK(model, intermediatePositions.get(idx), slices, closeEnough);
+    iter++;
+    if (iter > 10) return EXEC_FAILURE;
+    slices += 36;
+    closeEnough++;
+  }
+  return EXEC_SUCCESS;
+}
+
+
+
+
 int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
   
   float checkAngle = (2*PI)/(float)slices;
   
   // loop through each arm segment in turn
-  for (int a = model.segments.size()-1; a >= 0; a--) {
+  for (int a = 0; a < model.segments.size(); a++) {
     Model segment = model.segments.get(a);
     // loop through each permissible joint rotation of each segment
     for (int r = 0; r < 3; r++) {
@@ -298,11 +313,25 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
 
 
 
+void calculateDistanceBetweenPoints() {
+  // TODO: This is probably going to break when we enable frame instructions.
+  MotionInstruction instruction =
+    (MotionInstruction)currentProgram.getInstructions().get(currentInstruction);
+  if (instruction != null && instruction.getMotionType() != MTYPE_JOINT)
+    distanceBetweenPoints = instruction.getSpeed() / 60.0;
+  else if (curCoordFrame != COORD_JOINT)
+    distanceBetweenPoints = armModel.motorSpeed * liveSpeed / 60.0;
+  else distanceBetweenPoints = 5.0;
+}
+
+
+
 void calculateIntermediatePositions(PVector start, PVector end) {
+  calculateDistanceBetweenPoints();
   intermediatePositions.clear();
   float mu = 0;
   int numberOfPoints = (int)
-    (dist(start.x, start.y, start.z, end.x, end.y, end.z) / DISTANCE_BETWEEN_POINTS);
+    (dist(start.x, start.y, start.z, end.x, end.y, end.z) / distanceBetweenPoints);
   float increment = 1.0 / (float)numberOfPoints;
   for (int n = 0; n < numberOfPoints; n++) {
     mu += increment;
@@ -327,6 +356,7 @@ Here's how this works:
 */
 void calculateContinuousPositions(PVector p1, PVector p2, PVector p3, float percentage) {
   //percentage /= 2;
+  calculateDistanceBetweenPoints();
   percentage /= 1.5;
   percentage = 1 - percentage;
   percentage = constrain(percentage, 0, 1);
@@ -338,10 +368,10 @@ void calculateContinuousPositions(PVector p1, PVector p2, PVector p3, float perc
       dist(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z))
   {
     numberOfPoints = (int)
-      (dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) / DISTANCE_BETWEEN_POINTS);
+      (dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) / distanceBetweenPoints);
   } else {
     numberOfPoints = (int)
-      (dist(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z) / DISTANCE_BETWEEN_POINTS);
+      (dist(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z) / distanceBetweenPoints);
   }
   float increment = 1.0 / (float)numberOfPoints;
   for (int n = 0; n < numberOfPoints; n++) {
@@ -383,10 +413,7 @@ void beginNewContinuousMotion(ArmModel model, PVector start, PVector end,
 {
   calculateContinuousPositions(start, end, next, percentage);
   motionFrameCounter = 0;
-  int result = calculateIK(model, intermediatePositions.get(interMotionIdx), 720, 15);
-  // TODO: FLAG: UPDATE THIS LATER TO ACCOUNT FOR FAILURE POSSIBILITY.
-  while (result != EXEC_SUCCESS)
-    result = calculateIK(model, intermediatePositions.get(interMotionIdx), 720, 15);
+  attemptIK(model, interMotionIdx);
 }
 
 
@@ -394,10 +421,7 @@ void beginNewContinuousMotion(ArmModel model, PVector start, PVector end,
 void beginNewLinearMotion(ArmModel model, PVector start, PVector end) {
   calculateIntermediatePositions(start, end);
   motionFrameCounter = 0;
-  int result = calculateIK(model, intermediatePositions.get(interMotionIdx), 720, 15);
-  // TODO: FLAG: UPDATE THIS LATER TO ACCOUNT FOR FAILURE POSSIBILITY.
-  while (result != EXEC_SUCCESS)
-    result = calculateIK(model, intermediatePositions.get(interMotionIdx), 720, 15);
+  attemptIK(model, interMotionIdx);
 }
 
 
@@ -408,10 +432,7 @@ void beginNewCircularMotion(ArmModel model, PVector p1, PVector p2, PVector p3) 
   intermediatePositions = createArc(createCircleCircumference(p1, p2, p3, 180), p1, p2, p3);
   interMotionIdx = 0;
   motionFrameCounter = 0;
-  int result = calculateIK(model, intermediatePositions.get(interMotionIdx), 720, 15);
-  // TODO: FLAG: UPDATE THIS LATER TO ACCOUNT FOR FAILURE POSSIBILITY.
-  while (result != EXEC_SUCCESS)
-    result = calculateIK(model, intermediatePositions.get(interMotionIdx), 720, 15);
+  attemptIK(model, interMotionIdx);
 }
 
 
@@ -430,7 +451,7 @@ boolean executeMotion(ArmModel model, float speedMult) {
   // speed is in pixels per frame, multiply that by the current speed setting
   // which is contained in the motion instruction
   float currentSpeed = model.motorSpeed * speedMult;
-  if (currentSpeed * motionFrameCounter > DISTANCE_BETWEEN_POINTS) {
+  if (currentSpeed * motionFrameCounter > distanceBetweenPoints) {
     model.instantRotation();
     interMotionIdx++;
     motionFrameCounter = 0;
@@ -438,11 +459,7 @@ boolean executeMotion(ArmModel model, float speedMult) {
       interMotionIdx = -1;
       return true;
     }
-    int result = calculateIK(model, intermediatePositions.get(interMotionIdx), 720, 25);
-    // TODO: FLAG: MIGHT NEED TO UPDATE THIS LATER TO ACCOUNT FOR FAILURE POSSIBILITY.
-    while (result != EXEC_SUCCESS) {
-      result = calculateIK(model, intermediatePositions.get(interMotionIdx), 720, 25);
-    }
+    attemptIK(model, interMotionIdx);
   }
   return false;
 } // end execute linear motion
