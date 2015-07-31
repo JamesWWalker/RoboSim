@@ -1200,7 +1200,7 @@ public void goToEnterTextMode() {
     options.add("F2: FGHIJ");
     options.add("F3: KLMNO");
     options.add("F4: PQRST");
-    options.add("F5: UVWXY");
+    options.add("F5: UVWXYZ");
     options.add("ENTER: Finish");
     options.add("");
     options.add(workingText);
@@ -1264,13 +1264,27 @@ public void f1(int theValue){
          break;
       case PICK_LETTER:
          switch (letterSet) {
-            case 1: workingText += "A"; break;
-            case 2: workingText += "F"; break;
-            case 3: workingText += "K"; break;
-            case 4: workingText += "P"; break;
-            case 5: workingText += "U"; break;
+            case 1: workingText += "A"; goToEnterTextMode(); break;
+            case 2: workingText += "F"; goToEnterTextMode(); break;
+            case 3: workingText += "K"; goToEnterTextMode(); break;
+            case 4: workingText += "P"; goToEnterTextMode(); break;
+            case 5: break;
+            case 6: workingText += "U"; goToEnterTextMode(); break;
+            case 7: workingText += "X"; goToEnterTextMode(); break;
          }
-         goToEnterTextMode();
+         if (letterSet == 5) {
+           clearScreen();
+           options = new ArrayList<String>();
+           options.add("F1: U");
+           options.add("F2: V");
+           options.add("F3: W");
+           options.add("");
+           options.add(workingText);
+           letterSet = 6;
+           mode = PICK_LETTER;
+           which_option = 0;
+           updateScreen(color(0), color(0));
+         }
          break;
    }
     
@@ -1297,13 +1311,27 @@ public void f2(int theValue) {
     updateScreen(color(0), color(0));
   } else if (mode == PICK_LETTER) {
     switch (letterSet) {
-      case 1: workingText += "B"; break;
-      case 2: workingText += "G"; break;
-      case 3: workingText += "L"; break;
-      case 4: workingText += "Q"; break;
-      case 5: workingText += "V"; break;
+      case 1: workingText += "B"; goToEnterTextMode(); break;
+      case 2: workingText += "G"; goToEnterTextMode(); break;
+      case 3: workingText += "L"; goToEnterTextMode(); break;
+      case 4: workingText += "Q"; goToEnterTextMode(); break;
+      case 5: break;
+      case 6: workingText += "V"; goToEnterTextMode(); break;
+      case 7: workingText += "Y"; goToEnterTextMode(); break;
     }
-    goToEnterTextMode();
+    if (letterSet == 5) {
+      clearScreen();
+      options = new ArrayList<String>();
+      options.add("F1: X");
+      options.add("F2: Y");
+      options.add("F3: Z");
+      options.add("");
+      options.add(workingText);
+      letterSet = 7;
+      mode = PICK_LETTER;
+      which_option = 0;
+      updateScreen(color(0), color(0));
+    }
   }
 }
 
@@ -1325,11 +1353,13 @@ public void f3(int theValue) {
     updateScreen(color(0), color(0));
   } else if (mode == PICK_LETTER) {
     switch (letterSet) {
-      case 1: workingText += "C"; break;
-      case 2: workingText += "H"; break;
-      case 3: workingText += "M"; break;
-      case 4: workingText += "R"; break;
-      case 5: workingText += "W"; break;
+      case 1: workingText += "C"; goToEnterTextMode(); break;
+      case 2: workingText += "H"; goToEnterTextMode(); break;
+      case 3: workingText += "M"; goToEnterTextMode(); break;
+      case 4: workingText += "R"; goToEnterTextMode(); break;
+      case 5: break;
+      case 6: workingText += "W"; goToEnterTextMode(); break;
+      case 7: workingText += "Z"; goToEnterTextMode(); break;
     }
     goToEnterTextMode();
   }
@@ -1414,13 +1444,11 @@ public void f4(int theValue){
          return;
      case PICK_LETTER:
          switch (letterSet) {
-           case 1: workingText += "D"; break;
-           case 2: workingText += "I"; break;
-           case 3: workingText += "N"; break;
-           case 4: workingText += "S"; break;
-           case 5: workingText += "X"; break;
+           case 1: workingText += "D"; goToEnterTextMode(); break;
+           case 2: workingText += "I"; goToEnterTextMode(); break;
+           case 3: workingText += "N"; goToEnterTextMode(); break;
+           case 4: workingText += "S"; goToEnterTextMode(); break;
          }
-         goToEnterTextMode();
          return;
    }
    //println("mode="+mode+" active_col"+active_col);
@@ -1476,11 +1504,8 @@ public void f5(int theValue) {
   } else if (mode == ENTER_TEXT) {
       clearScreen();
       options = new ArrayList<String>();
-      options.add("F1: U");
-      options.add("F2: V");
-      options.add("F3: W");
-      options.add("F4: X");
-      options.add("F5: Y");
+      options.add("F1: UVW");
+      options.add("F2: XYZ");
       options.add("");
       options.add(workingText);
       letterSet = 5;
@@ -1489,13 +1514,11 @@ public void f5(int theValue) {
       updateScreen(color(0), color(0));
   } else if (mode == PICK_LETTER) {
     switch (letterSet) {
-      case 1: workingText += "E"; break;
-      case 2: workingText += "J"; break;
-      case 3: workingText += "O"; break;
-      case 4: workingText += "T"; break;
-      case 5: workingText += "Y"; break;
+      case 1: workingText += "E"; goToEnterTextMode(); break;
+      case 2: workingText += "J"; goToEnterTextMode(); break;
+      case 3: workingText += "O"; goToEnterTextMode(); break;
+      case 4: workingText += "T"; goToEnterTextMode(); break;
     }
-    goToEnterTextMode();
   }
   
 }
@@ -1591,6 +1614,7 @@ public void ENTER(int theValue){
       case SET_INSTRUCTION_SPEED:
          float tempSpeed = Float.parseFloat(workingText);
          if (speedInPercentage) tempSpeed /= 100.0;
+         else if (tempSpeed > armModel.motorSpeed) tempSpeed = armModel.motorSpeed;
          MotionInstruction castIns = (MotionInstruction)(programs.get(select_program).getInstructions().get(select_instruction));
          castIns.setSpeed(tempSpeed);
          loadInstructions(active_program);

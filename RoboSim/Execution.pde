@@ -18,7 +18,7 @@ void createTestProgram() {
   MotionInstruction instruction =
     new MotionInstruction(MTYPE_LINEAR, 0, true, 800, 1.0, COORD_WORLD); //1.0
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 1, true, 1600, 0.75, COORD_WORLD); //0.75
+  instruction = new MotionInstruction(MTYPE_CIRCULAR, 1, true, 1600, 0.75, COORD_WORLD); //0.75
   program.addInstruction(instruction);
   instruction = new MotionInstruction(MTYPE_LINEAR, 2, true, 400, 0.5, COORD_WORLD); //0.5
   program.addInstruction(instruction);
