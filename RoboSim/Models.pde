@@ -257,14 +257,15 @@ public class ArmModel {
   
   public PVector getWpr() {
     PVector out = new PVector(0,0,0);
+    PVector tmp = new PVector(0,0,0);
     for (Model a : segments) {
-      out.x += a.currentRotations[0];
-      out.y += a.currentRotations[1];
-      out.z += a.currentRotations[2];
+      tmp.x += a.currentRotations[0];
+      tmp.y += a.currentRotations[1];
+      tmp.z += a.currentRotations[2];
     }
-    out.x = clampAngle(out.x);
-    out.y = clampAngle(out.y);
-    out.z = clampAngle(out.z);
+    out.x = clampAngle(tmp.y);
+    out.y = clampAngle(tmp.z);
+    out.z = clampAngle(tmp.x);
     return out;
   } // end get WPR
   
