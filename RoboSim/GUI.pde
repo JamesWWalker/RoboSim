@@ -17,7 +17,9 @@ final int NONE = 0,
           JUMP_TO_LINE = 7,
           VIEW_REGISTER = 8,
           ENTER_TEXT = 9,
-          PICK_LETTER = 10;
+          PICK_LETTER = 10,
+          MENU_NAV = 11,
+          SETUP_NAV = 12;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
@@ -994,6 +996,36 @@ public void show(int theValue){
    doRotate = false;  
 }
 
+
+public void mu(int theValue) {
+  contents = new ArrayList<ArrayList<String>>();
+  ArrayList<String> line = new ArrayList<String>();
+  line.add("1 UTILITIES (NA)");
+  contents.add(line);
+  line = new ArrayList<String>(); line.add("2 TEST CYCLE (NA)");
+  contents.add(line);
+  line = new ArrayList<String>(); line.add("3 MANUAL FCTNS (NA)");
+  contents.add(line);
+  line = new ArrayList<String>(); line.add("4 ALARM (NA)");
+  contents.add(line);
+  line = new ArrayList<String>(); line.add("5 I/O (NA)");
+  contents.add(line);
+  line = new ArrayList<String>(); line.add("6 SETUP");
+  contents.add(line);
+  line = new ArrayList<String>(); line.add("7 FILE (NA)");
+  contents.add(line);
+  line = new ArrayList<String>(); line.add("8");
+  contents.add(line);
+  line = new ArrayList<String>(); line.add("9 USER (NA)");
+  contents.add(line);
+  line = new ArrayList<String>(); line.add("0 --NEXT--");
+  contents.add(line);
+  active_col = active_row = 0;
+  mode = MENU_NAV;
+  updateScreen(color(255,0,0), color(0));
+}
+
+
 public void NUM0(int theValue){
    addNumber("0");
 }
@@ -1093,7 +1125,11 @@ public void up(int theValue){
          }else{
             which_option -= 1;
          }
-         break;   
+         break;
+      case MENU_NAV:
+      case SETUP_NAV:
+         if (active_row > 0) active_row--;
+         break;
    }
    
    updateScreen(color(255,0,0), color(0,0,0));
@@ -1128,6 +1164,10 @@ public void dn(int theValue){
          }else{
             which_option += 1;
          }
+         break;
+      case MENU_NAV:
+      case SETUP_NAV:
+         if (active_row < contents.size()-1) active_row++;
          break;
    }  
    updateScreen(color(255,0,0), color(0,0,0));
@@ -1173,6 +1213,35 @@ public void rt(int theValue){
       case INSTRUCTION_EDIT:
           mode = INSTRUCTION_NAV;
           rt(1);
+          break;
+      case MENU_NAV:
+          if (active_row == 5) { // SETUP
+            contents = new ArrayList<ArrayList<String>>();
+            ArrayList<String> line = new ArrayList<String>();
+            line.add("1 Prog Select (NA)");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("2 General (NA)");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("3 Call Guard (NA)");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("4 Frames");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("5 Macro (NA)");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("6 Ref Position (NA)");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("7 Port Init (NA)");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("8 Ovrd Select (NA)");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("9 User Alarm (NA)");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("0 --NEXT--");
+            contents.add(line);
+            active_col = active_row = 0;
+            mode = SETUP_NAV;
+            updateScreen(color(255,0,0), color(0));
+          }
           break;
    }
 }

@@ -110,12 +110,13 @@ public void draw() {
   popMatrix(); /* */
   // TESTING CODE: DRAW END EFFECTOR POSITION
   /*pushMatrix();
-  PVector eep = calculateEndEffectorPosition(armModel, false);
   applyCamera();
   noFill();
   stroke(255, 0, 0);
-  translate(eep.x, eep.y, eep.z);
-  println(eep.x + ", " + eep.y + ", " + eep.z);
+  applyModelRotation(armModel);
+  sphere(50);
+  translate(0, 0, -400);
+  stroke(0, 255, 0);
   sphere(50);
   popMatrix(); /* */
   // END TESTING CODE

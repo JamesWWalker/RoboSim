@@ -235,6 +235,67 @@ PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
 
 /* */
 
+void applyModelRotation(ArmModel model) {
+  if (model.type == ARM_TEST) {
+    rotateY(model.segments.get(0).currentRotations[1]);
+    translate(0, -200, 0);
+    translate(-25, -130, 0);
+    rotateZ(model.segments.get(1).currentRotations[2]);
+    translate(-25, -130, 0);
+    translate(0, -120, 0);
+    rotateZ(model.segments.get(2).currentRotations[2]);
+    translate(0, -120, 0);
+    rotateZ(PI);
+    translate(0, 102, 0);
+  } else if (model.type == ARM_STANDARD) {
+    translate(600, 200, 0);
+    translate(-50, -166, -358); // -115, -213, -413
+    rotateZ(PI);
+    translate(150, 0, 150);
+    rotateY(model.segments.get(0).currentRotations[1]);
+    translate(-150, 0, -150);
+    rotateZ(-PI);    
+    translate(-115, -85, 180);
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(0, 62, 62);
+    rotateX(model.segments.get(1).currentRotations[2]);
+    translate(0, -62, -62);
+    rotateY(-PI/2);
+    rotateZ(-PI);   
+    translate(0, -500, -50);
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(0, 75, 75);
+    rotateX(model.segments.get(2).currentRotations[2]);
+    translate(0, -75, -75);
+    rotateY(PI/2);
+    rotateZ(-PI);
+    translate(745, -150, 150);
+    rotateZ(PI/2);
+    rotateY(PI/2);
+    translate(70, 0, 70);
+    rotateY(model.segments.get(3).currentRotations[0]);
+    translate(-70, 0, -70);
+    rotateY(-PI/2);
+    rotateZ(-PI/2);    
+    translate(-115, 130, -124);
+    rotateZ(PI);
+    rotateY(-PI/2);
+    translate(0, 50, 50);
+    rotateX(model.segments.get(4).currentRotations[2]);
+    translate(0, -50, -50);
+    rotateY(PI/2);
+    rotateZ(-PI);    
+    translate(150, -10, 95);
+    rotateY(-PI/2);
+    rotateZ(PI);
+    translate(45, 45, 0);
+    rotateZ(model.segments.get(5).currentRotations[0]);
+  }
+}
+
+
 
 int attemptIK(ArmModel model, int idx) {
   int iter = 0;
