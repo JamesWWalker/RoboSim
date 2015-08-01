@@ -19,7 +19,10 @@ final int NONE = 0,
           ENTER_TEXT = 9,
           PICK_LETTER = 10,
           MENU_NAV = 11,
-          SETUP_NAV = 12;
+          SETUP_NAV = 12,
+          NAV_TOOL_FRAMES = 13,
+          NAV_USER_FRAMES = 14,
+          PICK_FRAME_MODE = 15;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
@@ -1120,6 +1123,7 @@ public void up(int theValue){
          loadInstructions(select_program);
          break;
       case INSTRUCTION_EDIT:
+      case PICK_FRAME_MODE:
          if (which_option == 0){
             // does nothing
          }else{
@@ -1128,6 +1132,8 @@ public void up(int theValue){
          break;
       case MENU_NAV:
       case SETUP_NAV:
+      case NAV_TOOL_FRAMES:
+      case NAV_USER_FRAMES:
          if (active_row > 0) active_row--;
          break;
    }
@@ -1159,6 +1165,7 @@ public void dn(int theValue){
          loadInstructions(select_program);
          break;
       case INSTRUCTION_EDIT:
+      case PICK_FRAME_MODE:
          if (which_option == options.size() - 1){
             // does nothing
          }else{
@@ -1167,6 +1174,8 @@ public void dn(int theValue){
          break;
       case MENU_NAV:
       case SETUP_NAV:
+      case NAV_TOOL_FRAMES:
+      case NAV_USER_FRAMES:
          if (active_row < contents.size()-1) active_row++;
          break;
    }  
@@ -1431,6 +1440,14 @@ public void f3(int theValue) {
       case 7: workingText += "Z"; goToEnterTextMode(); break;
     }
     goToEnterTextMode();
+  } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
+    options = new ArrayList<String>();
+    options.add("1.Tool Frame");
+    options.add("2.Jog Frame");
+    options.add("3.User Frame");
+    mode = PICK_FRAME_MODE;
+    which_option = 0;
+    updateScreen(color(255,0,0), color(0));
   }
 }
 
@@ -1748,6 +1765,17 @@ public void ENTER(int theValue){
          options = new ArrayList<String>();
          loadInstructions(select_program);
          updateScreen(color(255,0,0), color(0,0,0));
+         break;
+      case SETUP_NAV:
+         if (active_row == 3) loadToolFrames();
+         break;
+      case PICK_FRAME_MODE:
+         if (which_option == 1) return; // not implemented
+         options = new ArrayList<String>();
+         clearOptions();
+         if (which_option == 0) loadToolFrames();
+         else if (which_option == 2) loadUserFrames();
+         which_option = -1;
          break;
    }
 }
@@ -2131,12 +2159,19 @@ public void updateScreen(color active, color normal){
                  .show()
                  .moveTo(g1)
                  ;
+   } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
+     fn_info.setText("F2: DETAIL     F3: OTHER")
+                 .setPosition(next_px, display_py+display_height-15)
+                 .setColorValue(normal)
+                 .show()
+                 .moveTo(g1)
+                 ;
    } else {
           fn_info.show()
                  .moveTo(g1)
                  ;
    }
-}
+} // end updateScreen()
 
 // clear screen
 public void clearScreen(){
@@ -2190,6 +2225,43 @@ public void clearNums(){
    }
    index_nums = 1000;
 }
+
+
+public void loadToolFrames() {
+  contents = new ArrayList<ArrayList<String>>();
+  for (int n = 0; n < toolFrames.length; n++) {
+    Frame f = toolFrames[n];
+    ArrayList<String> line = new ArrayList<String>();
+    String str = "";
+    str += (n+1);
+    str += "   " + "Orig: " + f.getOrigin() + "   X: " + f.getAxis(0);
+    str += "   Y: " + f.getAxis(1);
+    line.add(str);
+    contents.add(line);
+  }
+  active_col = active_row = 0;
+  mode = NAV_TOOL_FRAMES;
+  updateScreen(color(255,0,0), color(0));
+}
+
+
+public void loadUserFrames() {
+  contents = new ArrayList<ArrayList<String>>();
+  for (int n = 0; n < userFrames.length; n++) {
+    Frame f = userFrames[n];
+    ArrayList<String> line = new ArrayList<String>();
+    String str = "";
+    str += (n+1);
+    str += "   " + "Orig: " + f.getOrigin() + "   X: " + f.getAxis(0);
+    str += "   Y: " + f.getAxis(1);
+    line.add(str);
+    contents.add(line);
+  }
+  active_col = active_row = 0;
+  mode = NAV_USER_FRAMES;
+  updateScreen(color(255,0,0), color(0));
+}
+
 
 // prepare for displaying motion instructions on screen
 public void loadInstructions(int programID){

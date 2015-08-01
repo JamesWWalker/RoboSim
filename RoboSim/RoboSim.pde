@@ -52,6 +52,10 @@ public void setup() {
   intermediatePositions = new ArrayList<PVector>();
   // TESTING CODE
   createTestProgram();
+  for (int n = 0; n < toolFrames.length; n++) {
+    toolFrames[n] = new Frame();
+    userFrames[n] = new Frame();
+  }
   // END TESTING CODE
 }
 

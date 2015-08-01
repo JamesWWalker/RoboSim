@@ -1,5 +1,8 @@
 
 final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
+Point[] pr = new Point[1000]; // global registers
+Frame[] toolFrames = new Frame[10]; // tool frames
+Frame[] userFrames = new Frame[10];
 
 
 public class Point {
@@ -33,7 +36,30 @@ public class Point {
 } // end Point class
 
 
-Point[] pr = new Point[1000]; // global registers
+
+public class Frame {
+  private PVector origin;
+  private PVector[] axes = new PVector[3];
+  
+  public Frame() {
+    origin = new PVector(0,0,0);
+    for (int n = 0; n < axes.length; n++) axes[n] = new PVector(0,0,0);
+  }
+  
+  public PVector getOrigin() { return origin; }
+  public void setOrigin(PVector in) { origin = in; }
+  
+  public PVector getAxis(int idx) {
+    if (idx >= 0 && idx < axes.length) return axes[idx];
+    else return null;
+  }
+  
+  public void setAxis(int idx, PVector in) {
+    if (idx >= 0 && idx < axes.length) axes[idx] = in;
+  }
+} // end Frame class
+
+
 
 public class Program {
   private String name;
