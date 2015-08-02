@@ -1641,14 +1641,9 @@ public void f5(int theValue) {
       } else if (teachingWhichPoint == 2 || teachingWhichPoint == 3) { // x,y axis
         pushMatrix();
         applyCamera();
-        noFill();
-        stroke(255, 0, 0);
-        applyModelRotation(armModel);
-        PVector first = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
-        translate(0, 0, -400);
-        stroke(0, 255, 0);
-        PVector second = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
+        PVector second = convertNativeToWorld(calculateEndEffectorPosition(armModel, false));
         popMatrix();
+        PVector first = currentFrame.getOrigin();
         PVector vec = new PVector(second.x-first.x, second.y-first.y, second.z-first.z);
         vec.normalize();
         if (teachingWhichPoint == 2) { // x axis
