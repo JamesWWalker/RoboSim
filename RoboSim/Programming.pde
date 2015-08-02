@@ -39,15 +39,19 @@ public class Point {
 
 public class Frame {
   private PVector origin;
+  private PVector wpr;
   private PVector[] axes = new PVector[3];
   
   public Frame() {
     origin = new PVector(0,0,0);
+    wpr = new PVector(0,0,0);
     for (int n = 0; n < axes.length; n++) axes[n] = new PVector(0,0,0);
   }
   
   public PVector getOrigin() { return origin; }
   public void setOrigin(PVector in) { origin = in; }
+  public PVector getWpr() { return wpr; }
+  public void setWpr(PVector in) { wpr = in; }
   
   public PVector getAxis(int idx) {
     if (idx >= 0 && idx < axes.length) return axes[idx];
@@ -56,6 +60,7 @@ public class Frame {
   
   public void setAxis(int idx, PVector in) {
     if (idx >= 0 && idx < axes.length) axes[idx] = in;
+    if (idx == 2) wpr = vectorConvertTo(new PVector(1,1,1), axes[0], axes[1], axes[2]);
   }
 } // end Frame class
 

@@ -22,7 +22,10 @@ final int NONE = 0,
           SETUP_NAV = 12,
           NAV_TOOL_FRAMES = 13,
           NAV_USER_FRAMES = 14,
-          PICK_FRAME_MODE = 15;
+          PICK_FRAME_MODE = 15,
+          FRAME_DETAIL = 16,
+          PICK_FRAME_METHOD = 17,
+          THREE_POINT_MODE = 18;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
@@ -57,6 +60,9 @@ boolean speedInPercentage;
 final int ITEMS_TO_SHOW = 8; // how many instructions to show onscreen at a time
 final int PROGRAMS_TO_SHOW = 16; // how many programs to show onscreen at a time
 int letterSet; // which letter group to enter
+Frame currentFrame;
+int inFrame;
+int teachingWhichPoint;
 
 // display on screen
 ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>(); // display list of programs or motion instructions
@@ -1124,6 +1130,7 @@ public void up(int theValue){
          break;
       case INSTRUCTION_EDIT:
       case PICK_FRAME_MODE:
+      case PICK_FRAME_METHOD:
          if (which_option == 0){
             // does nothing
          }else{
@@ -1166,6 +1173,7 @@ public void dn(int theValue){
          break;
       case INSTRUCTION_EDIT:
       case PICK_FRAME_MODE:
+      case PICK_FRAME_METHOD:
          if (which_option == options.size() - 1){
             // does nothing
          }else{
@@ -1410,6 +1418,21 @@ public void f2(int theValue) {
       which_option = 0;
       updateScreen(color(0), color(0));
     }
+  } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
+    inFrame = mode;
+    if (inFrame == NAV_TOOL_FRAMES) currentFrame = toolFrames[active_row];
+    else if (inFrame == NAV_USER_FRAMES) currentFrame = userFrames[active_row];
+    loadFrameDetails();
+  } else if (mode == FRAME_DETAIL) {
+    if (inFrame == NAV_USER_FRAMES) {
+      options = new ArrayList<String>();
+      options.add("1.Three Point");
+      options.add("2.Four Point");
+      options.add("3.Direct Entry");
+      mode = PICK_FRAME_METHOD;
+      which_option = 0;
+      updateScreen(color(255,0,0), color(0));
+    }
   }
 }
 
@@ -1605,6 +1628,43 @@ public void f5(int theValue) {
       case 3: workingText += "O"; goToEnterTextMode(); break;
       case 4: workingText += "T"; goToEnterTextMode(); break;
     }
+  } else if (mode == THREE_POINT_MODE) {
+    if (shift == ON) {
+      if (teachingWhichPoint == 1) { // teaching origin
+        pushMatrix();
+        applyCamera();
+        currentFrame.setOrigin(
+          convertNativeToWorld(calculateEndEffectorPosition(armModel, false)));
+        popMatrix();
+        teachingWhichPoint++;
+        loadThreePointMethod();
+      } else if (teachingWhichPoint == 2 || teachingWhichPoint == 3) { // x,y axis
+        pushMatrix();
+        applyCamera();
+        noFill();
+        stroke(255, 0, 0);
+        applyModelRotation(armModel);
+        PVector first = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
+        translate(0, 0, -400);
+        stroke(0, 255, 0);
+        PVector second = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
+        popMatrix();
+        PVector vec = new PVector(second.x-first.x, second.y-first.y, second.z-first.z);
+        vec.normalize();
+        if (teachingWhichPoint == 2) { // x axis
+          currentFrame.setAxis(0, vec);
+          teachingWhichPoint++;
+          loadThreePointMethod();
+        } else { // y axis
+          PVector xvec = currentFrame.getAxis(0);
+          PVector yvec = computePerpendicular(xvec, vec);
+          currentFrame.setAxis(1, yvec.normalize(null));
+          currentFrame.setAxis(2, xvec.cross(yvec).normalize(null));
+          if (inFrame == NAV_TOOL_FRAMES) loadToolFrames();
+          else if (inFrame == NAV_USER_FRAMES) loadUserFrames();
+        }
+      }
+    }
   }
   
 }
@@ -1776,6 +1836,13 @@ public void ENTER(int theValue){
          if (which_option == 0) loadToolFrames();
          else if (which_option == 2) loadUserFrames();
          which_option = -1;
+         break;
+      case PICK_FRAME_METHOD:
+         if (which_option == 1 || which_option == 2) return; // not implemented
+         options = new ArrayList<String>();
+         which_option = -1;
+         teachingWhichPoint = 1;
+         loadThreePointMethod();
          break;
    }
 }
@@ -2166,6 +2233,20 @@ public void updateScreen(color active, color normal){
                  .show()
                  .moveTo(g1)
                  ;
+   } else if (mode == FRAME_DETAIL) {
+     fn_info.setText("F2: METHOD")
+                 .setPosition(next_px, display_py+display_height-15)
+                 .setColorValue(normal)
+                 .show()
+                 .moveTo(g1)
+                 ;
+   } else if (mode == THREE_POINT_MODE) {
+     fn_info.setText("SHIFT+F5: RECORD")
+                 .setPosition(next_px, display_py+display_height-15)
+                 .setColorValue(normal)
+                 .show()
+                 .moveTo(g1)
+                 ;
    } else {
           fn_info.show()
                  .moveTo(g1)
@@ -2234,8 +2315,8 @@ public void loadToolFrames() {
     ArrayList<String> line = new ArrayList<String>();
     String str = "";
     str += (n+1);
-    str += "   " + "Orig: " + f.getOrigin() + "   X: " + f.getAxis(0);
-    str += "   Y: " + f.getAxis(1);
+    str += "   " + "Orig: " + f.getOrigin()/* + "   X: " + f.getAxis(0)*/;
+//    str += "   Y: " + f.getAxis(1);
     line.add(str);
     contents.add(line);
   }
@@ -2252,14 +2333,79 @@ public void loadUserFrames() {
     ArrayList<String> line = new ArrayList<String>();
     String str = "";
     str += (n+1);
-    str += "   " + "Orig: " + f.getOrigin() + "   X: " + f.getAxis(0);
-    str += "   Y: " + f.getAxis(1);
+    str += "   " + "Orig: " + f.getOrigin()/* + "   X: " + f.getAxis(0)*/;
+//    str += "   Y: " + f.getAxis(1);
     line.add(str);
     contents.add(line);
   }
   active_col = active_row = 0;
   mode = NAV_USER_FRAMES;
   updateScreen(color(255,0,0), color(0));
+}
+
+
+public void loadThreePointMethod() {
+  contents = new ArrayList<ArrayList<String>>();
+  
+  ArrayList<String> line = new ArrayList<String>();
+  String str = "";
+  if (teachingWhichPoint > 1) str = "Orient Origin Point: RECORDED";
+  else str = "Orient Origin Point: UNINIT";
+  line.add(str);
+  contents.add(line);
+  
+  line = new ArrayList<String>();
+  if (teachingWhichPoint > 2) str = "X Direction Point: RECORDED";
+  else str = "X Direction Point: UNINIT";
+  line.add(str);
+  contents.add(line);
+  
+  line = new ArrayList<String>();
+  if (teachingWhichPoint > 3) str = "Y Direction Point: RECORDED";
+  else str = "Y Direction Point: UNINIT";
+  line.add(str);
+  contents.add(line);
+  
+  mode = THREE_POINT_MODE;
+  updateScreen(color(0), color(0));
+}
+
+
+public void loadFrameDetails() {
+  contents = new ArrayList<ArrayList<String>>();
+  ArrayList<String> line = new ArrayList<String>();
+  String str = "";
+  if (inFrame == NAV_TOOL_FRAMES) str = "TOOL FRAME " + (active_row+1);
+  else if (inFrame == NAV_USER_FRAMES) str = "USER FRAME " + (active_row+1);
+  line.add(str);
+  contents.add(line);
+  
+  line = new ArrayList<String>();
+  str = "X: " + currentFrame.getOrigin().x;
+  line.add(str);
+  contents.add(line);
+  line = new ArrayList<String>();
+  str = "Y: " + currentFrame.getOrigin().y;
+  line.add(str);
+  contents.add(line);
+  line = new ArrayList<String>();
+  str = "Z: " + currentFrame.getOrigin().z;
+  line.add(str);
+  contents.add(line);
+  line = new ArrayList<String>();
+  str = "W: " + currentFrame.getWpr().x;
+  line.add(str);
+  contents.add(line);
+  line = new ArrayList<String>();
+  str = "P: " + currentFrame.getWpr().y;
+  line.add(str);
+  contents.add(line);
+  line = new ArrayList<String>();
+  str = "R: " + currentFrame.getWpr().z;
+  line.add(str);
+  contents.add(line);  
+  mode = FRAME_DETAIL;
+  updateScreen(color(0), color(0));
 }
 
 

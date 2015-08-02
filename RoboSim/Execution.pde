@@ -156,6 +156,25 @@ PVector convertUserToNative(CoordinateFrame frame, PVector in) {
 }
 
 
+// takes a vector and a (probably not quite orthogonal) second vector
+// and computes a vector that's truly orthogonal to the first one and
+// pointing in the direction closest to the imperfect second vector
+PVector computePerpendicular(PVector in, PVector second) {
+  PVector[] plane = createPlaneFrom3Points(in, second, new PVector(in.x*2, in.y*2, in.z*2));
+  PVector v1 = vectorConvertTo(in, plane[0], plane[1], plane[2]);
+  PVector v2 = vectorConvertTo(second, plane[0], plane[1], plane[2]);
+  PVector perp1 = new PVector(v1.y, -v1.x, v1.z);
+  PVector perp2 = new PVector(-v1.y, v1.x, v1.z);
+  PVector orig = new PVector(v2.x*5, v2.y*5, v2.z);
+  PVector p1 = new PVector(perp1.x*5, perp1.y*5, perp1.z);
+  PVector p2 = new PVector(perp2.x*5, perp2.y*5, perp2.z);
+  if (dist(orig.x, orig.y, orig.z, p1.x, p1.y, p1.z) <
+      dist(orig.x, orig.y, orig.z, p2.x, p2.y, p2.z))
+    return vectorConvertFrom(perp1, plane[0], plane[1], plane[2]);
+  else return vectorConvertFrom(perp2, plane[0], plane[1], plane[2]);
+}
+
+
 
 PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
   pushMatrix();
