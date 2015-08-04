@@ -124,6 +124,15 @@ public void draw() {
   sphere(50);
   popMatrix(); /* */
   // END TESTING CODE
+  // TESTING CODE: DRAW ORIGIN OF TOOL FRAME 0
+  PVector aufo = convertWorldToNative(toolFrames[0].getOrigin());
+  stroke(255, 0, 0);
+  noFill();
+  pushMatrix();
+  translate(aufo.x, aufo.y, aufo.z);
+  sphere(15);
+  popMatrix();
+  // END TESTING CODE
 
   hint(DISABLE_DEPTH_TEST);
   

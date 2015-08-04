@@ -16,15 +16,15 @@ float liveSpeed = 0.1;
 void createTestProgram() {
   Program program = new Program("Test Program");
   MotionInstruction instruction =
-    new MotionInstruction(MTYPE_LINEAR, 0, true, 800, 1.0, COORD_WORLD); //1.0
+    new MotionInstruction(MTYPE_LINEAR, 0, true, 800, 1.0); //1.0
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_CIRCULAR, 1, true, 1600, 0.75, COORD_WORLD); //0.75
+  instruction = new MotionInstruction(MTYPE_CIRCULAR, 1, true, 1600, 0.75); //0.75
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 2, true, 400, 0.5, COORD_WORLD); //0.5
+  instruction = new MotionInstruction(MTYPE_LINEAR, 2, true, 400, 0.5); //0.5
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_JOINT, 3, true, 1.0, 0, COORD_JOINT);
+  instruction = new MotionInstruction(MTYPE_JOINT, 3, true, 1.0, 0);
   program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_JOINT, 4, true, 1.0, 0, COORD_JOINT);
+  instruction = new MotionInstruction(MTYPE_JOINT, 4, true, 1.0, 0);
   program.addInstruction(instruction);
   //for (int n = 0; n < 15; n++) program.addInstruction(
   //  new MotionInstruction(MTYPE_JOINT, 1, true, 0.5, 0));
@@ -40,31 +40,31 @@ void createTestProgram() {
   
   Program program2 = new Program("Test Program 2");
   MotionInstruction instruction2 =
-    new MotionInstruction(MTYPE_JOINT, 3, true, 1.0, 0, COORD_JOINT);
+    new MotionInstruction(MTYPE_JOINT, 3, true, 1.0, 0);
   program2.addInstruction(instruction2);
-  instruction2 = new MotionInstruction(MTYPE_JOINT, 4, true, 1.0, 0, COORD_JOINT);
+  instruction2 = new MotionInstruction(MTYPE_JOINT, 4, true, 1.0, 0);
   program2.addInstruction(instruction2);
   programs.add(program2);
   currentProgram = program2;
   
   Program program3 = new Program("Circular Test");
   MotionInstruction instruction3 =
-    new MotionInstruction(MTYPE_LINEAR, 0, true, 1.0, 0, COORD_WORLD);
+    new MotionInstruction(MTYPE_LINEAR, 0, true, 1.0, 0);
   program3.addInstruction(instruction3);
-  instruction3 = new MotionInstruction(MTYPE_CIRCULAR, 1, true, 1.0, 0, COORD_WORLD);
+  instruction3 = new MotionInstruction(MTYPE_CIRCULAR, 1, true, 1.0, 0);
   program3.addInstruction(instruction3);
-  instruction3 = new MotionInstruction(MTYPE_LINEAR, 2, true, 1.0, 0, COORD_WORLD);
+  instruction3 = new MotionInstruction(MTYPE_LINEAR, 2, true, 1.0, 0);
   program3.addInstruction(instruction3);
-  instruction3 = new MotionInstruction(MTYPE_LINEAR, 3, true, 0.25, 0, COORD_WORLD);
+  instruction3 = new MotionInstruction(MTYPE_LINEAR, 3, true, 0.25, 0);
   program3.addInstruction(instruction3);
   programs.add(program3);
   //currentProgram = program3;
   
   Program program4 = new Program("New Arm Test");
   MotionInstruction instruction4 =
-    new MotionInstruction(MTYPE_LINEAR, 5, true, 1.0, 0, COORD_WORLD);
+    new MotionInstruction(MTYPE_LINEAR, 5, true, 1.0, 0);
   program4.addInstruction(instruction4);
-  instruction4 = new MotionInstruction(MTYPE_LINEAR, 6, true, 1.0, 0, COORD_WORLD);
+  instruction4 = new MotionInstruction(MTYPE_LINEAR, 6, true, 1.0, 0);
   program4.addInstruction(instruction4);
   programs.add(program4);
   //currentProgram = program4;

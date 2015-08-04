@@ -25,7 +25,8 @@ final int NONE = 0,
           PICK_FRAME_MODE = 15,
           FRAME_DETAIL = 16,
           PICK_FRAME_METHOD = 17,
-          THREE_POINT_MODE = 18;
+          THREE_POINT_MODE = 18,
+          ACTIVE_FRAMES = 19;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
@@ -63,6 +64,11 @@ int letterSet; // which letter group to enter
 Frame currentFrame;
 int inFrame;
 int teachingWhichPoint;
+PVector[] tempPoints = new PVector[3];
+PVector[] tempVectors = new PVector[3];
+int activeUserFrame = -1;
+int activeJogFrame = -1;
+int activeToolFrame = -1;
 
 // display on screen
 ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>(); // display list of programs or motion instructions
@@ -1086,6 +1092,8 @@ public void addNumber(String number) {
     workingText += number;
     options.set(1, workingText + workingTextSuffix);
     updateScreen(color(255,0,0), color(0,0,0));
+  } else if (mode == ACTIVE_FRAMES) {
+    workingText += number;
   }
 }
 
@@ -1143,6 +1151,9 @@ public void up(int theValue){
       case NAV_USER_FRAMES:
          if (active_row > 0) active_row--;
          break;
+      case ACTIVE_FRAMES:
+         if (active_row > 1) active_row--;
+         break;
    }
    
    updateScreen(color(255,0,0), color(0,0,0));
@@ -1184,6 +1195,7 @@ public void dn(int theValue){
       case SETUP_NAV:
       case NAV_TOOL_FRAMES:
       case NAV_USER_FRAMES:
+      case ACTIVE_FRAMES:
          if (active_row < contents.size()-1) active_row++;
          break;
    }  
@@ -1320,7 +1332,8 @@ public void f1(int theValue){
              false,
              (curCoordFrame == COORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
              0,
-             curCoordFrame);
+             activeUserFrame,
+             activeToolFrame);
            prog.addInstruction(insert);
            active_instruction = select_instruction = prog.getInstructions().size()-1;
            active_col = 0;
@@ -1429,10 +1442,15 @@ public void f2(int theValue) {
       options.add("1.Three Point");
       options.add("2.Four Point");
       options.add("3.Direct Entry");
-      mode = PICK_FRAME_METHOD;
-      which_option = 0;
-      updateScreen(color(255,0,0), color(0));
+    } else if (inFrame == NAV_TOOL_FRAMES) {
+      options = new ArrayList<String>();
+      options.add("1.Three Point");
+      options.add("2.Six Point");
+      options.add("3.Direct Entry");
     }
+    mode = PICK_FRAME_METHOD;
+    which_option = 0;
+    updateScreen(color(255,0,0), color(0));
   }
 }
 
@@ -1604,7 +1622,8 @@ public void f5(int theValue) {
         false,
         (curCoordFrame == COORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
         0,
-        curCoordFrame);
+        activeUserFrame,
+        activeToolFrame);
       prog.overwriteInstruction(active_instruction, insert);
       active_col = 0;
       loadInstructions(select_program);
@@ -1630,37 +1649,120 @@ public void f5(int theValue) {
     }
   } else if (mode == THREE_POINT_MODE) {
     if (shift == ON) {
-      if (teachingWhichPoint == 1) { // teaching origin
-        pushMatrix();
-        applyCamera();
-        currentFrame.setOrigin(
-          convertNativeToWorld(calculateEndEffectorPosition(armModel, false)));
-        popMatrix();
-        teachingWhichPoint++;
-        loadThreePointMethod();
-      } else if (teachingWhichPoint == 2 || teachingWhichPoint == 3) { // x,y axis
-        pushMatrix();
-        applyCamera();
-        PVector second = convertNativeToWorld(calculateEndEffectorPosition(armModel, false));
-        popMatrix();
-        PVector first = currentFrame.getOrigin();
-        PVector vec = new PVector(second.x-first.x, second.y-first.y, second.z-first.z);
-        vec.normalize();
-        if (teachingWhichPoint == 2) { // x axis
-          currentFrame.setAxis(0, vec);
+      if (inFrame == NAV_USER_FRAMES) {
+        if (teachingWhichPoint == 1) { // teaching origin
+          pushMatrix();
+          applyCamera();
+          PVector eep = calculateEndEffectorPosition(armModel, false);
+          popMatrix();
+          currentFrame.setOrigin(convertNativeToWorld(eep));
           teachingWhichPoint++;
           loadThreePointMethod();
-        } else { // y axis
-          PVector xvec = currentFrame.getAxis(0);
-          PVector yvec = computePerpendicular(xvec, vec);
-          currentFrame.setAxis(1, yvec.normalize(null));
-          currentFrame.setAxis(2, xvec.cross(yvec).normalize(null));
-          if (inFrame == NAV_TOOL_FRAMES) loadToolFrames();
-          else if (inFrame == NAV_USER_FRAMES) loadUserFrames();
+        } else if (teachingWhichPoint == 2 || teachingWhichPoint == 3) { // x,y axis
+          pushMatrix();
+          applyCamera();
+          PVector eep = calculateEndEffectorPosition(armModel, false);
+          popMatrix();
+          PVector second = convertNativeToWorld(eep);
+          PVector first = currentFrame.getOrigin();
+          PVector vec = new PVector(second.x-first.x, second.y-first.y, second.z-first.z);
+          vec.normalize();
+          if (teachingWhichPoint == 2) { // x axis
+            currentFrame.setAxis(0, vec);
+            teachingWhichPoint++;
+            loadThreePointMethod();
+          } else { // y axis
+            PVector xvec = currentFrame.getAxis(0);
+            PVector yvec = computePerpendicular(xvec, vec);
+            currentFrame.setAxis(1, yvec.normalize(null));
+            currentFrame.setAxis(2, xvec.cross(yvec).normalize(null));
+            loadUserFrames();
+          }
         }
-      }
+      } else if (inFrame == NAV_TOOL_FRAMES) {
+        pushMatrix();
+        applyCamera();
+        applyModelRotation(armModel);
+        PVector one = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
+        translate(0, 0, -100);
+        PVector two = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
+        popMatrix();
+        one = convertNativeToWorld(one);
+        two = convertNativeToWorld(two);
+        tempPoints[teachingWhichPoint-1] = one;
+        tempVectors[teachingWhichPoint-1] = new PVector(
+          two.x-one.x, two.y-one.y, two.z-one.z).normalize(null);
+        if (teachingWhichPoint < 3) {
+          teachingWhichPoint++;
+          loadThreePointMethod();
+        } else {
+          // calculate approx. intersection pt. of the provided vectors to get the tool end effector position
+          PVector[] last = new PVector[3];
+          PVector[] curr = new PVector[3];
+          for (int n = 0; n < 3; n++)
+            last[n] = new PVector(
+              tempPoints[n].x + tempVectors[n].x,
+              tempPoints[n].y + tempVectors[n].y,
+              tempPoints[n].z + tempVectors[n].z
+            );
+          float lastDist =
+            dist(last[0].x, last[0].y, last[0].z, last[1].x, last[1].y, last[1].z) +
+            dist(last[0].x, last[0].y, last[0].z, last[2].x, last[2].y, last[2].z) +
+            dist(last[2].x, last[2].y, last[2].z, last[1].x, last[1].y, last[1].z);
+          float currentDist = lastDist;
+          int iter = 0;
+          while (true) {
+            iter++;
+            if (iter > 10000) { // FAIL CHECK
+              loadToolFrames();
+              return;
+            }
+            for (int n = 0; n < 3; n++)
+              curr[n] = new PVector(
+                last[n].x + tempVectors[n].x,
+                last[n].y + tempVectors[n].y,
+                last[n].z + tempVectors[n].z
+              );
+            currentDist =
+              dist(curr[0].x, curr[0].y, curr[0].z, curr[1].x, curr[1].y, curr[1].z) +
+              dist(curr[0].x, curr[0].y, curr[0].z, curr[2].x, curr[2].y, curr[2].z) +
+              dist(curr[2].x, curr[2].y, curr[2].z, curr[1].x, curr[1].y, curr[1].z);
+            if (currentDist > lastDist) break; // we've passed each other so we're near the closest approach
+            for (int n = 0; n < 3; n++) {
+              last[n].x = curr[n].x; last[n].y = curr[n].y; last[n].z = curr[n].z;
+              lastDist = currentDist;
+            }
+          }
+          // create a cube of dense points around approx. closest approach and check each one
+          PVector approx = new PVector(
+              (last[0].x+last[1].x+last[2].x)/3.0,
+              (last[0].y+last[1].y+last[2].y)/3.0,
+              (last[0].z+last[1].z+last[2].z)/3.0
+            );
+          float leastDiff = Float.MAX_VALUE;
+          PVector closestPt = new PVector(0,0,0);
+          for (float x = approx.x-1; x <= approx.x+1; x += 0.05) {
+            for (float y = approx.y-1; y <= approx.y+1; y += 0.05) {
+              for (float z = approx.z-1; z <= approx.z+1; z += 0.05) {
+                float dist1 = dist(x, y, z, tempPoints[0].x, tempPoints[0].y, tempPoints[0].z);
+                float dist2 = dist(x, y, z, tempPoints[1].x, tempPoints[1].y, tempPoints[1].z);
+                float dist3 = dist(x, y, z, tempPoints[2].x, tempPoints[2].y, tempPoints[2].z);
+                float mx = max(dist1, dist2, dist3);
+                float mn = min(dist1, dist2, dist3);
+                float diff = mx - mn;
+                if (diff < leastDiff) {
+                  leastDiff = diff;
+                  closestPt.x = x; closestPt.y = y; closestPt.z = z;
+                }
+              }
+            }
+          }
+          currentFrame.setOrigin(closestPt);
+          loadToolFrames();
+        }
+      } // end if inFrame == NAV_TOOL_FRAMES
     }
-  }
+  } // end if mode==THREE_POINT_MODE
   
 }
 
@@ -1839,6 +1941,16 @@ public void ENTER(int theValue){
          teachingWhichPoint = 1;
          loadThreePointMethod();
          break;
+      case ACTIVE_FRAMES:
+         int num = Integer.parseInt(workingText);
+         if (num < 0) num = 0;
+         else if (num > userFrames.length) num = userFrames.length;
+         if (active_row == 1) activeUserFrame = num-1;
+         else if (active_row == 2) ; // jog not implemented
+         else if (active_row == 3) activeToolFrame = num-1;
+         workingText = "";
+         loadActiveFrames();
+         break;
    }
 }
 
@@ -1857,7 +1969,13 @@ public void ITEM(int theValue) {
 
 
 public void COORD(int theValue) {
-  // TODO: enable cycling through all the kinds of coordinate frames
+  if (shift == ON) {
+    active_row = 1;
+    active_col = 0;
+    workingText = "";
+    loadActiveFrames();
+    return;
+  }  
   curCoordFrame++;
   if (curCoordFrame > COORD_WORLD) curCoordFrame = COORD_JOINT;
   liveSpeed = 0.1;
@@ -2344,20 +2462,35 @@ public void loadThreePointMethod() {
   
   ArrayList<String> line = new ArrayList<String>();
   String str = "";
-  if (teachingWhichPoint > 1) str = "Orient Origin Point: RECORDED";
-  else str = "Orient Origin Point: UNINIT";
+  if (inFrame == NAV_USER_FRAMES) {
+    if (teachingWhichPoint > 1) str = "Orient Origin Point: RECORDED";
+    else str = "Orient Origin Point: UNINIT";
+  } else if (inFrame == NAV_TOOL_FRAMES) {
+    if (teachingWhichPoint > 1) str = "First Approach Point: RECORDED";
+    else str = "First Approach Point: UNINIT";
+  }
   line.add(str);
   contents.add(line);
   
   line = new ArrayList<String>();
-  if (teachingWhichPoint > 2) str = "X Direction Point: RECORDED";
-  else str = "X Direction Point: UNINIT";
+  if (inFrame == NAV_USER_FRAMES) {
+    if (teachingWhichPoint > 2) str = "X Direction Point: RECORDED";
+    else str = "X Direction Point: UNINIT";
+  } else if (inFrame == NAV_TOOL_FRAMES) {
+    if (teachingWhichPoint > 2) str = "Second Approach Point: RECORDED";
+    else str = "Second Approach Point: UNINIT";
+  }
   line.add(str);
   contents.add(line);
   
   line = new ArrayList<String>();
-  if (teachingWhichPoint > 3) str = "Y Direction Point: RECORDED";
-  else str = "Y Direction Point: UNINIT";
+  if (inFrame == NAV_USER_FRAMES) {
+    if (teachingWhichPoint > 3) str = "Y Direction Point: RECORDED";
+    else str = "Y Direction Point: UNINIT";
+  } else if (inFrame == NAV_TOOL_FRAMES) {
+    if (teachingWhichPoint > 3) str = "Third Approach Point: RECORDED";
+    else str = "Third Approach Point: UNINIT";
+  }
   line.add(str);
   contents.add(line);
   
@@ -2444,6 +2577,36 @@ public void loadInstructions(int programID){
       contents.add(m);
       println("hi " + m.toString());
    } 
+}
+
+
+void loadActiveFrames() {
+  options = new ArrayList<String>();
+  contents = new ArrayList<ArrayList<String>>();
+  ArrayList<String> line = new ArrayList<String>();
+  String str = "";
+  
+  str = "ACTIVE FRAMES";
+  line.add(str);
+  contents.add(line);
+  
+  line = new ArrayList<String>();
+  str = "User: " + (activeUserFrame+1);
+  line.add(str);
+  contents.add(line);
+  
+  line = new ArrayList<String>();
+  str = "Jog: " + (activeJogFrame+1);
+  line.add(str);
+  contents.add(line);
+  
+  line = new ArrayList<String>();
+  str = "Tool: " + (activeToolFrame+1);
+  line.add(str);
+  contents.add(line);
+  
+  mode = ACTIVE_FRAMES;
+  updateScreen(color(255,0,0), color(0));
 }
 
 
