@@ -177,15 +177,24 @@ public class MotionInstruction extends Instruction {
   
   // TODO: Fix to account for user/tool frames
   public Point getVector(Program parent) {
+println("getVector start");
     if (motionType != COORD_JOINT) {
       Point out;
       if (globalRegister) out = pr[register].clone();
       else out = parent.p[register].clone();
       out.c = convertWorldToNative(out.c);
+println("getVector end1");
       return out;
     } else {
-      if (globalRegister) return pr[register];
-      else return parent.p[register];
+      Point ret;
+      if (globalRegister) ret = pr[register].clone();
+      else ret = parent.p[register].clone();
+      if (userFrame != -1) {
+        PVector[] frame = userFrames[userFrame].axes;
+        ret.c = vectorConvertFrom(ret.c, frame[0], frame[1], frame[2]);
+      }
+println("getVector end2");
+      return ret;
     }
   } // end getVector()
   

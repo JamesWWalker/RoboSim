@@ -730,13 +730,14 @@ float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
 
 // return true when done
 boolean executeProgram(Program program, ArmModel model) {
+println("executeProgram start");
   if (program == null || currentInstruction >= program.getInstructions().size())
     return true;
   Instruction ins = program.getInstructions().get(currentInstruction);
   if (ins instanceof MotionInstruction) {
     MotionInstruction instruction = (MotionInstruction)ins;
     if (!executingInstruction) { // start executing new instruction
-    
+println("executeProgram end1");
       if (setUpInstruction(program, model, instruction)) return true;
       executingInstruction = true;
       
@@ -751,6 +752,7 @@ boolean executeProgram(Program program, ArmModel model) {
       }
     }
   } // end of if instruction==motion instruction
+println("executeProgram end2");
   return false;
 } // end executeProgram
 
