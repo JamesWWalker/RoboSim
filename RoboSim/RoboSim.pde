@@ -124,12 +124,43 @@ public void draw() {
   sphere(50);
   popMatrix(); /* */
   // END TESTING CODE
-  // TESTING CODE: DRAW ORIGIN OF TOOL FRAME 0
-  PVector aufo = convertWorldToNative(toolFrames[0].getOrigin());
-  stroke(255, 0, 0);
+  // TESTING CODE: DRAW USER FRAME 0
+  PVector ufo = convertWorldToNative(userFrames[0].getOrigin());
+  
+  PVector ufx = new PVector(
+      ufo.x-userFrames[0].getAxis(0).x*80,
+      ufo.y-userFrames[0].getAxis(0).y*80,
+      ufo.z-userFrames[0].getAxis(0).z*80
+    );
+  PVector ufy = new PVector(
+      ufo.x-userFrames[0].getAxis(2).x*80,
+      ufo.y-userFrames[0].getAxis(2).y*80,
+      ufo.z-userFrames[0].getAxis(2).z*80
+    );
+  PVector ufz = new PVector(
+      ufo.x+userFrames[0].getAxis(1).x*80,
+      ufo.y+userFrames[0].getAxis(1).y*80,
+      ufo.z+userFrames[0].getAxis(1).z*80
+    );
   noFill();
+  stroke(255, 0, 0);
   pushMatrix();
-  translate(aufo.x, aufo.y, aufo.z);
+  translate(ufo.x, ufo.y, ufo.z);
+  sphere(15);
+  popMatrix();
+  stroke(0, 255, 0);
+  pushMatrix();
+  translate(ufx.x, ufx.y, ufx.z);
+  sphere(15);
+  popMatrix();
+  stroke(0, 0, 255);
+  pushMatrix();
+  translate(ufy.x, ufy.y, ufy.z);
+  sphere(15);
+  popMatrix();
+  stroke(255, 255, 0);
+  pushMatrix();
+  translate(ufz.x, ufz.y, ufz.z);
   sphere(15);
   popMatrix();
   // END TESTING CODE

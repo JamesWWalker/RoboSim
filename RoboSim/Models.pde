@@ -330,11 +330,18 @@ public class ArmModel {
           startFrom = calculateEndEffectorPosition(armModel, false);
           popMatrix();
         }
+        PVector move = new PVector(linearMoveSpeeds[0], linearMoveSpeeds[1], linearMoveSpeeds[2]);
+        if (activeUserFrame >= 0 && activeUserFrame < userFrames.length) {
+          PVector[] frame = userFrames[activeUserFrame].axes;
+          move.y = -move.y;
+          move.z = -move.z;
+          move = vectorConvertTo(move, frame[0], frame[1], frame[2]);
+        }
         intermediatePositions.clear();
         float distance = motorSpeed/60.0 * liveSpeed;
-        intermediatePositions.add(new PVector(startFrom.x + linearMoveSpeeds[0] * distance,
-                                              startFrom.y + linearMoveSpeeds[1] * distance,
-                                              startFrom.z + linearMoveSpeeds[2] * distance));
+        intermediatePositions.add(new PVector(startFrom.x + move.x * distance,
+                                              startFrom.y + move.y * distance,
+                                              startFrom.z + move.z * distance));
         attemptIK(this, 0);
         instantRotation();
       }
