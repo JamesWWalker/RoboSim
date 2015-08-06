@@ -252,6 +252,27 @@ public class ArmModel {
       segments.get(6).draw();
             
       // next, the end effector
+      if (activeEndEffector == ENDEF_SUCTION) {
+        rotateY(PI);
+        translate(-88, -37, 0);
+        eeModelSuction.draw();
+      } else if (activeEndEffector == ENDEF_CLAW) {
+        rotateY(PI);
+        translate(-88, 0, 0);
+        eeModelClaw.draw();
+        rotateZ(PI/2);
+        if (endEffectorStatus == OFF) {
+          translate(10, -85, 30);
+          eeModelClawPincer.draw();
+          translate(55, 0, 0);
+          eeModelClawPincer.draw();
+        } else if (endEffectorStatus == ON) {
+          translate(28, -85, 30);
+          eeModelClawPincer.draw();
+          translate(20, 0, 0);
+          eeModelClawPincer.draw();
+        }
+      }
     }
   }// end draw arm model
   

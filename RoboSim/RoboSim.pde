@@ -3,7 +3,17 @@ import controlP5.*;
 import java.util.*;
 import java.nio.*;
 
+final int OFF = 0, ON = 1;
+
 ArmModel armModel;
+Model eeModelSuction;
+Model eeModelClaw;
+Model eeModelClawPincer;
+
+final int ENDEF_NONE = 0, ENDEF_SUCTION = 1, ENDEF_CLAW = 2;
+int activeEndEffector = ENDEF_CLAW;
+int endEffectorStatus = ON;
+
 float lastMouseX, lastMouseY;
 float cameraTX = 0, cameraTY = 0, cameraTZ = 0;
 float cameraRX = 0, cameraRY = 0, cameraRZ = 0;
@@ -49,6 +59,9 @@ public void setup() {
   gui();
   for (int n = 0; n < pr.length; n++) pr[n] = new Point();
   armModel = new ArmModel(ARM_STANDARD);
+  eeModelSuction = new Model("VACUUM_2.STL", color(40));
+  eeModelClaw = new Model("GRIPPER.STL", color(40));
+  eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
   intermediatePositions = new ArrayList<PVector>();
   // TESTING CODE
   createTestProgram();
@@ -114,7 +127,7 @@ public void draw() {
   }
   popMatrix(); /* */
   // TESTING CODE: DRAW END EFFECTOR POSITION
-  pushMatrix();
+  /*pushMatrix();
   applyCamera();
   noFill();
   stroke(255, 0, 0);
