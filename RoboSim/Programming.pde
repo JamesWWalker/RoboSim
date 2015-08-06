@@ -226,6 +226,22 @@ println("getVector end2");
 public class FrameInstruction extends Instruction {
 }
 
+public class ToolInstruction extends Instruction {
+  private String display;
+  private int setToolStatus;
+  
+  public String getDisplay() { return display; }
+  
+  public ToolInstruction(String d, int in) {
+    display = d;
+    setToolStatus = in;
+  }
+  
+  public void execute() {
+    endEffectorStatus = setToolStatus;
+  }
+}
+
 public class CoordinateFrame {
   private PVector origin = new PVector();
   private PVector rotation = new PVector();

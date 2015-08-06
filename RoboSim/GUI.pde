@@ -6,7 +6,6 @@ final int FRAME_JOINT = 0,
           FRAME_USER = 4;
 final int SMALL_BUTTON = 20,
           LARGE_BUTTON = 35; 
-final int OFF = 0, ON = 1;      
 final int NONE = 0, 
           PROGRAM_NAV = 1, 
           INSTRUCTION_NAV = 2,
@@ -25,7 +24,12 @@ final int NONE = 0,
           PICK_FRAME_MODE = 15,
           FRAME_DETAIL = 16,
           PICK_FRAME_METHOD = 17,
-          THREE_POINT_MODE = 18;
+          THREE_POINT_MODE = 18,
+          ACTIVE_FRAMES = 19,
+          PICK_INSTRUCTION = 20,
+          IO_SUBMENU = 21,
+          SET_DO_BRACKET = 22,
+          SET_DO_STATUS = 23;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
@@ -66,6 +70,12 @@ int letterSet; // which letter group to enter
 Frame currentFrame;
 int inFrame;
 int teachingWhichPoint;
+PVector[] tempPoints = new PVector[3];
+PVector[] tempVectors = new PVector[3];
+int activeUserFrame = -1;
+int activeJogFrame = -1;
+int activeToolFrame = -1;
+PVector[] teachingPts = new PVector[3];
 
 // display on screen
 ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>(); // display list of programs or motion instructions
@@ -911,6 +921,11 @@ public void mouseWheel(MouseEvent event){
 }
 
 public void keyPressed(){
+  
+  // TEST CODE: Press s to call saveState, l to call loadState
+  if (key == 's' || key == 'S') saveState();
+  else if (key == 'l' || key == 'L') loadState();
+  
    /* click spacebar once to activate pan button
     * click spacebar again to deactivate pan button
     */ 
@@ -1100,7 +1115,7 @@ public void NUM9(int theValue){
 
 public void addNumber(String number) {
   if (mode == SET_INSTRUCTION_REGISTER || mode == SET_INSTRUCTION_TERMINATION ||
-      mode == JUMP_TO_LINE)
+      mode == JUMP_TO_LINE || mode == SET_DO_BRACKET)
   {
     workingText += number;
     options.set(1, workingText);
@@ -1109,6 +1124,8 @@ public void addNumber(String number) {
     workingText += number;
     options.set(1, workingText + workingTextSuffix);
     updateScreen(color(255,0,0), color(0,0,0));
+  } else if (mode == ACTIVE_FRAMES) {
+    workingText += number;
   }
 }
 
@@ -1154,6 +1171,7 @@ public void up(int theValue){
       case INSTRUCTION_EDIT:
       case PICK_FRAME_MODE:
       case PICK_FRAME_METHOD:
+      case SET_DO_STATUS:
          if (which_option == 0){
             // does nothing
          }else{
@@ -1164,7 +1182,12 @@ public void up(int theValue){
       case SETUP_NAV:
       case NAV_TOOL_FRAMES:
       case NAV_USER_FRAMES:
+      case PICK_INSTRUCTION:
+      case IO_SUBMENU:
          if (active_row > 0) active_row--;
+         break;
+      case ACTIVE_FRAMES:
+         if (active_row > 1) active_row--;
          break;
    }
    
@@ -1197,6 +1220,7 @@ public void dn(int theValue){
       case INSTRUCTION_EDIT:
       case PICK_FRAME_MODE:
       case PICK_FRAME_METHOD:
+      case SET_DO_STATUS:
          if (which_option == options.size() - 1){
             // does nothing
          }else{
@@ -1207,6 +1231,9 @@ public void dn(int theValue){
       case SETUP_NAV:
       case NAV_TOOL_FRAMES:
       case NAV_USER_FRAMES:
+      case ACTIVE_FRAMES:
+      case PICK_INSTRUCTION:
+      case IO_SUBMENU:
          if (active_row < contents.size()-1) active_row++;
          break;
    }  
@@ -1283,6 +1310,34 @@ public void rt(int theValue){
             updateScreen(color(255,0,0), color(0));
           }
           break;
+       case PICK_INSTRUCTION:
+          if (active_row == 0) { // I/O
+            contents = new ArrayList<ArrayList<String>>();
+            ArrayList<String> line = new ArrayList<String>();
+            line.add("1 Cell Intface (NA)");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("2 Custom (NA)");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("3 Digital");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("4 Analog (NA)");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("5 Group (NA)");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("6 Robot");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("7 UOP (NA)");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("8 SOP (NA)");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("9 Interconnect (NA)");
+            contents.add(line);
+            active_col = active_row = 0;
+            mode = IO_SUBMENU;
+            updateScreen(color(255,0,0), color(0));
+          } else if (active_row == 1) { // Offset/Frames
+          }
+          break;
    }
 }
 
@@ -1325,7 +1380,19 @@ public void f1(int theValue){
          //shift = OFF;
          break;
       case INSTRUCTION_NAV:
-         if (shift == ON) {
+         if (shift == OFF) {
+           contents = new ArrayList<ArrayList<String>>();
+           ArrayList<String> line = new ArrayList<String>();
+           line.add("1 I/O");
+           contents.add(line);
+           line = new ArrayList<String>(); line.add("2 Offset/Frames");
+           contents.add(line);
+           line = new ArrayList<String>(); line.add("(Others not yet implemented)");
+           contents.add(line);
+           active_col = active_row = 0;
+           mode = PICK_INSTRUCTION;
+           updateScreen(color(255,0,0), color(0));
+         } else { // shift+f1 = add new motion instruction
            pushMatrix();
            applyCamera();
            PVector eep = calculateEndEffectorPosition(armModel, false);
@@ -1343,7 +1410,8 @@ public void f1(int theValue){
              false,
              (curCoordFrame == COORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
              0,
-             curCoordFrame);
+             activeUserFrame,
+             activeToolFrame);
            prog.addInstruction(insert);
            active_instruction = select_instruction = prog.getInstructions().size()-1;
            active_col = 0;
@@ -1452,10 +1520,15 @@ public void f2(int theValue) {
       options.add("1.Three Point");
       options.add("2.Four Point");
       options.add("3.Direct Entry");
-      mode = PICK_FRAME_METHOD;
-      which_option = 0;
-      updateScreen(color(255,0,0), color(0));
+    } else if (inFrame == NAV_TOOL_FRAMES) {
+      options = new ArrayList<String>();
+      options.add("1.Three Point");
+      options.add("2.Six Point");
+      options.add("3.Direct Entry");
     }
+    mode = PICK_FRAME_METHOD;
+    which_option = 0;
+    updateScreen(color(255,0,0), color(0));
   }
 }
 
@@ -1501,8 +1574,9 @@ public void f3(int theValue) {
 public void f4(int theValue){
    switch (mode){
       case INSTRUCTION_NAV:
-         //MotionInstruction m = (MotionInstruction) programs.get(select_program).getInstructions().get(active_row);
-         switch (active_col){
+         Instruction ins = programs.get(select_program).getInstructions().get(active_instruction);
+         if (ins instanceof MotionInstruction) {
+           switch (active_col){
              case 1: // motion type
                 options = new ArrayList<String>();
                 options.add("1.JOINT");
@@ -1557,6 +1631,7 @@ public void f4(int theValue){
                 mode = SET_INSTRUCTION_TERMINATION;
                 which_option = 0;
                 break;
+           }
          } 
          break;  
      case ENTER_TEXT:
@@ -1627,7 +1702,8 @@ public void f5(int theValue) {
         false,
         (curCoordFrame == COORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
         0,
-        curCoordFrame);
+        activeUserFrame,
+        activeToolFrame);
       prog.overwriteInstruction(active_instruction, insert);
       active_col = 0;
       loadInstructions(select_program);
@@ -1653,37 +1729,127 @@ public void f5(int theValue) {
     }
   } else if (mode == THREE_POINT_MODE) {
     if (shift == ON) {
-      if (teachingWhichPoint == 1) { // teaching origin
-        pushMatrix();
-        applyCamera();
-        currentFrame.setOrigin(
-          convertNativeToWorld(calculateEndEffectorPosition(armModel, false)));
-        popMatrix();
-        teachingWhichPoint++;
-        loadThreePointMethod();
-      } else if (teachingWhichPoint == 2 || teachingWhichPoint == 3) { // x,y axis
-        pushMatrix();
-        applyCamera();
-        PVector second = convertNativeToWorld(calculateEndEffectorPosition(armModel, false));
-        popMatrix();
-        PVector first = currentFrame.getOrigin();
-        PVector vec = new PVector(second.x-first.x, second.y-first.y, second.z-first.z);
-        vec.normalize();
-        if (teachingWhichPoint == 2) { // x axis
-          currentFrame.setAxis(0, vec);
+      if (inFrame == NAV_USER_FRAMES) {
+        if (teachingWhichPoint == 1) { // teaching origin
+          pushMatrix();
+          applyCamera();
+          PVector eep = calculateEndEffectorPosition(armModel, false);
+          popMatrix();
+          currentFrame.setOrigin(convertNativeToWorld(eep));
           teachingWhichPoint++;
           loadThreePointMethod();
-        } else { // y axis
-          PVector xvec = currentFrame.getAxis(0);
-          PVector yvec = computePerpendicular(xvec, vec);
-          currentFrame.setAxis(1, yvec.normalize(null));
-          currentFrame.setAxis(2, xvec.cross(yvec).normalize(null));
-          if (inFrame == NAV_TOOL_FRAMES) loadToolFrames();
-          else if (inFrame == NAV_USER_FRAMES) loadUserFrames();
+        } else if (teachingWhichPoint == 2 || teachingWhichPoint == 3) { // x,y axis
+          pushMatrix();
+          applyCamera();
+          PVector eep = calculateEndEffectorPosition(armModel, false);
+          popMatrix();
+          PVector second = convertNativeToWorld(eep);
+          PVector first = currentFrame.getOrigin();
+          PVector vec = new PVector(second.x-first.x, second.y-first.y, second.z-first.z);
+          vec.normalize();
+          if (teachingWhichPoint == 2) { // x axis
+            currentFrame.setAxis(0, vec);
+            teachingWhichPoint++;
+            loadThreePointMethod();
+          } else { // y axis
+            PVector xvec = currentFrame.getAxis(0);
+            PVector yvec = computePerpendicular(xvec, vec);
+            currentFrame.setAxis(1, yvec.normalize(null));
+            currentFrame.setAxis(2, xvec.cross(yvec).normalize(null));
+            loadUserFrames();
+          }
         }
-      }
+      } else if (inFrame == NAV_TOOL_FRAMES) {
+        pushMatrix();
+        applyCamera();
+        applyModelRotation(armModel);
+        PVector one = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
+        translate(0, 0, -100);
+        PVector two = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
+        popMatrix();
+        tempPoints[teachingWhichPoint-1] = one;
+        teachingPts[teachingWhichPoint-1] = one;
+        tempVectors[teachingWhichPoint-1] = new PVector(
+          two.x-one.x, two.y-one.y, two.z-one.z).normalize(null);
+        if (teachingWhichPoint < 3) {
+          teachingWhichPoint++;
+          loadThreePointMethod();
+        } else {
+          // calculate approx. intersection pt. of the provided vectors to get the tool end effector position
+          PVector[] last = new PVector[3];
+          PVector[] curr = new PVector[3];
+          for (int n = 0; n < 3; n++)
+            last[n] = new PVector(
+              tempPoints[n].x + tempVectors[n].x,
+              tempPoints[n].y + tempVectors[n].y,
+              tempPoints[n].z + tempVectors[n].z
+            );
+          float lastDist =
+            dist(last[0].x, last[0].y, last[0].z, last[1].x, last[1].y, last[1].z) +
+            dist(last[0].x, last[0].y, last[0].z, last[2].x, last[2].y, last[2].z) +
+            dist(last[2].x, last[2].y, last[2].z, last[1].x, last[1].y, last[1].z);
+          float currentDist = lastDist;
+          int iter = 0;
+          while (true) {
+            iter++;
+            if (iter > 10000) { // FAIL CHECK
+              loadToolFrames();
+              return;
+            }
+            for (int n = 0; n < 3; n++)
+              curr[n] = new PVector(
+                last[n].x + tempVectors[n].x,
+                last[n].y + tempVectors[n].y,
+                last[n].z + tempVectors[n].z
+              );
+            currentDist =
+              dist(curr[0].x, curr[0].y, curr[0].z, curr[1].x, curr[1].y, curr[1].z) +
+              dist(curr[0].x, curr[0].y, curr[0].z, curr[2].x, curr[2].y, curr[2].z) +
+              dist(curr[2].x, curr[2].y, curr[2].z, curr[1].x, curr[1].y, curr[1].z);
+            if (currentDist > lastDist) break; // we've passed each other so we're near the closest approach
+            for (int n = 0; n < 3; n++) {
+              last[n].x = curr[n].x; last[n].y = curr[n].y; last[n].z = curr[n].z;
+              lastDist = currentDist;
+            }
+          }
+          // create a cube of dense points around approx. closest approach and check each one
+          PVector approx = new PVector(
+              (last[0].x+last[1].x+last[2].x)/3.0,
+              (last[0].y+last[1].y+last[2].y)/3.0,
+              (last[0].z+last[1].z+last[2].z)/3.0
+            );
+          float leastDiff = Float.MAX_VALUE;
+          PVector closestPt = new PVector(0,0,0);
+          for (float x = approx.x-1; x <= approx.x+1; x += 0.05) {
+            for (float y = approx.y-1; y <= approx.y+1; y += 0.05) {
+              for (float z = approx.z-1; z <= approx.z+1; z += 0.05) {
+                float dist1 = dist(x, y, z, tempPoints[0].x, tempPoints[0].y, tempPoints[0].z);
+                float dist2 = dist(x, y, z, tempPoints[1].x, tempPoints[1].y, tempPoints[1].z);
+                float dist3 = dist(x, y, z, tempPoints[2].x, tempPoints[2].y, tempPoints[2].z);
+                float mx = max(dist1, dist2, dist3);
+                float mn = min(dist1, dist2, dist3);
+                float diff = mx - mn;
+                if (diff < leastDiff) {
+                  leastDiff = diff;
+                  closestPt.x = x; closestPt.y = y; closestPt.z = z;
+                }
+              }
+            }
+          }
+          // now set the tool frame origin's Z offset as average of closest point's
+          // distance from the 3 end effector positions when setting the approaches
+          currentFrame.setOrigin(
+              new PVector(0, 0,
+                -(dist(closestPt.x, closestPt.y, closestPt.z, teachingPts[0].x, teachingPts[0].y, teachingPts[0].z) +
+                 dist(closestPt.x, closestPt.y, closestPt.z, teachingPts[1].x, teachingPts[1].y, teachingPts[1].z) +
+                 dist(closestPt.x, closestPt.y, closestPt.z, teachingPts[2].x, teachingPts[2].y, teachingPts[2].z))/3.0
+                )
+            );
+          loadToolFrames();
+        }
+      } // end if inFrame == NAV_TOOL_FRAMES
     }
-  }
+  } // end if mode==THREE_POINT_MODE
   
 }
 
@@ -1862,6 +2028,48 @@ public void ENTER(int theValue){
          teachingWhichPoint = 1;
          loadThreePointMethod();
          break;
+      case ACTIVE_FRAMES:
+         int num = Integer.parseInt(workingText);
+         if (num < 0) num = 0;
+         else if (num > userFrames.length) num = userFrames.length;
+         if (active_row == 1) activeUserFrame = num-1;
+         else if (active_row == 2) ; // jog not implemented
+         else if (active_row == 3) activeToolFrame = num-1;
+         workingText = "";
+         loadActiveFrames();
+         break;
+      case IO_SUBMENU:
+         options = new ArrayList<String>();
+         options.add("Use number keys to enter RO[X]");
+         workingText = "";
+         options.add(workingText);
+         mode = SET_DO_BRACKET;
+         which_option = 0;
+         updateScreen(color(255,0,0), color(0));
+         break;
+      case SET_DO_BRACKET:
+         options = new ArrayList<String>();
+         options.add("ON");
+         options.add("OFF");
+         mode = SET_DO_STATUS;
+         which_option = 0;
+         updateScreen(color(255,0,0), color(0));
+         break;
+      case SET_DO_STATUS:
+         int bracketNum = Integer.parseInt(workingText);
+         Program prog = programs.get(select_program);
+         ToolInstruction insert = new ToolInstruction(
+            "DO[" + bracketNum + "]=" + (which_option == 0 ? "ON" : "OFF"),
+            (which_option == 0 ? ON : OFF));
+         prog.addInstruction(insert);
+         active_instruction = select_instruction = prog.getInstructions().size()-1;
+         active_col = 0;
+         loadInstructions(select_program);
+         active_row = contents.size()-1;
+         mode = INSTRUCTION_NAV;
+         options.clear();
+         updateScreen(color(255,0,0), color(0,0,0));
+         break;
    }
 }
 
@@ -1880,11 +2088,18 @@ public void ITEM(int theValue) {
 
 
 public void COORD(int theValue) {
-  // TODO: enable cycling through all the kinds of coordinate frames
+  if (shift == ON) {
+    active_row = 1;
+    active_col = 0;
+    workingText = "";
+    loadActiveFrames();
+    return;
+  }  
   curCoordFrame++;
   if (curCoordFrame > COORD_WORLD) curCoordFrame = COORD_JOINT;
   liveSpeed = 0.1;
 }
+
 
 
 public void SPEEDUP(int theValue) {
@@ -1993,7 +2208,8 @@ public void record_normal(int theValue){
 }
 
 public void EE(int theValue){
- 
+  activeEndEffector++;
+  if (activeEndEffector > ENDEF_CLAW) activeEndEffector = 0;
 }
 
 // axis: 0 = -x, 1= +x, 2 = -y, 3 = +y, 4 = -z, 5 = +z
@@ -2162,25 +2378,6 @@ public void updateScreen(color active, color normal){
       next_py += 14;
       
       
-   }
-   
-   // display 'END' at the end of the program 
-   switch (mode){
-      case INSTRUCTION_NAV:
-         /*cp5.addTextlabel("-2")
-            .setText("End") 
-            .setPosition(next_px, next_py)
-            .setColorValue(normal)
-            .moveTo(g1)
-            ;
-         next_px = display_px;
-         next_py += 14;   .* */
-         break;
-      case INSTRUCTION_EDIT:
-      case SET_INSTRUCTION_SPEED:
-      case SET_INSTRUCTION_REGISTER:
-      case SET_INSTRUCTION_TERMINATION:
-         break;
    }
    
    // display options for an element being edited
@@ -2384,20 +2581,35 @@ public void loadThreePointMethod() {
   
   ArrayList<String> line = new ArrayList<String>();
   String str = "";
-  if (teachingWhichPoint > 1) str = "Orient Origin Point: RECORDED";
-  else str = "Orient Origin Point: UNINIT";
+  if (inFrame == NAV_USER_FRAMES) {
+    if (teachingWhichPoint > 1) str = "Orient Origin Point: RECORDED";
+    else str = "Orient Origin Point: UNINIT";
+  } else if (inFrame == NAV_TOOL_FRAMES) {
+    if (teachingWhichPoint > 1) str = "First Approach Point: RECORDED";
+    else str = "First Approach Point: UNINIT";
+  }
   line.add(str);
   contents.add(line);
   
   line = new ArrayList<String>();
-  if (teachingWhichPoint > 2) str = "X Direction Point: RECORDED";
-  else str = "X Direction Point: UNINIT";
+  if (inFrame == NAV_USER_FRAMES) {
+    if (teachingWhichPoint > 2) str = "X Direction Point: RECORDED";
+    else str = "X Direction Point: UNINIT";
+  } else if (inFrame == NAV_TOOL_FRAMES) {
+    if (teachingWhichPoint > 2) str = "Second Approach Point: RECORDED";
+    else str = "Second Approach Point: UNINIT";
+  }
   line.add(str);
   contents.add(line);
   
   line = new ArrayList<String>();
-  if (teachingWhichPoint > 3) str = "Y Direction Point: RECORDED";
-  else str = "Y Direction Point: UNINIT";
+  if (inFrame == NAV_USER_FRAMES) {
+    if (teachingWhichPoint > 3) str = "Y Direction Point: RECORDED";
+    else str = "Y Direction Point: UNINIT";
+  } else if (inFrame == NAV_TOOL_FRAMES) {
+    if (teachingWhichPoint > 3) str = "Third Approach Point: RECORDED";
+    else str = "Third Approach Point: UNINIT";
+  }
   line.add(str);
   contents.add(line);
   
@@ -2459,31 +2671,67 @@ public void loadInstructions(int programID){
    for(int i=start;i<end;i++){
       ArrayList<String> m = new ArrayList<String>();
       m.add(Integer.toString(i+1) + ")");
-      MotionInstruction a = (MotionInstruction)p.getInstructions().get(i);
-      // add motion type
-      switch (a.getMotionType()){
-         case MTYPE_JOINT:
-            m.add("J");
-            break;
-         case MTYPE_LINEAR:
-            m.add("L");
-            break;
-         case MTYPE_CIRCULAR:
-            m.add("C");
-            break; 
+      Instruction instruction = p.getInstructions().get(i);
+      if (instruction instanceof MotionInstruction) {
+        MotionInstruction a = (MotionInstruction)instruction;
+        // add motion type
+        switch (a.getMotionType()){
+           case MTYPE_JOINT:
+              m.add("J");
+              break;
+           case MTYPE_LINEAR:
+              m.add("L");
+              break;
+           case MTYPE_CIRCULAR:
+              m.add("C");
+              break; 
+        }
+        // load register no, speed and termination type
+        if (a.getGlobal()) m.add("PR[");
+        else m.add("P[");
+        m.add(a.getRegister()+"]");
+        if (a.getMotionType() == MTYPE_JOINT) m.add((a.getSpeed() * 100) + "%");
+        else m.add((int)(a.getSpeed()) + "mm/s");
+        if (a.getTermination() == 0) m.add("FINE");
+        else m.add("CONT" + (int)(a.getTermination()*100));
+        contents.add(m);
+        println("hi " + m.toString());
+      } else if (instruction instanceof ToolInstruction) {
+        ToolInstruction a = (ToolInstruction)instruction;
+        m.add(a.getDisplay());
+        contents.add(m);
       }
-      
-      // load register no, speed and termination type
-      if (a.getGlobal()) m.add("PR[");
-      else m.add("P[");
-      m.add(a.getRegister()+"]");
-      if (a.getMotionType() == MTYPE_JOINT) m.add((a.getSpeed() * 100) + "%");
-      else m.add((int)(a.getSpeed()) + "mm/s");
-      if (a.getTermination() == 0) m.add("FINE");
-      else m.add("CONT" + (int)(a.getTermination()*100));
-      contents.add(m);
-      println("hi " + m.toString());
    } 
+}
+
+
+void loadActiveFrames() {
+  options = new ArrayList<String>();
+  contents = new ArrayList<ArrayList<String>>();
+  ArrayList<String> line = new ArrayList<String>();
+  String str = "";
+  
+  str = "ACTIVE FRAMES";
+  line.add(str);
+  contents.add(line);
+  
+  line = new ArrayList<String>();
+  str = "User: " + (activeUserFrame+1);
+  line.add(str);
+  contents.add(line);
+  
+  line = new ArrayList<String>();
+  str = "Jog: " + (activeJogFrame+1);
+  line.add(str);
+  contents.add(line);
+  
+  line = new ArrayList<String>();
+  str = "Tool: " + (activeToolFrame+1);
+  line.add(str);
+  contents.add(line);
+  
+  mode = ACTIVE_FRAMES;
+  updateScreen(color(255,0,0), color(0));
 }
 
 
@@ -2512,5 +2760,4 @@ void loadPrograms() {
       contents.add(temp);
    }
 }
-
 
