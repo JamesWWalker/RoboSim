@@ -70,6 +70,18 @@ void createTestProgram() {
   //currentProgram = program4;
   
   for (int n = 0; n < 22; n++) programs.add(new Program("Xtra" + Integer.toString(n)));
+  /*
+  try{            
+            Runtime rt = Runtime.getRuntime();
+            System.out.format("run script to record screen...\n");
+            Process proc = rt.exec("ffmpeg -f dshow -i video=\"screen-capture-recorder\":audio=\"Microphone (Conexant SmartAudio HD)\" output.flv");
+            //while(record == ON){
+              Thread.sleep(4000);
+            //}
+            System.out.format("finish recording\n");
+        }catch (Throwable t){
+            t.printStackTrace();
+        }*/
 }
 
 

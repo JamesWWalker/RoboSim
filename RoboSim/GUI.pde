@@ -39,6 +39,7 @@ int mode = NONE;
 int NUM_MODE; // When NUM_MODE is ON, allows for entering numbers
 int shift = OFF; // Is shift button pressed or not?
 int step = OFF; // Is step button pressed or not?
+int record = OFF;
  
 int g1_px, g1_py; // the left-top corner of group1
 int g1_width, g1_height; // group 1's width and height
@@ -50,7 +51,8 @@ Button bt_show, bt_hide,
        bt_zoomin_shrink, bt_zoomin_normal,
        bt_zoomout_shrink, bt_zoomout_normal,
        bt_pan_shrink, bt_pan_normal,
-       bt_rotate_shrink, bt_rotate_normal
+       bt_rotate_shrink, bt_rotate_normal,
+       bt_record_shrink, bt_record_normal
        ;
 Textlabel fn_info, num_info;
 
@@ -216,6 +218,16 @@ void gui(){
        .setImages(rotate)
        .updateSize()
        .moveTo(g1) ;     
+       
+    int record_normal_px = rotate_normal_px + LARGE_BUTTON + 1;
+    int record_normal_py = rotate_normal_py;   
+    PImage[] record = {loadImage("images/record-35x20.png"), loadImage("images/record-over.png"), loadImage("images/record-on.png")};   
+    bt_record_normal = cp5.addButton("record_normal")
+       .setPosition(record_normal_px, record_normal_py)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
+       .setImages(record)
+       .updateSize()
+       .moveTo(g1) ;      
        
    PImage[] imgs_arrow_up = {loadImage("images/arrow-up.png"), loadImage("images/arrow-up_over.png"), loadImage("images/arrow-up_down.png")};   
    int up_px = display_px+display_width + 2;
@@ -1955,6 +1967,19 @@ public void rotate_shrink(int theValue){
   }
 }
 
+public void record_normal(int theValue){
+   if (record == OFF){
+      record = ON;
+      PImage[] record = {loadImage("images/record-on.png"), loadImage("images/record-on.png"), loadImage("images/record-on.png")};   
+      bt_record_normal.setImages(record);
+      new Thread(new RecordScreen()).start();
+   }else{
+      record = OFF;
+      PImage[] record = {loadImage("images/record-35x20.png"), loadImage("images/record-over.png"), loadImage("images/record-on.png")};   
+      bt_record_normal.setImages(record);
+      
+   }
+}
 
 // axis: 0 = -x, 1= +x, 2 = -y, 3 = +y, 4 = -z, 5 = +z
 public void activateLiveMotion(int joint, int dir, int axis) {
