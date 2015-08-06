@@ -56,7 +56,7 @@ public void setup() {
     toolFrames[n] = new Frame();
     userFrames[n] = new Frame();
   }
-  toolFrames[0].setOrigin(new PVector(0, 0, -500));
+//  toolFrames[0].setOrigin(new PVector(0, 0, -500));
   // END TESTING CODE
 }
 

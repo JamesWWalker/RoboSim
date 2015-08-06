@@ -1757,12 +1757,14 @@ public void f5(int theValue) {
               }
             }
           }
-          // now set the tool frame origin as the closest point's offset from the
-          // first end effector position while recording
+          // now set the tool frame origin's Z offset as average of closest point's
+          // distance from the 3 end effector positions when setting the approaches
           currentFrame.setOrigin(
-              new PVector(closestPt.x-teachingPts[0].x,
-                          closestPt.y-teachingPts[0].y,
-                          closestPt.z-teachingPts[0].z)
+              new PVector(0, 0,
+                -(dist(closestPt.x, closestPt.y, closestPt.z, teachingPts[0].x, teachingPts[0].y, teachingPts[0].z) +
+                 dist(closestPt.x, closestPt.y, closestPt.z, teachingPts[1].x, teachingPts[1].y, teachingPts[1].z) +
+                 dist(closestPt.x, closestPt.y, closestPt.z, teachingPts[2].x, teachingPts[2].y, teachingPts[2].z))/3.0
+                )
             );
           loadToolFrames();
         }
