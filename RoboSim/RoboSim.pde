@@ -56,6 +56,7 @@ public void setup() {
     toolFrames[n] = new Frame();
     userFrames[n] = new Frame();
   }
+  toolFrames[0].setOrigin(new PVector(0, 0, -500));
   // END TESTING CODE
 }
 
@@ -113,7 +114,7 @@ public void draw() {
   }
   popMatrix(); /* */
   // TESTING CODE: DRAW END EFFECTOR POSITION
-  /*pushMatrix();
+  pushMatrix();
   applyCamera();
   noFill();
   stroke(255, 0, 0);
@@ -125,7 +126,7 @@ public void draw() {
   popMatrix(); /* */
   // END TESTING CODE
   // TESTING CODE: DRAW USER FRAME 0
-  PVector ufo = convertWorldToNative(userFrames[0].getOrigin());
+  /*PVector ufo = convertWorldToNative(userFrames[0].getOrigin());
   
   PVector ufx = new PVector(
       ufo.x-userFrames[0].getAxis(0).x*80,
@@ -162,7 +163,7 @@ public void draw() {
   pushMatrix();
   translate(ufz.x, ufz.y, ufz.z);
   sphere(15);
-  popMatrix();
+  popMatrix(); /* */
   // END TESTING CODE
 
   hint(DISABLE_DEPTH_TEST);

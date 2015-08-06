@@ -69,6 +69,7 @@ PVector[] tempVectors = new PVector[3];
 int activeUserFrame = -1;
 int activeJogFrame = -1;
 int activeToolFrame = -1;
+PVector[] teachingPts = new PVector[3];
 
 // display on screen
 ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>(); // display list of programs or motion instructions
@@ -1687,9 +1688,8 @@ public void f5(int theValue) {
         translate(0, 0, -100);
         PVector two = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
         popMatrix();
-        one = convertNativeToWorld(one);
-        two = convertNativeToWorld(two);
         tempPoints[teachingWhichPoint-1] = one;
+        teachingPts[teachingWhichPoint-1] = one;
         tempVectors[teachingWhichPoint-1] = new PVector(
           two.x-one.x, two.y-one.y, two.z-one.z).normalize(null);
         if (teachingWhichPoint < 3) {
@@ -1757,7 +1757,13 @@ public void f5(int theValue) {
               }
             }
           }
-          currentFrame.setOrigin(closestPt);
+          // now set the tool frame origin as the closest point's offset from the
+          // first end effector position while recording
+          currentFrame.setOrigin(
+              new PVector(closestPt.x-teachingPts[0].x,
+                          closestPt.y-teachingPts[0].y,
+                          closestPt.z-teachingPts[0].z)
+            );
           loadToolFrames();
         }
       } // end if inFrame == NAV_TOOL_FRAMES

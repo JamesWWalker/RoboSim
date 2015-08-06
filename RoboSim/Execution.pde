@@ -243,6 +243,10 @@ PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
     translate(45, 45, 0);
     if (!test) rotateZ(model.segments.get(5).currentRotations[0]);
     else rotateZ(model.segments.get(5).testRotations[0]);
+    if (activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
+      PVector tr = toolFrames[activeToolFrame].getOrigin();
+      translate(tr.x, tr.y, tr.z);
+    }
   }
   PVector ret = new PVector(
     modelX(0, 0, 0),
@@ -311,6 +315,10 @@ void applyModelRotation(ArmModel model) {
     rotateZ(PI);
     translate(45, 45, 0);
     rotateZ(model.segments.get(5).currentRotations[0]);
+    if (activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
+      PVector tr = toolFrames[activeToolFrame].getOrigin();
+      translate(tr.x, tr.y, tr.z);
+    }
   }
 }
 
