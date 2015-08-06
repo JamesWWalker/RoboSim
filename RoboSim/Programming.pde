@@ -131,15 +131,28 @@ public class MotionInstruction extends Instruction {
   private boolean globalRegister;
   private float speed;
   private float termination;
-  private int coordinateFrame;
+  private int userFrame, toolFrame;
   
-  public MotionInstruction(int m, int r, boolean g, float s, float t, int c) {
+  public MotionInstruction(int m, int r, boolean g, float s, float t,
+                           int uf, int tf)
+  {
     motionType = m;
     register = r;
     globalRegister = g;
     speed = s;
     termination = t;
-    coordinateFrame = c;
+    userFrame = uf;
+    toolFrame = tf;
+  }
+  
+  public MotionInstruction(int m, int r, boolean g, float s, float t) {
+    motionType = m;
+    register = r;
+    globalRegister = g;
+    speed = s;
+    termination = t;
+    userFrame = -1;
+    toolFrame = -1;
   }
   
   public int getMotionType() { return motionType; }
@@ -152,6 +165,10 @@ public class MotionInstruction extends Instruction {
   public void setSpeed(float in) { speed = in; }
   public float getTermination() { return termination; }
   public void setTermination(float in) { termination = in; }
+  public float getUserFrame() { return userFrame; }
+  public void setUserFrame(int in) { userFrame = in; }
+  public float getToolFrame() { return toolFrame; }
+  public void setToolFrame(int in) { toolFrame = in; }
   
   public float getSpeedForExec(ArmModel model) {
     if (motionType == MTYPE_JOINT) return speed;
@@ -160,15 +177,24 @@ public class MotionInstruction extends Instruction {
   
   // TODO: Fix to account for user/tool frames
   public Point getVector(Program parent) {
-    if (coordinateFrame == COORD_WORLD ) {
+println("getVector start");
+    if (motionType != COORD_JOINT) {
       Point out;
       if (globalRegister) out = pr[register].clone();
       else out = parent.p[register].clone();
       out.c = convertWorldToNative(out.c);
+println("getVector end1");
       return out;
     } else {
-      if (globalRegister) return pr[register];
-      else return parent.p[register];
+      Point ret;
+      if (globalRegister) ret = pr[register].clone();
+      else ret = parent.p[register].clone();
+      if (userFrame != -1) {
+        PVector[] frame = userFrames[userFrame].axes;
+        ret.c = vectorConvertFrom(ret.c, frame[0], frame[1], frame[2]);
+      }
+println("getVector end2");
+      return ret;
     }
   } // end getVector()
   

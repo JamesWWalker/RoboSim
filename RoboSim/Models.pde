@@ -252,6 +252,27 @@ public class ArmModel {
       segments.get(6).draw();
             
       // next, the end effector
+      if (activeEndEffector == ENDEF_SUCTION) {
+        rotateY(PI);
+        translate(-88, -37, 0);
+        eeModelSuction.draw();
+      } else if (activeEndEffector == ENDEF_CLAW) {
+        rotateY(PI);
+        translate(-88, 0, 0);
+        eeModelClaw.draw();
+        rotateZ(PI/2);
+        if (endEffectorStatus == OFF) {
+          translate(10, -85, 30);
+          eeModelClawPincer.draw();
+          translate(55, 0, 0);
+          eeModelClawPincer.draw();
+        } else if (endEffectorStatus == ON) {
+          translate(28, -85, 30);
+          eeModelClawPincer.draw();
+          translate(20, 0, 0);
+          eeModelClawPincer.draw();
+        }
+      }
     }
   }// end draw arm model
   
@@ -330,11 +351,18 @@ public class ArmModel {
           startFrom = calculateEndEffectorPosition(armModel, false);
           popMatrix();
         }
+        PVector move = new PVector(linearMoveSpeeds[0], linearMoveSpeeds[1], linearMoveSpeeds[2]);
+        if (activeUserFrame >= 0 && activeUserFrame < userFrames.length) {
+          PVector[] frame = userFrames[activeUserFrame].axes;
+          move.y = -move.y;
+          move.z = -move.z;
+          move = vectorConvertTo(move, frame[0], frame[1], frame[2]);
+        }
         intermediatePositions.clear();
         float distance = motorSpeed/60.0 * liveSpeed;
-        intermediatePositions.add(new PVector(startFrom.x + linearMoveSpeeds[0] * distance,
-                                              startFrom.y + linearMoveSpeeds[1] * distance,
-                                              startFrom.z + linearMoveSpeeds[2] * distance));
+        intermediatePositions.add(new PVector(startFrom.x + move.x * distance,
+                                              startFrom.y + move.y * distance,
+                                              startFrom.z + move.z * distance));
         attemptIK(this, 0);
         instantRotation();
       }

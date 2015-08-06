@@ -4,7 +4,17 @@ import java.util.*;
 import java.nio.*;
 import java.io.*;
 
+final int OFF = 0, ON = 1;
+
 ArmModel armModel;
+Model eeModelSuction;
+Model eeModelClaw;
+Model eeModelClawPincer;
+
+final int ENDEF_NONE = 0, ENDEF_SUCTION = 1, ENDEF_CLAW = 2;
+int activeEndEffector = ENDEF_CLAW;
+int endEffectorStatus = ON;
+
 float lastMouseX, lastMouseY;
 float cameraTX = 0, cameraTY = 0, cameraTZ = 0;
 float cameraRX = 0, cameraRY = 0, cameraRZ = 0;
@@ -50,6 +60,9 @@ public void setup() {
   gui();
   for (int n = 0; n < pr.length; n++) pr[n] = new Point();
   armModel = new ArmModel(ARM_STANDARD);
+  eeModelSuction = new Model("VACUUM_2.STL", color(40));
+  eeModelClaw = new Model("GRIPPER.STL", color(40));
+  eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
   intermediatePositions = new ArrayList<PVector>();
   // TESTING CODE
   createTestProgram();
@@ -57,6 +70,7 @@ public void setup() {
     toolFrames[n] = new Frame();
     userFrames[n] = new Frame();
   }
+//  toolFrames[0].setOrigin(new PVector(0, 0, -500));
   // END TESTING CODE
 }
 
@@ -123,6 +137,46 @@ public void draw() {
   translate(0, 0, -400);
   stroke(0, 255, 0);
   sphere(50);
+  popMatrix(); /* */
+  // END TESTING CODE
+  // TESTING CODE: DRAW USER FRAME 0
+  /*PVector ufo = convertWorldToNative(userFrames[0].getOrigin());
+  
+  PVector ufx = new PVector(
+      ufo.x-userFrames[0].getAxis(0).x*80,
+      ufo.y-userFrames[0].getAxis(0).y*80,
+      ufo.z-userFrames[0].getAxis(0).z*80
+    );
+  PVector ufy = new PVector(
+      ufo.x-userFrames[0].getAxis(2).x*80,
+      ufo.y-userFrames[0].getAxis(2).y*80,
+      ufo.z-userFrames[0].getAxis(2).z*80
+    );
+  PVector ufz = new PVector(
+      ufo.x+userFrames[0].getAxis(1).x*80,
+      ufo.y+userFrames[0].getAxis(1).y*80,
+      ufo.z+userFrames[0].getAxis(1).z*80
+    );
+  noFill();
+  stroke(255, 0, 0);
+  pushMatrix();
+  translate(ufo.x, ufo.y, ufo.z);
+  sphere(15);
+  popMatrix();
+  stroke(0, 255, 0);
+  pushMatrix();
+  translate(ufx.x, ufx.y, ufx.z);
+  sphere(15);
+  popMatrix();
+  stroke(0, 0, 255);
+  pushMatrix();
+  translate(ufy.x, ufy.y, ufy.z);
+  sphere(15);
+  popMatrix();
+  stroke(255, 255, 0);
+  pushMatrix();
+  translate(ufz.x, ufz.y, ufz.z);
+  sphere(15);
   popMatrix(); /* */
   // END TESTING CODE
 
