@@ -1411,7 +1411,7 @@ public void f1(int theValue){
            updateScreen(color(255,0,0), color(0));
          } else { // shift+f1 = add new motion instruction
            pushMatrix();
-           applyCamera();
+           //applyCamera();
            PVector eep = calculateEndEffectorPosition(armModel, false);
            popMatrix();
            eep = convertNativeToWorld(eep);
@@ -1703,7 +1703,7 @@ public void f5(int theValue) {
     } else {
       // overwrite current instruction
       pushMatrix();
-      applyCamera();
+      //applyCamera();
       PVector eep = calculateEndEffectorPosition(armModel, false);
       popMatrix();
       eep = convertNativeToWorld(eep);
@@ -1749,7 +1749,7 @@ public void f5(int theValue) {
       if (inFrame == NAV_USER_FRAMES) {
         if (teachingWhichPoint == 1) { // teaching origin
           pushMatrix();
-          applyCamera();
+          //applyCamera();
           PVector eep = calculateEndEffectorPosition(armModel, false);
           popMatrix();
           currentFrame.setOrigin(convertNativeToWorld(eep));
@@ -1757,7 +1757,7 @@ public void f5(int theValue) {
           loadThreePointMethod();
         } else if (teachingWhichPoint == 2 || teachingWhichPoint == 3) { // x,y axis
           pushMatrix();
-          applyCamera();
+          //applyCamera();
           PVector eep = calculateEndEffectorPosition(armModel, false);
           popMatrix();
           PVector second = convertNativeToWorld(eep);
@@ -1778,7 +1778,7 @@ public void f5(int theValue) {
         }
       } else if (inFrame == NAV_TOOL_FRAMES) {
         pushMatrix();
-        applyCamera();
+        //applyCamera();
         applyModelRotation(armModel);
         PVector one = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
         translate(0, 0, -100);

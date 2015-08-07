@@ -347,7 +347,7 @@ public class ArmModel {
         if (intermediatePositions.size() == 1) startFrom = intermediatePositions.get(0);
         else {
           pushMatrix();
-          applyCamera();
+          //applyCamera();
           startFrom = calculateEndEffectorPosition(armModel, false);
           popMatrix();
         }
@@ -363,7 +363,9 @@ public class ArmModel {
         intermediatePositions.add(new PVector(startFrom.x + move.x * distance,
                                               startFrom.y + move.y * distance,
                                               startFrom.z + move.z * distance));
+        println("attemptIK call 5 before");
         attemptIK(this, 0);
+        println("attemptIK call 5 after");
         instantRotation();
       }
     }

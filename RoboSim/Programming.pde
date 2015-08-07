@@ -176,7 +176,6 @@ public class MotionInstruction extends Instruction {
     else return (speed / model.motorSpeed);
   }
   
-  // TODO: Fix to account for user/tool frames
   public Point getVector(Program parent) {
 println("getVector start");
     if (motionType != COORD_JOINT) {

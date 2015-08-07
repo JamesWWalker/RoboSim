@@ -96,7 +96,7 @@ void showMainDisplayText() {
                 " J4: " + j[3] + " J5: " + j[4] + " J6: " + j[5], width-20, 60);
   } else {
     pushMatrix();
-    applyCamera();
+    //applyCamera();
     PVector cam = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
     PVector eep = calculateEndEffectorPosition(armModel, false);
     popMatrix();
@@ -129,7 +129,7 @@ void showMainDisplayText() {
 // Assumes that the robot starts out facing toward the LEFT.
 PVector convertWorldToNative(PVector in) {
   pushMatrix();
-  applyCamera();
+  //applyCamera();
   float outx = modelX(0,0,0)-in.x;
   float outy = modelY(0,0,0)-in.z;
   float outz = -(modelZ(0,0,0)-in.y);
@@ -140,7 +140,7 @@ PVector convertWorldToNative(PVector in) {
 
 PVector convertNativeToWorld(PVector in) {
   pushMatrix();
-  applyCamera();
+  //applyCamera();
   float outx = modelX(0,0,0)-in.x;
   float outy = in.z+modelZ(0,0,0);
   float outz = modelY(0,0,0)-in.y;
@@ -154,7 +154,7 @@ PVector convertNativeToWorld(PVector in) {
 // Processing's coordinate system.
 PVector convertUserToNative(CoordinateFrame frame, PVector in) {
   pushMatrix();
-  applyCamera();
+  //applyCamera();
   PVector tr = frame.getOrigin();
   // first, apply the user-defined coordinate frame by translating to the
   // origin and then rotating to the user-defined orientation (remember
@@ -342,11 +342,15 @@ void applyModelRotation(ArmModel model) {
 
 
 int attemptIK(ArmModel model, int idx) {
+  // if the size is 0 and idx is 0 that means we're already there so there's nothing to do
+  if (intermediatePositions.size() == 0 && idx == 0) return EXEC_SUCCESS;
   int iter = 0;
   int slices = 540, closeEnough = 10;
   int result = EXEC_PROCESSING;
   while (result != EXEC_SUCCESS) {
+    println("Execution check A");
     result = calculateIK(model, intermediatePositions.get(idx), slices, closeEnough);
+    println("Execution check B");
     iter++;
     if (iter > 10) return EXEC_FAILURE;
     slices += 36;
@@ -370,7 +374,7 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
       if (segment.rotations[r]) {
         segment.testRotations[r] = segment.currentRotations[r];
         pushMatrix();
-        applyCamera();
+        //applyCamera();
         PVector eetp = calculateEndEffectorPosition(model, true);
         popMatrix();
         float closest = dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z);
@@ -379,7 +383,7 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
           segment.testRotations[r] += checkAngle;
           if (segment.anglePermitted(r, checkAngle)) {
             pushMatrix();
-            applyCamera();
+            //applyCamera();
             eetp = calculateEndEffectorPosition(model, true);
             popMatrix();
             if (dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z) < closest) {
@@ -397,7 +401,7 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
   // figure out where the end of all the arms is and compare that
   // to where we want it to be
   pushMatrix();
-  applyCamera();
+  //applyCamera();
   PVector eetp = calculateEndEffectorPosition(model, true);
   popMatrix();
   if (dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z) < closeEnough) {
@@ -419,9 +423,10 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
 
 
 void calculateDistanceBetweenPoints() {
-  // TODO: This is probably going to break when we enable frame instructions.
+  println("execution CHECK C");
   MotionInstruction instruction =
     (MotionInstruction)currentProgram.getInstructions().get(currentInstruction);
+  println("execution CHECK D");
   if (instruction != null && instruction.getMotionType() != MTYPE_JOINT)
     distanceBetweenPoints = instruction.getSpeed() / 60.0;
   else if (curCoordFrame != COORD_JOINT)
@@ -498,7 +503,9 @@ void calculateContinuousPositions(PVector p1, PVector p2, PVector p3, float perc
   int secondaryIdx = 0; // accessor for secondary targets
   mu = 0;
   increment /= 2.0;
+  println("execution check E");
   PVector currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
+  println("execution check F");
   for (int n = transitionPoint; n < numberOfPoints; n++) {
     mu += increment;
     intermediatePositions.add(new PVector(
@@ -508,6 +515,7 @@ void calculateContinuousPositions(PVector p1, PVector p2, PVector p3, float perc
     currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
     secondaryIdx++;
   }
+  println("execution check F1");
   interMotionIdx = 0;
 } // end calculate continuous positions
 
@@ -518,7 +526,9 @@ void beginNewContinuousMotion(ArmModel model, PVector start, PVector end,
 {
   calculateContinuousPositions(start, end, next, percentage);
   motionFrameCounter = 0;
+  println("attemptIK call 1 before");
   attemptIK(model, interMotionIdx);
+  println("attemptIK call 1 after");
 }
 
 
@@ -526,7 +536,9 @@ void beginNewContinuousMotion(ArmModel model, PVector start, PVector end,
 void beginNewLinearMotion(ArmModel model, PVector start, PVector end) {
   calculateIntermediatePositions(start, end);
   motionFrameCounter = 0;
+  println("attemptIK call 2 before");
   attemptIK(model, interMotionIdx);
+  println("attemptIK call 2 after");
 }
 
 
@@ -537,7 +549,9 @@ void beginNewCircularMotion(ArmModel model, PVector p1, PVector p2, PVector p3) 
   intermediatePositions = createArc(createCircleCircumference(p1, p2, p3, 180), p1, p2, p3);
   interMotionIdx = 0;
   motionFrameCounter = 0;
+  println("attemptIK call 3 before");
   attemptIK(model, interMotionIdx);
+  println("attemptIK call 3 after");
 }
 
 
@@ -564,7 +578,9 @@ boolean executeMotion(ArmModel model, float speedMult) {
       interMotionIdx = -1;
       return true;
     }
+    println("attemptIK call 4 before");
     attemptIK(model, interMotionIdx);
+    println("attemptIK call 4 after");
   }
   return false;
 } // end execute linear motion
@@ -822,15 +838,17 @@ boolean executeSingleInstruction(Instruction ins) {
 
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
       pushMatrix();
-      applyCamera();
+      //applyCamera();
       PVector start = calculateEndEffectorPosition(model, false);
       popMatrix();
       if (instruction.getMotionType() == MTYPE_JOINT) {
         float[] j = instruction.getVector(program).j;
         for (int n = 0; n < j.length; n++) {
           for (int r = 0; r < 3; r++) {
+            println("execution check G");
             if (model.segments.get(n).rotations[r])
               model.segments.get(n).targetRotations[r] = j[n];
+            println("execution check H");
           }
         }
         // calculate whether it's faster to turn CW or CCW

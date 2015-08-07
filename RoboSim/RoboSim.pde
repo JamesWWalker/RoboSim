@@ -90,6 +90,8 @@ public void draw() {
   } /* */
   // END TESTING CODE
   
+//  updateIntermediatePositions();
+  
   if (!doneMoving) doneMoving = executeProgram(currentProgram, armModel);
   else if (singleInstruction != null) {
     println("Here " + frameCount);
@@ -111,8 +113,6 @@ public void draw() {
   armModel.draw();
   popMatrix();
 
-  popMatrix();
-  
   noLights();
   
   // TESTING CODE: DRAW INTERMEDIATE POINTS
@@ -129,7 +129,7 @@ public void draw() {
   popMatrix(); /* */
   // TESTING CODE: DRAW END EFFECTOR POSITION
   /*pushMatrix();
-  applyCamera();
+  //applyCamera();
   noFill();
   stroke(255, 0, 0);
   applyModelRotation(armModel);
@@ -180,10 +180,12 @@ public void draw() {
   popMatrix(); /* */
   // END TESTING CODE
 
+  popMatrix();
+
   hint(DISABLE_DEPTH_TEST);
   
   showMainDisplayText();
-  //println(frameRate + " fps");
+//  println(frameRate + " fps");
 }
 
 void applyCamera() {
@@ -191,6 +193,36 @@ void applyCamera() {
   translate(panX, panY); // for pan button
   scale(myscale);
   rotateX(myRotX); // for rotate button
-  rotateY(myRotY); // for rotate button
+  rotateY(myRotY); // for rotate button /* */
+  /*camera(width/2.0-1200,
+         height/2.0-600,
+         (height/2.0) / tan(PI*30.0 / 180.0)+800,
+         width/2.0-1200,
+         height/2.0-600,
+         600,
+         0,
+         1,
+         0); /* */
+}
+
+void updateIntermediatePositions() {
+  if (intermediatePositions != null) {
+    for (int n = 0; n < intermediatePositions.size(); n++) {
+      PVector v = intermediatePositions.get(n);
+      pushMatrix();
+      translate(-v.x, -v.y, -v.z);
+      //applyCamera();
+      translate(v.x, v.y, v.z);
+      intermediatePositions.set(n, new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0)));
+      popMatrix();
+    }
+    /*
+    for (PVector v : intermediatePositions) {
+      pushMatrix();
+      translate(v.x, v.y, v.z);
+      sphere(10);
+      popMatrix();
+    } /* */
+  }
 }
 
