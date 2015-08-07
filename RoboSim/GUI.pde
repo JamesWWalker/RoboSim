@@ -32,7 +32,9 @@ final int NONE = 0,
           SET_DO_STATUS = 23,
           SET_RO_BRACKET = 24,
           SET_RO_STATUS = 25,
-          SET_FRAME_INSTRUCTION = 26;
+          SET_FRAME_INSTRUCTION = 26,
+          EDIT_MENU = 27,
+          CONFIRM_DELETE = 28;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
@@ -1189,6 +1191,7 @@ public void up(int theValue){
       case PICK_INSTRUCTION:
       case IO_SUBMENU:
       case SET_FRAME_INSTRUCTION:
+      case EDIT_MENU:
          if (active_row > 0) active_row--;
          break;
       case ACTIVE_FRAMES:
@@ -1241,6 +1244,7 @@ public void dn(int theValue){
       case PICK_INSTRUCTION:
       case IO_SUBMENU:
       case SET_FRAME_INSTRUCTION:
+      case EDIT_MENU:
          if (active_row < contents.size()-1) active_row++;
          break;
    }  
@@ -1674,6 +1678,19 @@ public void f4(int theValue){
            case 4: workingText += "S"; goToEnterTextMode(); break;
          }
          return;
+     case CONFIRM_DELETE:
+         Program prog = programs.get(select_program);
+         prog.getInstructions().remove(select_instruction);
+         if (select_instruction >= prog.getInstructions().size()) {
+           select_instruction = active_instruction = prog.getInstructions().size()-1;
+         }
+         active_row = 0;
+         active_col = 0;
+         loadInstructions(select_program);
+         mode = INSTRUCTION_NAV;
+         options.clear();
+         updateScreen(color(255,0,0), color(0,0,0));
+         break;
    }
    //println("mode="+mode+" active_col"+active_col);
    updateScreen(color(255,0,0), color(0,0,0));
@@ -1682,23 +1699,47 @@ public void f4(int theValue){
 public void f5(int theValue) {
   if (mode == INSTRUCTION_NAV) {
     if (shift == OFF) {
-      Instruction ins = programs.get(select_program).getInstructions().get(select_instruction);
-      if (ins instanceof MotionInstruction) {
-        MotionInstruction castIns = (MotionInstruction)ins;
-        Point p = castIns.getVector(programs.get(select_program));
-        options = new ArrayList<String>();
-        options.add("Data of the point in this register (press ENTER to exit):");
-        if (castIns.getMotionType() != MTYPE_JOINT) {
-          options.add("x: " + p.c.x + "  y: " + p.c.y + "  z: " + p.c.z);
-          options.add("w: " + p.a.x + "  p: " + p.a.y + "  r: " + p.a.z);
-        } else {
-          options.add("j1: " + p.j[0] + "  j2: " + p.j[1] + "  j3: " + p.j[2]);
-          options.add("j4: " + p.j[3] + "  j5: " + p.j[4] + "  j6: " + p.j[5]);
+      if (active_col == 0) { // if you're on the line number, bring up a list of instruction editing options
+        contents = new ArrayList<ArrayList<String>>();
+        ArrayList<String> line = new ArrayList<String>();
+        line.add("1 Insert (NA)");
+        contents.add(line);
+        line = new ArrayList<String>(); line.add("2 Delete");
+        contents.add(line);
+        line = new ArrayList<String>(); line.add("3 Copy (NA)");
+        contents.add(line);
+        line = new ArrayList<String>(); line.add("4 Find (NA)");
+        contents.add(line);
+        line = new ArrayList<String>(); line.add("5 Replace (NA)");
+        contents.add(line);
+        line = new ArrayList<String>(); line.add("6 Renumber (NA)");
+        contents.add(line);
+        line = new ArrayList<String>(); line.add("7 Comment (NA)");
+        contents.add(line);
+        line = new ArrayList<String>(); line.add("8 Undo (NA)");
+        contents.add(line);
+        active_col = active_row = 0;
+        mode = EDIT_MENU;
+        updateScreen(color(255,0,0), color(0));
+      } else if (active_col == 2 || active_col == 3) { // show register contents if you're highlighting a register
+        Instruction ins = programs.get(select_program).getInstructions().get(select_instruction);
+         if (ins instanceof MotionInstruction) {
+         MotionInstruction castIns = (MotionInstruction)ins;
+          Point p = castIns.getVector(programs.get(select_program));
+          options = new ArrayList<String>();
+          options.add("Data of the point in this register (press ENTER to exit):");
+          if (castIns.getMotionType() != MTYPE_JOINT) {
+            options.add("x: " + p.c.x + "  y: " + p.c.y + "  z: " + p.c.z);
+            options.add("w: " + p.a.x + "  p: " + p.a.y + "  r: " + p.a.z);
+          } else {
+            options.add("j1: " + p.j[0] + "  j2: " + p.j[1] + "  j3: " + p.j[2]);
+            options.add("j4: " + p.j[3] + "  j5: " + p.j[4] + "  j6: " + p.j[5]);
+          }
+          mode = VIEW_REGISTER;
+          which_option = 0;
+          loadInstructions(select_program);
+          updateScreen(color(255,0,0), color(0,0,0));
         }
-        mode = VIEW_REGISTER;
-        which_option = 0;
-        loadInstructions(select_program);
-        updateScreen(color(255,0,0), color(0,0,0));
       }
     } else {
       // overwrite current instruction
@@ -1866,7 +1907,18 @@ public void f5(int theValue) {
         }
       } // end if inFrame == NAV_TOOL_FRAMES
     }
-  } // end if mode==THREE_POINT_MODE
+  } else if (mode == CONFIRM_DELETE) {
+         Program prog = programs.get(select_program);
+         if (select_instruction >= prog.getInstructions().size()) {
+           select_instruction = active_instruction = prog.getInstructions().size()-1;
+         }
+         active_row = 0;
+         active_col = 0;
+         loadInstructions(select_program);
+         mode = INSTRUCTION_NAV;
+         options.clear();
+         updateScreen(color(255,0,0), color(0,0,0));
+  }
   
 }
 
@@ -2117,6 +2169,15 @@ public void ENTER(int theValue){
          mode = INSTRUCTION_NAV;
          options.clear();
          updateScreen(color(255,0,0), color(0,0,0));
+         break;
+      case EDIT_MENU:
+         if (active_row == 1) { // delete
+            options = new ArrayList<String>();
+            options.add("Delete this line? F4 = YES, F5 = NO");
+            mode = CONFIRM_DELETE;
+            which_option = 0;
+            updateScreen(color(255,0,0), color(0,0,0));
+         }
          break;
    }
 }
