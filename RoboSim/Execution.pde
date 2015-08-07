@@ -1,8 +1,4 @@
 
-// To-do list:
-// -> Make motion instructions follow different coordinate systems
-//
-
 ArrayList<PVector> intermediatePositions;
 int motionFrameCounter = 0;
 float distanceBetweenPoints = 5.0;
@@ -11,6 +7,9 @@ int interMotionIdx = -1;
 final int COORD_JOINT = 0, COORD_WORLD = 1, COORD_TOOL = 2, COORD_USER = 3;
 int curCoordFrame = COORD_JOINT;
 float liveSpeed = 0.1;
+
+int errorCounter;
+String errorText;
 
 
 void createTestProgram() {
@@ -108,6 +107,12 @@ void showMainDisplayText() {
   }
   text((shift == ON ? "Shift ON" : "Shift OFF"), width-120, 80);
   text((step == ON ? "Step ON" : "Step OFF"), width-20, 80);
+  
+  if (errorCounter > 0) {
+    errorCounter--;
+    fill(255, 0, 0);
+    text(errorText, width-20, 100);
+  }
 /*  text("Coordinates: Native: " + eep.x + " Y: " + eep.y + " Z: " + eep.z, width-20, 40);
 //  text("Camera base at: X: " + cam.x + " Y: " + cam.y + " Z: " + cam.z, width-20, 60);
   text("Coordinates: World: " + concor.x + " Y: " + concor.y + " Z: " + concor.z, width-20, 60);
@@ -756,6 +761,10 @@ println("executeProgram start");
   Instruction ins = program.getInstructions().get(currentInstruction);
   if (ins instanceof MotionInstruction) {
     MotionInstruction instruction = (MotionInstruction)ins;
+    if (instruction.getUserFrame() != activeUserFrame) {
+      setError("ERROR: Instruction's user frame is different from currently active user frame.");
+      return true;
+    }
     if (!executingInstruction) { // start executing new instruction
 println("executeProgram end1");
       if (setUpInstruction(program, model, instruction)) return true;
@@ -791,9 +800,13 @@ println("executeProgram end2");
 boolean executeSingleInstruction(Instruction ins) {
   if (ins instanceof MotionInstruction) {
     MotionInstruction instruction = (MotionInstruction)ins;
-    if (instruction.getMotionType() != MTYPE_JOINT)
+    if (instruction.getMotionType() != MTYPE_JOINT) {
+      if (instruction.getUserFrame() != activeUserFrame) {
+        setError("ERROR: Instruction's user frame is different from currently active user frame.");
+        return true;
+      }
       return executeMotion(armModel, instruction.getSpeedForExec(armModel));
-    else return armModel.interpolateRotation();
+    } else return armModel.interpolateRotation();
   } else if (ins instanceof ToolInstruction) {
     ToolInstruction instruction = (ToolInstruction)ins;
     instruction.execute();
@@ -867,6 +880,13 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
       } // end if motion type is circular
       return false;
 } // end setUpInstruction
+
+
+
+void setError(String text) {
+  errorText = text;
+  errorCounter = 600;
+}
 
 
 
