@@ -790,7 +790,8 @@ println("executeProgram end1");
       
       if (instruction.getMotionType() != MTYPE_JOINT)
         executingInstruction = !(executeMotion(model, instruction.getSpeedForExec(model)));
-      else executingInstruction = !(model.interpolateRotation());
+      else executingInstruction =
+        !(model.interpolateRotation(instruction.getSpeedForExec(model)));
       if (!executingInstruction) {
         currentInstruction++;
         if (currentInstruction >= program.getInstructions().size()) return true;
@@ -822,7 +823,7 @@ boolean executeSingleInstruction(Instruction ins) {
         return true;
       }
       return executeMotion(armModel, instruction.getSpeedForExec(armModel));
-    } else return armModel.interpolateRotation();
+    } else return armModel.interpolateRotation(instruction.getSpeedForExec(armModel));
   } else if (ins instanceof ToolInstruction) {
     ToolInstruction instruction = (ToolInstruction)ins;
     instruction.execute();

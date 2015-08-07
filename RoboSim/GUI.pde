@@ -2214,12 +2214,14 @@ public void COORD(int theValue) {
 public void SPEEDUP(int theValue) {
   if (liveSpeed < 0.5) liveSpeed += 0.05;
   else if (liveSpeed < 1) liveSpeed += 0.1;
+  if (liveSpeed > 1) liveSpeed = 1;
 }
 
 
 public void SLOWDOWN(int theValue) {
   if (liveSpeed > 0.5) liveSpeed -= 0.1;
   else if (liveSpeed > 0) liveSpeed -= 0.05;
+  if (liveSpeed < 0.05) liveSpeed = 0.05;
 }
 
 

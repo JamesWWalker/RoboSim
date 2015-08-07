@@ -16,7 +16,7 @@ public class Model {
   public float[] targetRotations = new float[3]; // we want to be rotated to this value
   public int[] rotationDirections = new int[3]; // control rotation direction so we
                                                 // don't "take the long way around"
-  public float[] rotationSpeeds = new float[3];
+  public float rotationSpeed;
   public float[] jointsMoving = new float[3]; // for live control using the joint buttons
   
   public Model(String filename, color col) {
@@ -24,8 +24,8 @@ public class Model {
       rotations[n] = false;
       currentRotations[n] = 0;
       jointRanges[n] = new ArrayList<PVector>();
-      rotationSpeeds[n] = 0.01;
     }
+    rotationSpeed = 0.01;
     loadSTLModel(filename, col);
   }
   
@@ -124,23 +124,29 @@ public class ArmModel {
       Model base = new Model("ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
       base.rotations[1] = true;
       base.jointRanges[1].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
+      base.rotationSpeed = radians(350)/60.0;
       Model axis1 = new Model("ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40));
       axis1.rotations[2] = true;
       axis1.jointRanges[2].add(new PVector(0, 2.01));
       axis1.jointRanges[2].add(new PVector(4.34, TWO_PI));
+      axis1.rotationSpeed = radians(350)/60.0;
       Model axis2 = new Model("ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0));
       axis2.rotations[2] = true;
       axis2.jointRanges[2].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
+      axis2.rotationSpeed = radians(400)/60.0;
       Model axis3 = new Model("ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40));
       axis3.rotations[0] = true;
       axis3.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
+      axis3.rotationSpeed = radians(450)/60.0;
       Model axis4 = new Model("ROBOT_MODEL_1_AXIS4.STL", color(40, 40, 40));
       axis4.rotations[2] = true;
       axis4.jointRanges[2].add(new PVector(0, 1.8));
       axis4.jointRanges[2].add(new PVector(4.62, TWO_PI));
+      axis4.rotationSpeed = radians(450)/60.0;
       Model axis5 = new Model("ROBOT_MODEL_1_AXIS5.STL", color(200, 200, 0));
       axis5.rotations[0] = true;
       axis5.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
+      axis5.rotationSpeed = radians(720)/60.0;
       Model axis6 = new Model("ROBOT_MODEL_1_AXIS6.STL", color(40, 40, 40));
       segments.add(base);
       segments.add(axis1);
@@ -303,15 +309,15 @@ public class ArmModel {
     return j;
   } // end get joint rotations
   
-  public boolean interpolateRotation() {
+  public boolean interpolateRotation(float speed) {
     boolean allDone = true;
     for (Model a : segments) {
       for (int r = 0; r < 3; r++) {
         if (a.rotations[r]) {
-          if (abs(a.currentRotations[r] - a.targetRotations[r]) > a.rotationSpeeds[r]*2)
+          if (abs(a.currentRotations[r] - a.targetRotations[r]) > a.rotationSpeed*2)
           {
             allDone = false;
-            a.currentRotations[r] += a.rotationSpeeds[r] * a.rotationDirections[r];
+            a.currentRotations[r] += a.rotationSpeed * a.rotationDirections[r] * speed;
             a.currentRotations[r] = clampAngle(a.currentRotations[r]);
           }
         }
@@ -333,7 +339,8 @@ public class ArmModel {
       for (Model model : segments) {
         for (int n = 0; n < 3; n++) {
           if (model.rotations[n]) {
-            float trialAngle = model.currentRotations[n] + 0.02 * model.jointsMoving[n];
+            float trialAngle = model.currentRotations[n] +
+              model.rotationSpeed * model.jointsMoving[n] * liveSpeed;
             trialAngle = clampAngle(trialAngle);
             if (model.anglePermitted(n, trialAngle))
               model.currentRotations[n] = trialAngle;
