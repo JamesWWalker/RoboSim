@@ -1,5 +1,6 @@
 
 final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
+final int FTYPE_TOOL = 0, FTYPE_USER = 1;
 Point[] pr = new Point[1000]; // global registers
 Frame[] toolFrames = new Frame[10]; // tool frames
 Frame[] userFrames = new Frame[10];
@@ -223,8 +224,32 @@ println("getVector end2");
   
 } // end MotionInstruction class
 
+
+
 public class FrameInstruction extends Instruction {
-}
+  private int frameType;
+  private int idx;
+  
+  public FrameInstruction(int f, int i) {
+    frameType = f;
+    idx = i;
+  }
+  
+  public void execute() {
+    if (frameType == FTYPE_TOOL) activeToolFrame = idx;
+    else if (frameType == FTYPE_USER) activeUserFrame = idx;
+  }
+  
+  public String toString() {
+    String ret = "";
+    if (frameType == FTYPE_TOOL) ret += "UTOOL_NUM=";
+    else if (frameType == FTYPE_USER) ret += "UFRAME_NUM=";
+    ret += idx+1;
+    return ret;
+  }
+} // end FrameInstruction class
+
+
 
 public class ToolInstruction extends Instruction {
   private String type;
@@ -248,7 +273,9 @@ public class ToolInstruction extends Instruction {
   public String toString() {
     return type + "[" + bracket + "]=" + (setToolStatus == ON ? "ON" : "OFF");
   }
-}
+} // end ToolInstruction class
+
+
 
 public class CoordinateFrame {
   private PVector origin = new PVector();

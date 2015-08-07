@@ -31,7 +31,8 @@ final int NONE = 0,
           SET_DO_BRACKET = 22,
           SET_DO_STATUS = 23,
           SET_RO_BRACKET = 24,
-          SET_RO_STATUS = 25;
+          SET_RO_STATUS = 25,
+          SET_FRAME_INSTRUCTION = 26;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
@@ -1126,7 +1127,7 @@ public void addNumber(String number) {
     workingText += number;
     options.set(1, workingText + workingTextSuffix);
     updateScreen(color(255,0,0), color(0,0,0));
-  } else if (mode == ACTIVE_FRAMES) {
+  } else if (mode == ACTIVE_FRAMES || mode == SET_FRAME_INSTRUCTION) {
     workingText += number;
   }
 }
@@ -1187,6 +1188,7 @@ public void up(int theValue){
       case NAV_USER_FRAMES:
       case PICK_INSTRUCTION:
       case IO_SUBMENU:
+      case SET_FRAME_INSTRUCTION:
          if (active_row > 0) active_row--;
          break;
       case ACTIVE_FRAMES:
@@ -1238,6 +1240,7 @@ public void dn(int theValue){
       case ACTIVE_FRAMES:
       case PICK_INSTRUCTION:
       case IO_SUBMENU:
+      case SET_FRAME_INSTRUCTION:
          if (active_row < contents.size()-1) active_row++;
          break;
    }  
@@ -1340,6 +1343,16 @@ public void rt(int theValue){
             mode = IO_SUBMENU;
             updateScreen(color(255,0,0), color(0));
           } else if (active_row == 1) { // Offset/Frames
+            contents = new ArrayList<ArrayList<String>>();
+            ArrayList<String> line = new ArrayList<String>();
+            line.add("1 UTOOL_NUM=()");
+            contents.add(line);
+            line = new ArrayList<String>(); line.add("2 UFRAME_NUM=()");
+            contents.add(line);
+            active_col = active_row = 0;
+            mode = SET_FRAME_INSTRUCTION;
+            workingText="0";
+            updateScreen(color(255,0,0), color(0));
           }
           break;
    }
@@ -2088,6 +2101,23 @@ public void ENTER(int theValue){
          options.clear();
          updateScreen(color(255,0,0), color(0,0,0));
          break;
+      case SET_FRAME_INSTRUCTION:
+         num = Integer.parseInt(workingText)-1;
+         if (num < -1) num = -1;
+         else if (num >= userFrames.length) num = userFrames.length-1;
+         prog = programs.get(select_program);
+         int type = 0;
+         if (active_row == 0) type = FTYPE_TOOL;
+         else if (active_row == 1) type = FTYPE_USER;
+         prog.addInstruction(new FrameInstruction(type, num));
+         active_instruction = select_instruction = prog.getInstructions().size()-1;
+         active_col = 0;
+         loadInstructions(select_program);
+         active_row = contents.size()-1;
+         mode = INSTRUCTION_NAV;
+         options.clear();
+         updateScreen(color(255,0,0), color(0,0,0));
+         break;
    }
 }
 
@@ -2714,9 +2744,10 @@ public void loadInstructions(int programID){
         else m.add("CONT" + (int)(a.getTermination()*100));
         contents.add(m);
         println("hi " + m.toString());
-      } else if (instruction instanceof ToolInstruction) {
-        ToolInstruction a = (ToolInstruction)instruction;
-        m.add(a.toString());
+      } else if (instruction instanceof ToolInstruction ||
+                 instruction instanceof FrameInstruction)
+      {
+        m.add(instruction.toString());
         contents.add(m);
       }
    } 

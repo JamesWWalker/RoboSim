@@ -776,6 +776,11 @@ println("executeProgram end1");
     instruction.execute();
     currentInstruction++;
     if (currentInstruction >= program.getInstructions().size()) return true;
+  } else if (ins instanceof FrameInstruction) {
+    FrameInstruction instruction = (FrameInstruction)ins;
+    instruction.execute();
+    currentInstruction++;
+    if (currentInstruction >= program.getInstructions().size()) return true;
   } // end of instruction type check
 println("executeProgram end2");
   return false;
@@ -791,6 +796,10 @@ boolean executeSingleInstruction(Instruction ins) {
     else return armModel.interpolateRotation();
   } else if (ins instanceof ToolInstruction) {
     ToolInstruction instruction = (ToolInstruction)ins;
+    instruction.execute();
+    return true;
+  } else if (ins instanceof FrameInstruction) {
+    FrameInstruction instruction = (FrameInstruction)ins;
     instruction.execute();
     return true;
   }
