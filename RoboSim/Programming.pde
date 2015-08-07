@@ -227,18 +227,26 @@ public class FrameInstruction extends Instruction {
 }
 
 public class ToolInstruction extends Instruction {
-  private String display;
+  private String type;
+  private int bracket;
   private int setToolStatus;
   
-  public String getDisplay() { return display; }
-  
-  public ToolInstruction(String d, int in) {
-    display = d;
-    setToolStatus = in;
+  public ToolInstruction(String d, int b, int t) {
+    type = d;
+    bracket = b;
+    setToolStatus = t;
   }
   
   public void execute() {
-    endEffectorStatus = setToolStatus;
+    if ((type.equals("RO") && bracket == 4 && activeEndEffector == ENDEF_CLAW) ||
+        (type.equals("DO") && bracket == 101 && activeEndEffector == ENDEF_SUCTION))
+    {
+      endEffectorStatus = setToolStatus;
+    }
+  }
+  
+  public String toString() {
+    return type + "[" + bracket + "]=" + (setToolStatus == ON ? "ON" : "OFF");
   }
 }
 

@@ -29,7 +29,9 @@ final int NONE = 0,
           PICK_INSTRUCTION = 20,
           IO_SUBMENU = 21,
           SET_DO_BRACKET = 22,
-          SET_DO_STATUS = 23;
+          SET_DO_STATUS = 23,
+          SET_RO_BRACKET = 24,
+          SET_RO_STATUS = 25;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
@@ -1115,7 +1117,7 @@ public void NUM9(int theValue){
 
 public void addNumber(String number) {
   if (mode == SET_INSTRUCTION_REGISTER || mode == SET_INSTRUCTION_TERMINATION ||
-      mode == JUMP_TO_LINE || mode == SET_DO_BRACKET)
+      mode == JUMP_TO_LINE || mode == SET_DO_BRACKET || mode == SET_RO_BRACKET)
   {
     workingText += number;
     options.set(1, workingText);
@@ -1172,6 +1174,7 @@ public void up(int theValue){
       case PICK_FRAME_MODE:
       case PICK_FRAME_METHOD:
       case SET_DO_STATUS:
+      case SET_RO_STATUS:
          if (which_option == 0){
             // does nothing
          }else{
@@ -1221,6 +1224,7 @@ public void dn(int theValue){
       case PICK_FRAME_MODE:
       case PICK_FRAME_METHOD:
       case SET_DO_STATUS:
+      case SET_RO_STATUS:
          if (which_option == options.size() - 1){
             // does nothing
          }else{
@@ -2039,27 +2043,41 @@ public void ENTER(int theValue){
          loadActiveFrames();
          break;
       case IO_SUBMENU:
-         options = new ArrayList<String>();
-         options.add("Use number keys to enter RO[X]");
-         workingText = "";
-         options.add(workingText);
-         mode = SET_DO_BRACKET;
-         which_option = 0;
-         updateScreen(color(255,0,0), color(0));
+         if (active_row == 2) { // digital
+            options = new ArrayList<String>();
+            options.add("Use number keys to enter DO[X]");
+            workingText = "";
+            options.add(workingText);
+            mode = SET_DO_BRACKET;
+            which_option = 0;
+            updateScreen(color(255,0,0), color(0));
+         } else if (active_row == 5) { // robot
+            options = new ArrayList<String>();
+            options.add("Use number keys to enter RO[X]");
+            workingText = "";
+            options.add(workingText);
+            mode = SET_RO_BRACKET;
+            which_option = 0;
+            updateScreen(color(255,0,0), color(0));
+         }
          break;
       case SET_DO_BRACKET:
+      case SET_RO_BRACKET:
          options = new ArrayList<String>();
          options.add("ON");
          options.add("OFF");
-         mode = SET_DO_STATUS;
+         if (mode == SET_DO_BRACKET) mode = SET_DO_STATUS;
+         else if (mode == SET_RO_BRACKET) mode = SET_RO_STATUS;
          which_option = 0;
          updateScreen(color(255,0,0), color(0));
          break;
       case SET_DO_STATUS:
+      case SET_RO_STATUS:
          int bracketNum = Integer.parseInt(workingText);
          Program prog = programs.get(select_program);
          ToolInstruction insert = new ToolInstruction(
-            "DO[" + bracketNum + "]=" + (which_option == 0 ? "ON" : "OFF"),
+            (mode == SET_DO_STATUS ? "DO" : "RO"),
+            bracketNum,
             (which_option == 0 ? ON : OFF));
          prog.addInstruction(insert);
          active_instruction = select_instruction = prog.getInstructions().size()-1;
@@ -2698,7 +2716,7 @@ public void loadInstructions(int programID){
         println("hi " + m.toString());
       } else if (instruction instanceof ToolInstruction) {
         ToolInstruction a = (ToolInstruction)instruction;
-        m.add(a.getDisplay());
+        m.add(a.toString());
         contents.add(m);
       }
    } 

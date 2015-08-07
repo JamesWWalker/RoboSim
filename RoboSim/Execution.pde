@@ -771,16 +771,30 @@ println("executeProgram end1");
         if (currentInstruction >= program.getInstructions().size()) return true;
       }
     }
-  } // end of if instruction==motion instruction
+  } else if (ins instanceof ToolInstruction) {
+    ToolInstruction instruction = (ToolInstruction)ins;
+    instruction.execute();
+    currentInstruction++;
+    if (currentInstruction >= program.getInstructions().size()) return true;
+  } // end of instruction type check
 println("executeProgram end2");
   return false;
 } // end executeProgram
 
 
-boolean executeSingleInstruction(MotionInstruction instruction) {
-  if (instruction.getMotionType() != MTYPE_JOINT)
-    return executeMotion(armModel, instruction.getSpeedForExec(armModel));
-  else return armModel.interpolateRotation();
+// return true when done
+boolean executeSingleInstruction(Instruction ins) {
+  if (ins instanceof MotionInstruction) {
+    MotionInstruction instruction = (MotionInstruction)ins;
+    if (instruction.getMotionType() != MTYPE_JOINT)
+      return executeMotion(armModel, instruction.getSpeedForExec(armModel));
+    else return armModel.interpolateRotation();
+  } else if (ins instanceof ToolInstruction) {
+    ToolInstruction instruction = (ToolInstruction)ins;
+    instruction.execute();
+    return true;
+  }
+  return true;
 }
 
 
