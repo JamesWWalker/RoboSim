@@ -1,5 +1,8 @@
 import java.nio.charset.Charset;
 
+/**
+ * This method saves the program state.
+ */
 void saveState() {
   println("Called save state");
   try{
@@ -50,8 +53,8 @@ void saveState() {
 
 // this will automatically called when program starts
 /**
- * Load program state that is previously stored. 
- * Returns 1 if sucess, otherwise return 0;
+ * Load the program state that is previously stored. 
+ * @return: 1 if sucess, otherwise return 0;
  */
 int loadState() {
   Path p1 = Paths.get(sketchPath("tmp/programs.ser")); 
@@ -60,7 +63,10 @@ int loadState() {
   return 1;
 }
 /**
- * This method load built-in programs and user-defined programs 
+ * This method loads built-in programs and user-defined programs 
+ *
+ * @PARAM:path - where to find the file that stores program state
+ * @return: 1 if success, otherwise 0.
  */
 int loadPrograms(Path path){
    try{
