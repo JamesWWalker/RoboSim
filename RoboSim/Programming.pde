@@ -6,7 +6,7 @@ Frame[] toolFrames = new Frame[10]; // tool frames
 Frame[] userFrames = new Frame[10];
 
 
-public class Point {
+public class Point  {
   public PVector c; // coordinates
   public PVector a; // angles
   public float[] j = new float[6]; // joint values
@@ -34,9 +34,31 @@ public class Point {
     return new Point(c.x, c.y, c.z, a.x, a.y, a.z, j[0], j[1], j[2], j[3], j[4], j[5]);
   }
   
+  public String toExport(){
+     String ret = "<Point> ";
+     ret += Float.toString(c.x);
+     ret += " ";
+     ret += Float.toString(c.y);
+     ret += " ";
+     ret += Float.toString(c.z);
+     ret += " ";
+     ret += Float.toString(a.x);
+     ret += " ";
+     ret += Float.toString(a.y);
+     ret += " ";
+     ret += Float.toString(a.z);
+     ret += " ";
+     for (int i=0;i<j.length-1;i++){
+        ret += Float.toString(j[i]);
+        ret += " ";
+     }
+     ret += Float.toString(j[j.length-1]);
+     ret += " ";
+     ret += "</Point>";     
+     return ret;
+  }
+  
 } // end Point class
-
-
 
 public class Frame {
   private PVector origin;
@@ -67,11 +89,11 @@ public class Frame {
 
 
 
-public class Program {
+public class Program  {
   private String name;
-  private ArrayList<Instruction> instructions;
-  private Point[] p = new Point[1000]; // local registers
   private int nextRegister;
+  private Point[] p = new Point[1000]; // local registers
+  private ArrayList<Instruction> instructions;
   
   public Program(String theName) {
     instructions = new ArrayList<Instruction>();
@@ -87,6 +109,47 @@ public class Program {
   public String getName(){
     return name;
   }
+  
+  // added by Judy
+  public String toExport(){
+     String ret = "<Program> ";
+     ret += name.replace(' ', '_');
+     ret += " ";
+     ret += Integer.toString(nextRegister);
+     ret += " ";
+     for(int i=0; i<1000; i++){
+        ret += p[i].toExport();
+        ret += " ";
+     }
+     for(int i=0;i<instructions.size();i++){
+        Instruction ins = instructions.get(i);
+        if (ins instanceof MotionInstruction){
+           MotionInstruction tmp = (MotionInstruction) ins;
+           ret += tmp.toExport();
+           ret += " ";
+        }else if (ins instanceof FrameInstruction){
+           FrameInstruction tmp = (FrameInstruction) ins;
+           ret += tmp.toExport();
+           ret += " ";
+        }else if (ins instanceof ToolInstruction){
+           ToolInstruction tmp = (ToolInstruction) ins;
+           ret += tmp.toExport();
+           ret += " ";
+        }
+     }
+     ret += "</Program> ";
+     return ret;
+  }
+  
+  public void loadNextRegister(int next){
+     nextRegister = next;
+  }
+  
+  public int getRegistersLength(){
+     return p.length;
+  }
+  /**** end ****/
+  
   
   public void addInstruction(Instruction i) {
     instructions.add(i);
@@ -121,12 +184,16 @@ public class Program {
     else return null;
   }
   
+  
+  
 } // end Program class
 
-public class Instruction {
+
+public  class Instruction  {
 }
 
-public class MotionInstruction extends Instruction {
+
+public final class MotionInstruction extends Instruction  {
   private int motionType;
   private int register;
   private boolean globalRegister;
@@ -221,6 +288,26 @@ println("getVector end2");
      return me;
   } // end toString()
   
+  public String toExport(){
+     String ret = "<MotionInstruction> ";
+     ret += Integer.toString(motionType);
+     ret += " ";
+     ret += Integer.toString(register);
+     ret += " ";
+     ret += Boolean.toString(globalRegister);
+     ret += " ";
+     ret += Float.toString(speed);
+     ret += " ";
+     ret += Float.toString(termination);
+     ret += " ";
+     ret += Integer.toString(userFrame);
+     ret += " ";
+     ret += Integer.toString(toolFrame);
+     ret += " ";
+     ret += "</MotionInstruction>";
+     return ret;
+  }
+  
 } // end MotionInstruction class
 
 
@@ -245,6 +332,16 @@ public class FrameInstruction extends Instruction {
     else if (frameType == FTYPE_USER) ret += "UFRAME_NUM=";
     ret += idx+1;
     return ret;
+  }
+  
+  public String toExport(){
+     String ret = "<FrameInstruction> ";
+     ret += Integer.toString(frameType);
+     ret += " ";
+     ret += Integer.toString(idx);
+     ret += " ";
+     ret += "</FrameInstruction>";
+     return ret;
   }
 } // end FrameInstruction class
 
@@ -272,6 +369,19 @@ public class ToolInstruction extends Instruction {
   public String toString() {
     return type + "[" + bracket + "]=" + (setToolStatus == ON ? "ON" : "OFF");
   }
+  
+  public String toExport(){
+     String ret = "<ToolInstruction> ";
+     ret += type;
+     ret += " ";
+     ret += Integer.toString(bracket);
+     ret += " ";
+     ret += Integer.toString(setToolStatus);
+     ret += " ";
+     ret += "</ToolInstruction>";
+     return ret;
+  }
+  
 } // end ToolInstruction class
 
 
@@ -317,3 +427,4 @@ public class RecordScreen implements Runnable{
         
     }
 }
+

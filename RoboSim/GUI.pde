@@ -1159,6 +1159,7 @@ public void up(int theValue){
          if (active_program > 0) {
            active_program--;
            select_program = active_program;
+           //saveState(); 
            active_col = 0;
          }
          loadPrograms();
@@ -1210,6 +1211,7 @@ public void dn(int theValue){
          if (active_program < programs.size()-1) {
            active_program++;
            select_program = active_program;
+           //saveState();
            active_col = 0;
          }
          loadPrograms();
@@ -1439,6 +1441,7 @@ public void f1(int theValue){
            loadInstructions(select_program);
            active_row = contents.size()-1;
            updateScreen(color(255,0,0), color(0,0,0));
+           saveState();
          }
          //shift = OFF;
          break;
@@ -1955,6 +1958,7 @@ public void ENTER(int theValue){
          break;
       case PROGRAM_NAV:
          select_program = active_program;
+         //saveState();
          select_instruction = active_instruction = 0;
          mode = INSTRUCTION_NAV;
          clearScreen();
@@ -2074,6 +2078,7 @@ public void ENTER(int theValue){
          select_program = active_program = programs.size()-1;
          select_instruction = active_instruction = 0;
          mode = INSTRUCTION_NAV;
+         saveState();
          clearScreen();
          options = new ArrayList<String>();
          loadInstructions(select_program);
@@ -2152,6 +2157,7 @@ public void ENTER(int theValue){
          mode = INSTRUCTION_NAV;
          options.clear();
          updateScreen(color(255,0,0), color(0,0,0));
+         saveState();
          break;
       case SET_FRAME_INSTRUCTION:
          num = Integer.parseInt(workingText)-1;
@@ -2169,6 +2175,7 @@ public void ENTER(int theValue){
          mode = INSTRUCTION_NAV;
          options.clear();
          updateScreen(color(255,0,0), color(0,0,0));
+         saveState();
          break;
       case EDIT_MENU:
          if (active_row == 1) { // delete
@@ -2857,6 +2864,7 @@ void loadPrograms() {
    int size = programs.size();
    if (size <= 0){
       programs.add(new Program("My Program 1"));
+      saveState();
    }
    
    active_instruction = 0;

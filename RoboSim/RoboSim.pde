@@ -2,7 +2,12 @@ import controlP5.*;
 
 import java.util.*;
 import java.nio.*;
+import java.nio.file.*;
 import java.io.*;
+import java.io.Serializable;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 final int OFF = 0, ON = 1;
 
@@ -54,6 +59,10 @@ int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
 
 /*******************************/
 
+// for store or load program state
+FileInputStream in = null;
+FileOutputStream out = null;
+
 public void setup() {
   size(1200, 800, P3D);
   cp5 = new ControlP5(this);
@@ -65,13 +74,26 @@ public void setup() {
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
   intermediatePositions = new ArrayList<PVector>();
   // TESTING CODE
+  /*
   createTestProgram();
   for (int n = 0; n < toolFrames.length; n++) {
     toolFrames[n] = new Frame();
     userFrames[n] = new Frame();
   }
+  */
 //  toolFrames[0].setOrigin(new PVector(0, 0, -500));
   // END TESTING CODE
+ 
+  // for test
+  int loadit = loadState();
+  if (loadit == 0){
+     println("create test programs");
+     createTestProgram();
+     for (int n = 0; n < toolFrames.length; n++) {
+       toolFrames[n] = new Frame();
+       userFrames[n] = new Frame();
+     }  
+  }
 }
 
 boolean doneMoving = true; // TESTING CODE
@@ -95,7 +117,12 @@ public void draw() {
   if (!doneMoving) doneMoving = executeProgram(currentProgram, armModel);
   else if (singleInstruction != null) {
     println("Here " + frameCount);
-    if (executeSingleInstruction(singleInstruction)) singleInstruction = null;
+    if (executeSingleInstruction(singleInstruction)) 
+    {
+       singleInstruction = null;
+       //saveState();  // added by Judy
+    }
+    
   }
 
   armModel.executeLiveMotion(); // respond to manual movement from J button presses
@@ -186,6 +213,7 @@ public void draw() {
   
   showMainDisplayText();
 //  println(frameRate + " fps");
+  
 }
 
 void applyCamera() {

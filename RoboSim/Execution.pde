@@ -68,7 +68,12 @@ void createTestProgram() {
   programs.add(program4);
   //currentProgram = program4;
   
-  for (int n = 0; n < 22; n++) programs.add(new Program("Xtra" + Integer.toString(n)));
+  
+  for (int n = 0; n < 22; n++) {
+     programs.add(new Program("Xtra" + Integer.toString(n)));
+     
+  }
+  saveState();
   /*
   try{            
             Runtime rt = Runtime.getRuntime();
