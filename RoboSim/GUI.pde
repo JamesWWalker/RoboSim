@@ -922,15 +922,9 @@ public void mouseWheel(MouseEvent event){
    if (e < 0){
       myscale *= 0.9; 
    }
-   println(e);
 }
 
 public void keyPressed(){
-  
-  // TEST CODE: Press s to call saveState, l to call loadState
-  if (key == 's' || key == 'S') saveState();
-  else if (key == 'l' || key == 'L') loadState();
-  
    /* click spacebar once to activate pan button
     * click spacebar again to deactivate pan button
     */ 
@@ -1416,10 +1410,7 @@ public void f1(int theValue){
            mode = PICK_INSTRUCTION;
            updateScreen(color(255,0,0), color(0));
          } else { // shift+f1 = add new motion instruction
-           pushMatrix();
-           //applyCamera();
            PVector eep = calculateEndEffectorPosition(armModel, false);
-           popMatrix();
            eep = convertNativeToWorld(eep);
            Program prog = programs.get(select_program);
            int reg = prog.nextRegister();
@@ -1746,10 +1737,7 @@ public void f5(int theValue) {
       }
     } else {
       // overwrite current instruction
-      pushMatrix();
-      //applyCamera();
       PVector eep = calculateEndEffectorPosition(armModel, false);
-      popMatrix();
       eep = convertNativeToWorld(eep);
       Program prog = programs.get(select_program);
       int reg = prog.nextRegister();
@@ -1792,18 +1780,12 @@ public void f5(int theValue) {
     if (shift == ON) {
       if (inFrame == NAV_USER_FRAMES) {
         if (teachingWhichPoint == 1) { // teaching origin
-          pushMatrix();
-          //applyCamera();
           PVector eep = calculateEndEffectorPosition(armModel, false);
-          popMatrix();
           currentFrame.setOrigin(convertNativeToWorld(eep));
           teachingWhichPoint++;
           loadThreePointMethod();
         } else if (teachingWhichPoint == 2 || teachingWhichPoint == 3) { // x,y axis
-          pushMatrix();
-          //applyCamera();
           PVector eep = calculateEndEffectorPosition(armModel, false);
-          popMatrix();
           PVector second = convertNativeToWorld(eep);
           PVector first = currentFrame.getOrigin();
           PVector vec = new PVector(second.x-first.x, second.y-first.y, second.z-first.z);
@@ -1822,7 +1804,6 @@ public void f5(int theValue) {
         }
       } else if (inFrame == NAV_TOOL_FRAMES) {
         pushMatrix();
-        //applyCamera();
         applyModelRotation(armModel);
         PVector one = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
         translate(0, 0, -100);
@@ -1962,11 +1943,8 @@ public void ENTER(int theValue){
          select_instruction = active_instruction = 0;
          mode = INSTRUCTION_NAV;
          clearScreen();
-         println("after clear screen");
          loadInstructions(select_program);
-         println("after load instruction");
          updateScreen(color(255,0,0), color(0,0,0));
-         println("after update screen");
          break;
       case INSTRUCTION_NAV:
          if (active_col == 2 || active_col == 3){
@@ -1978,7 +1956,6 @@ public void ENTER(int theValue){
          break;
       case INSTRUCTION_EDIT:
          Program current_p = programs.get(select_program);
-         println("select_instruction="+select_instruction);
          MotionInstruction m = (MotionInstruction)current_p.getInstructions().get(select_instruction);
          switch (active_col){
             case 1: // motion type
@@ -2455,8 +2432,7 @@ public void updateScreen(color active, color normal){
             .moveTo(g1)
             ;
          next_px = display_px;
-         next_py += 14;   
-         //println("I am in instruction mode");
+         next_py += 14;
          break;
    }
    
@@ -2529,7 +2505,6 @@ public void updateScreen(color active, color normal){
    next_py += 14;
    index_nums = 1000;
    if (nums.size() > 0){
-      println("nums size is " + nums.size());
       for(int i=0;i<nums.size();i++){
          if (nums.get(i) == -1){
             cp5.addTextlabel(Integer.toString(index_nums))
@@ -2780,9 +2755,6 @@ public void loadInstructions(int programID){
    contents = new ArrayList<ArrayList<String>>();
    int size = p.getInstructions().size();
    
-   //TODO: TEST
-   println("programID="+programID+" instructions size = "+size);
-   
    int start = active_instruction;
    int end = start + ITEMS_TO_SHOW;
    if (end >= size) end = size;
@@ -2813,7 +2785,6 @@ public void loadInstructions(int programID){
         if (a.getTermination() == 0) m.add("FINE");
         else m.add("CONT" + (int)(a.getTermination()*100));
         contents.add(m);
-        println("hi " + m.toString());
       } else if (instruction instanceof ToolInstruction ||
                  instruction instanceof FrameInstruction)
       {
@@ -2862,10 +2833,10 @@ void loadPrograms() {
    fn_info.setText("");
    
    int size = programs.size();
-   if (size <= 0){
+   /*if (size <= 0){
       programs.add(new Program("My Program 1"));
       saveState();
-   }
+   }/* */
    
    active_instruction = 0;
    active_row = 0;

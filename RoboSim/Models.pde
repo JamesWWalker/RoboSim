@@ -352,12 +352,7 @@ public class ArmModel {
       if (linearMoveSpeeds[0] != 0 || linearMoveSpeeds[1] != 0 || linearMoveSpeeds[2] != 0) {
         PVector startFrom = new PVector(0,0,0);
         if (intermediatePositions.size() == 1) startFrom = intermediatePositions.get(0);
-        else {
-          pushMatrix();
-          //applyCamera();
-          startFrom = calculateEndEffectorPosition(armModel, false);
-          popMatrix();
-        }
+        else startFrom = calculateEndEffectorPosition(armModel, false);
         PVector move = new PVector(linearMoveSpeeds[0], linearMoveSpeeds[1], linearMoveSpeeds[2]);
         if (activeUserFrame >= 0 && activeUserFrame < userFrames.length) {
           PVector[] frame = userFrames[activeUserFrame].axes;
@@ -370,9 +365,7 @@ public class ArmModel {
         intermediatePositions.add(new PVector(startFrom.x + move.x * distance,
                                               startFrom.y + move.y * distance,
                                               startFrom.z + move.z * distance));
-        println("attemptIK call 5 before");
         attemptIK(this, 0);
-        println("attemptIK call 5 after");
         instantRotation();
       }
     }

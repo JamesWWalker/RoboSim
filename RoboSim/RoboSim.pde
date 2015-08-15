@@ -73,30 +73,14 @@ public void setup() {
   eeModelClaw = new Model("GRIPPER.STL", color(40));
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
   intermediatePositions = new ArrayList<PVector>();
-  // TESTING CODE
-  /*
-  createTestProgram();
+  int loadit = loadState();
   for (int n = 0; n < toolFrames.length; n++) {
     toolFrames[n] = new Frame();
     userFrames[n] = new Frame();
-  }
-  */
-//  toolFrames[0].setOrigin(new PVector(0, 0, -500));
-  // END TESTING CODE
- 
-  // for test
-  int loadit = loadState();
-  if (loadit == 0){
-     println("create test programs");
-     createTestProgram();
-     for (int n = 0; n < toolFrames.length; n++) {
-       toolFrames[n] = new Frame();
-       userFrames[n] = new Frame();
-     }  
-  }
+  }  
 }
 
-boolean doneMoving = true; // TESTING CODE
+boolean doneMoving = true;
 
 public void draw() {
   
@@ -105,24 +89,10 @@ public void draw() {
   ambientLight(150, 150, 150);
 
   background(127);
-  //gui();
-  // TESTING CODE
-  /*if (frameCount == 20) {
-    readyProgram();
-  } /* */
-  // END TESTING CODE
-  
-//  updateIntermediatePositions();
   
   if (!doneMoving) doneMoving = executeProgram(currentProgram, armModel);
   else if (singleInstruction != null) {
-    println("Here " + frameCount);
-    if (executeSingleInstruction(singleInstruction)) 
-    {
-       singleInstruction = null;
-       //saveState();  // added by Judy
-    }
-    
+    if (executeSingleInstruction(singleInstruction)) singleInstruction = null;    
   }
 
   armModel.executeLiveMotion(); // respond to manual movement from J button presses
@@ -143,7 +113,7 @@ public void draw() {
   noLights();
   
   // TESTING CODE: DRAW INTERMEDIATE POINTS
-  noStroke();
+  /*noStroke();
   pushMatrix();
   if (intermediatePositions != null) {
     for (PVector v : intermediatePositions) {
@@ -222,35 +192,6 @@ void applyCamera() {
   scale(myscale);
   rotateX(myRotX); // for rotate button
   rotateY(myRotY); // for rotate button /* */
-  /*camera(width/2.0-1200,
-         height/2.0-600,
-         (height/2.0) / tan(PI*30.0 / 180.0)+800,
-         width/2.0-1200,
-         height/2.0-600,
-         600,
-         0,
-         1,
-         0); /* */
 }
 
-void updateIntermediatePositions() {
-  if (intermediatePositions != null) {
-    for (int n = 0; n < intermediatePositions.size(); n++) {
-      PVector v = intermediatePositions.get(n);
-      pushMatrix();
-      translate(-v.x, -v.y, -v.z);
-      //applyCamera();
-      translate(v.x, v.y, v.z);
-      intermediatePositions.set(n, new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0)));
-      popMatrix();
-    }
-    /*
-    for (PVector v : intermediatePositions) {
-      pushMatrix();
-      translate(v.x, v.y, v.z);
-      sphere(10);
-      popMatrix();
-    } /* */
-  }
-}
 

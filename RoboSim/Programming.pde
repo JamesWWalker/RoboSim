@@ -244,13 +244,11 @@ public final class MotionInstruction extends Instruction  {
   }
   
   public Point getVector(Program parent) {
-println("getVector start");
     if (motionType != COORD_JOINT) {
       Point out;
       if (globalRegister) out = pr[register].clone();
       else out = parent.p[register].clone();
       out.c = convertWorldToNative(out.c);
-println("getVector end1");
       return out;
     } else {
       Point ret;
@@ -260,7 +258,6 @@ println("getVector end1");
         PVector[] frame = userFrames[userFrame].axes;
         ret.c = vectorConvertFrom(ret.c, frame[0], frame[1], frame[2]);
       }
-println("getVector end2");
       return ret;
     }
   } // end getVector()

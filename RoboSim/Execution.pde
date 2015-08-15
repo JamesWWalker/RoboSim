@@ -11,7 +11,9 @@ float liveSpeed = 0.1;
 int errorCounter;
 String errorText;
 
-
+/**
+ * Creates some programs for testing purposes.
+ */
 void createTestProgram() {
   Program program = new Program("Test Program");
   MotionInstruction instruction =
@@ -68,28 +70,17 @@ void createTestProgram() {
   programs.add(program4);
   //currentProgram = program4;
   
-  
   for (int n = 0; n < 22; n++) {
      programs.add(new Program("Xtra" + Integer.toString(n)));
      
   }
   saveState();
-  /*
-  try{            
-            Runtime rt = Runtime.getRuntime();
-            System.out.format("run script to record screen...\n");
-            Process proc = rt.exec("ffmpeg -f dshow -i video=\"screen-capture-recorder\":audio=\"Microphone (Conexant SmartAudio HD)\" output.flv");
-            //while(record == ON){
-              Thread.sleep(4000);
-            //}
-            System.out.format("finish recording\n");
-        }catch (Throwable t){
-            t.printStackTrace();
-        }*/
-}
+} // end createTestProgram()
 
 
-
+/**
+ * Displays important information in the upper-right corner of the screen.
+ */
 void showMainDisplayText() {
   fill(0);
   textAlign(RIGHT, TOP);
@@ -100,11 +91,7 @@ void showMainDisplayText() {
     text("Joints: J1: " + j[0] + " J2: " + j[1] + " J3: " + j[2] +
                 " J4: " + j[3] + " J5: " + j[4] + " J6: " + j[5], width-20, 60);
   } else {
-    pushMatrix();
-    //applyCamera();
-    PVector cam = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
     PVector eep = calculateEndEffectorPosition(armModel, false);
-    popMatrix();
     PVector concor = convertNativeToWorld(eep);
     PVector wpr = armModel.getWpr();
     text("Coordinates: X: " + concor.x + " Y: " + concor.y + " Z: " + concor.z +
@@ -118,23 +105,16 @@ void showMainDisplayText() {
     fill(255, 0, 0);
     text(errorText, width-20, 100);
   }
-/*  text("Coordinates: Native: " + eep.x + " Y: " + eep.y + " Z: " + eep.z, width-20, 40);
-//  text("Camera base at: X: " + cam.x + " Y: " + cam.y + " Z: " + cam.z, width-20, 60);
-  text("Coordinates: World: " + concor.x + " Y: " + concor.y + " Z: " + concor.z, width-20, 60);
-  PVector conbak = convertWorldToNative(concor);
-  text("Coordinates: Back: " + conbak.x + " Y: " + conbak.y + " Z: " + conbak.z, width-20, 80);
-  text("Coordinates: Camera: " + cam.x + " Y: " + cam.y + " Z: " + cam.z, width-20, 100);
-  text("Current speed: " + (Integer.toString((int)(Math.round(liveSpeed*100)))) + "%", width-20, 120); /* */
 }
 
 
-
-// converts from RoboSim-defined world coordinates into
-// Processing's coordinate system.
-// Assumes that the robot starts out facing toward the LEFT.
+/**
+ * Converts from RoboSim-defined world coordinates into
+ * Processing's coordinate system.
+ * Assumes that the robot starts out facing toward the LEFT.
+ */
 PVector convertWorldToNative(PVector in) {
   pushMatrix();
-  //applyCamera();
   float outx = modelX(0,0,0)-in.x;
   float outy = modelY(0,0,0)-in.z;
   float outz = -(modelZ(0,0,0)-in.y);
@@ -143,9 +123,12 @@ PVector convertWorldToNative(PVector in) {
 }
 
 
+/**
+ * Converts from Processing's native coordinate system to
+ * RoboSim-defined world coordinates.
+ */
 PVector convertNativeToWorld(PVector in) {
   pushMatrix();
-  //applyCamera();
   float outx = modelX(0,0,0)-in.x;
   float outy = in.z+modelZ(0,0,0);
   float outz = modelY(0,0,0)-in.y;
@@ -153,34 +136,15 @@ PVector convertNativeToWorld(PVector in) {
   return new PVector(outx, outy, outz);
 }
 
-
-
-// convert from user-defined RoboSim coordinates into
-// Processing's coordinate system.
-PVector convertUserToNative(CoordinateFrame frame, PVector in) {
-  pushMatrix();
-  //applyCamera();
-  PVector tr = frame.getOrigin();
-  // first, apply the user-defined coordinate frame by translating to the
-  // origin and then rotating to the user-defined orientation (remember
-  // that we need to rotate coording to RoboSim conventions).
-  translate(-tr.x, -tr.z, tr.y);
-  tr = frame.getRotation();
-  rotateX(-tr.x);
-  rotateY(-tr.z);
-  rotateZ(tr.y);
-  // now translate to the given point, which is now defined in terms of
-  // the user-defined coordinates, then get the corresponding Processing coordinates.
-  translate(-in.x, -in.z, in.y);
-  PVector out = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
-  popMatrix();
-  return out;
-}
-
-
-// takes a vector and a (probably not quite orthogonal) second vector
-// and computes a vector that's truly orthogonal to the first one and
-// pointing in the direction closest to the imperfect second vector
+/**
+ * Takes a vector and a (probably not quite orthogonal) second vector
+ * and computes a vector that's truly orthogonal to the first one and
+ * pointing in the direction closest to the imperfect second vector
+ * @param in First vector
+ * @param second Second vector
+ * @return A vector perpendicular to the first one and on the same side
+ *         from first as the second one.
+ */
 PVector computePerpendicular(PVector in, PVector second) {
   PVector[] plane = createPlaneFrom3Points(in, second, new PVector(in.x*2, in.y*2, in.z*2));
   PVector v1 = vectorConvertTo(in, plane[0], plane[1], plane[2]);
@@ -197,7 +161,14 @@ PVector computePerpendicular(PVector in, PVector second) {
 }
 
 
-
+/**
+ * Gives the current position of the end effector in
+ * Processing native coordinates.
+ * @param model Arm model whose end effector position to calculate
+ * @param test Determines whether to use arm segments' actual
+ *             rotation values or if we're checking trial rotations
+ * @return The current end effector position
+ */
 PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
   pushMatrix();
   if (model.type == ARM_TEST) {
@@ -276,10 +247,18 @@ PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
     modelZ(0, 0, 0));
   popMatrix();
   return ret;
-}
+} // end calculateEndEffectorPosition
 
-/* */
 
+/**
+ * Performs rotations and translations to reach the end effector
+ * position, similarly to calculateEndEffectorPosition(), but
+ * this function doesn't return anything and also doesn't pop
+ * the matrix after performing the transformations. Useful when
+ * you're doing some graphical manipulation and you want to use
+ * the end effector position as your start point.
+ * @param model The arm model whose transformations to apply
+ */
 void applyModelRotation(ArmModel model) {
   if (model.type == ARM_TEST) {
     rotateY(model.segments.get(0).currentRotations[1]);
@@ -342,10 +321,15 @@ void applyModelRotation(ArmModel model) {
       translate(tr.x, tr.y, tr.z);
     }
   }
-}
+} // end apply model rotations
 
 
-
+/**
+ * Tries to perform inverse kinematics and aborts if it's taking too long.
+ * @param model Arm model to attempt IK with
+ * @param idx Index of intermediatePositions array to target
+ * @return Success or failure
+ */
 int attemptIK(ArmModel model, int idx) {
   // if the size is 0 and idx is 0 that means we're already there so there's nothing to do
   if (intermediatePositions.size() == 0 && idx == 0) return EXEC_SUCCESS;
@@ -353,9 +337,8 @@ int attemptIK(ArmModel model, int idx) {
   int slices = 540, closeEnough = 10;
   int result = EXEC_PROCESSING;
   while (result != EXEC_SUCCESS) {
-    println("Execution check A");
     result = calculateIK(model, intermediatePositions.get(idx), slices, closeEnough);
-    println("Execution check B");
+    if (result == EXEC_SUCCESS) break;
     iter++;
     if (iter > 10) return EXEC_FAILURE;
     slices += 36;
@@ -366,7 +349,15 @@ int attemptIK(ArmModel model, int idx) {
 
 
 
-
+/**
+ * Calculate joint rotations on an arm model necessary to get the end
+ * effector to a given point.
+ * @param model Arm model to calculate IK with
+ * @param eedp Destination point (end effector destination position)
+ * @param slices Granularity of IK attempt
+ * @param closeEnough Acceptable distance to destination point
+ * @return Success or failure
+ */
 int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
   
   float checkAngle = (2*PI)/(float)slices;
@@ -378,19 +369,13 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
     for (int r = 0; r < 3; r++) {
       if (segment.rotations[r]) {
         segment.testRotations[r] = segment.currentRotations[r];
-        pushMatrix();
-        //applyCamera();
         PVector eetp = calculateEndEffectorPosition(model, true);
-        popMatrix();
         float closest = dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z);
         float bestAngle = segment.testRotations[r];
         for (int n = 0; n < slices; n++) {
           segment.testRotations[r] += checkAngle;
           if (segment.anglePermitted(r, checkAngle)) {
-            pushMatrix();
-            //applyCamera();
             eetp = calculateEndEffectorPosition(model, true);
-            popMatrix();
             if (dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z) < closest) {
               closest = dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z);
               bestAngle = segment.testRotations[r];
@@ -405,10 +390,7 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
   
   // figure out where the end of all the arms is and compare that
   // to where we want it to be
-  pushMatrix();
-  //applyCamera();
   PVector eetp = calculateEndEffectorPosition(model, true);
-  popMatrix();
   if (dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z) < closeEnough) {
     // calculate whether it's faster to turn CW or CCW
     for (Model a : model.segments) {
@@ -426,12 +408,13 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
 } // end calculateIK
 
 
-
+/**
+ * Determine how close together intermediate points between two points
+ * need to be based on current speed
+ */
 void calculateDistanceBetweenPoints() {
-  println("execution CHECK C");
   MotionInstruction instruction =
     (MotionInstruction)currentProgram.getInstructions().get(currentInstruction);
-  println("execution CHECK D");
   if (instruction != null && instruction.getMotionType() != MTYPE_JOINT)
     distanceBetweenPoints = instruction.getSpeed() / 60.0;
   else if (curCoordFrame != COORD_JOINT)
@@ -441,6 +424,12 @@ void calculateDistanceBetweenPoints() {
 
 
 
+/**
+ * Calculate a "path" (series of intermediate positions) between two
+ * points in a straight line.
+ * @param start Start point
+ * @param end Destination point
+ */
 void calculateIntermediatePositions(PVector start, PVector end) {
   calculateDistanceBetweenPoints();
   intermediatePositions.clear();
@@ -459,16 +448,23 @@ void calculateIntermediatePositions(PVector start, PVector end) {
 } // end calculate intermediate positions
 
 
-
-/*
-Here's how this works:
-  Assuming our current point is P1, and we're moving to P2 and then P3:
-  1 Do linear interpolation between points P2 and P3 FIRST.
-  2 Begin interpolation between P1 and P2.
-  3 When you're (cont% / 2)% away from P2, begin interpolating not towards
-    P2, but towards the points defined between P2 and P3 in step 1.
-    The mu for this is from 0 to 0.5 instead of 0 to 1.0.
-*/
+/**
+ * Calculate a "path" (series of intermediate positions) between two
+ * points in a a curved line. Need a third point as well, or a curved
+ * line doesn't make sense.
+ * Here's how this works:
+ *   Assuming our current point is P1, and we're moving to P2 and then P3:
+ *   1 Do linear interpolation between points P2 and P3 FIRST.
+ *   2 Begin interpolation between P1 and P2.
+ *   3 When you're (cont% / 1.5)% away from P2, begin interpolating not towards
+ *     P2, but towards the points defined between P2 and P3 in step 1.
+ *   The mu for this is from 0 to 0.5 instead of 0 to 1.0.
+ *
+ * @param p1 Start point
+ * @param p2 Destination point
+ * @param p3 Third point, needed to figure out how to curve the path
+ * @param percentage Intensity of the curve
+ */
 void calculateContinuousPositions(PVector p1, PVector p2, PVector p3, float percentage) {
   //percentage /= 2;
   calculateDistanceBetweenPoints();
@@ -508,9 +504,7 @@ void calculateContinuousPositions(PVector p1, PVector p2, PVector p3, float perc
   int secondaryIdx = 0; // accessor for secondary targets
   mu = 0;
   increment /= 2.0;
-  println("execution check E");
   PVector currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
-  println("execution check F");
   for (int n = transitionPoint; n < numberOfPoints; n++) {
     mu += increment;
     intermediatePositions.add(new PVector(
@@ -520,49 +514,62 @@ void calculateContinuousPositions(PVector p1, PVector p2, PVector p3, float perc
     currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
     secondaryIdx++;
   }
-  println("execution check F1");
   interMotionIdx = 0;
 } // end calculate continuous positions
 
 
-
+/**
+ * Initiate a new continuous (curved) motion instruction.
+ * @param model Arm model to use
+ * @param start Start point
+ * @param end Destination point
+ * @param next Point after the destination
+ * @param percentage Intensity of the curve
+ */
 void beginNewContinuousMotion(ArmModel model, PVector start, PVector end,
                               PVector next, float percentage)
 {
   calculateContinuousPositions(start, end, next, percentage);
   motionFrameCounter = 0;
-  println("attemptIK call 1 before");
   attemptIK(model, interMotionIdx);
-  println("attemptIK call 1 after");
 }
 
 
-
+/**
+ * Initiate a new fine (linear) motion instruction.
+ * @param start Start point
+ * @param end Destination point
+ */
 void beginNewLinearMotion(ArmModel model, PVector start, PVector end) {
   calculateIntermediatePositions(start, end);
   motionFrameCounter = 0;
-  println("attemptIK call 2 before");
   attemptIK(model, interMotionIdx);
-  println("attemptIK call 2 after");
 }
 
 
-
+/**
+ * Initiate a new circular motion instruction according to FANUC methodology.
+ * @param p1 Point 1
+ * @param p2 Point 2
+ * @param p3 Point 3
+ */
 void beginNewCircularMotion(ArmModel model, PVector p1, PVector p2, PVector p3) {
   // Generate the circle circumference,
   // then turn it into an arc from the current point to the end point
   intermediatePositions = createArc(createCircleCircumference(p1, p2, p3, 180), p1, p2, p3);
   interMotionIdx = 0;
   motionFrameCounter = 0;
-  println("attemptIK call 3 before");
   attemptIK(model, interMotionIdx);
-  println("attemptIK call 3 after");
 }
 
 
 
 boolean executingInstruction = false;
 
+
+/**
+ * Prepare a new program for execution.
+ */
 void readyProgram() {
   currentInstruction = 0;
   executingInstruction = false;
@@ -570,6 +577,11 @@ void readyProgram() {
 }
 
 
+/**
+ * Move the arm model between two points according to its current speed.
+ * @param model The arm model
+ * @param speedMult Speed multiplier
+ */
 boolean executeMotion(ArmModel model, float speedMult) {
   motionFrameCounter++;
   // speed is in pixels per frame, multiply that by the current speed setting
@@ -583,14 +595,21 @@ boolean executeMotion(ArmModel model, float speedMult) {
       interMotionIdx = -1;
       return true;
     }
-    println("attemptIK call 4 before");
     attemptIK(model, interMotionIdx);
-    println("attemptIK call 4 after");
   }
   return false;
 } // end execute linear motion
 
 
+/**
+ * Convert a point based on a coordinate system defined as
+ * 3 orthonormal vectors.
+ * @param point Point to convert
+ * @param xAxis X axis of target coordinate system
+ * @param yAxis Y axis of target coordinate system
+ * @param zAxis Z axis of target coordinate system
+ * @return Coordinates of point after conversion
+ */
 PVector vectorConvertTo(PVector point, PVector xAxis,
                         PVector yAxis, PVector zAxis)
 {
@@ -604,6 +623,15 @@ PVector vectorConvertTo(PVector point, PVector xAxis,
 }
 
 
+/**
+ * Convert a point based on a coordinate system defined as
+ * 3 orthonormal vectors. Reverse operation of vectorConvertTo.
+ * @param point Point to convert
+ * @param xAxis X axis of target coordinate system
+ * @param yAxis Y axis of target coordinate system
+ * @param zAxis Z axis of target coordinate system
+ * @return Coordinates of point after conversion
+ */
 PVector vectorConvertFrom(PVector point, PVector xAxis,
                           PVector yAxis, PVector zAxis)
 {
@@ -617,6 +645,13 @@ PVector vectorConvertFrom(PVector point, PVector xAxis,
 }
 
 
+/**
+ * Create a plane (2D coordinate system) out of 3 input points.
+ * @param a First point
+ * @param b Second point
+ * @param c Third point
+ * @return New coordinate system defined by 3 orthonormal vectors
+ */
 PVector[] createPlaneFrom3Points(PVector a, PVector b, PVector c) {  
   PVector n1 = new PVector(a.x-b.x, a.y-b.y, a.z-b.z);
   n1.normalize();
@@ -635,9 +670,16 @@ PVector[] createPlaneFrom3Points(PVector a, PVector b, PVector c) {
 }
 
 
-// Create points around the circumference of a circle calculated
-// from three arbitrary 3D points
-// TODO: Add error check in case the 3 supplied points are colinear.
+/**
+ * Create points around the circumference of a circle calculated from
+ * three input points.
+ * @param a First point
+ * @param b Second point
+ * @param c Third point
+ * @param numPoints Number of points to place on the circle circumference
+ * @return List of points comprising a circle circumference that intersects
+ *         the three input points.
+ */
 ArrayList<PVector> createCircleCircumference(PVector a,
                                       PVector b,
                                       PVector c,
@@ -689,13 +731,26 @@ ArrayList<PVector> createCircleCircumference(PVector a,
 }
 
 
-// createArc helper method
+/**
+ * Helper method for the createArc method
+ */
 int cycleNumber(int number) {
   number++;
   if (number >= 4) number = 1;
   return number;
 }
 
+
+/**
+ * Takes a list of points describing a circle circumference, three points
+ * A, B, and C, and returns an arc built from the circumference that
+ * runs from A to B to C.
+ * @param points List of points describing the circle circumference.
+ * @param a Point A
+ * @param b Point b
+ * @param c Point C
+ * @return List of points describing the arc from A to B to C
+ */
 ArrayList<PVector> createArc(ArrayList<PVector> points, PVector a, PVector b, PVector c) {
   float CHKDIST = 15.0;
   while (true) {
@@ -743,7 +798,17 @@ ArrayList<PVector> createArc(ArrayList<PVector> points, PVector a, PVector b, PV
 } // end createArc
 
 
-// Find the circle center of 3 points in 2D
+/**
+ * Finds the circle center of 3 points. (That is, find the center of
+ * a circle whose circumference intersects all 3 points.)
+ * The points must all lie
+ * on the same plane (all have the same Z value). Should have a check
+ * for colinear case, currently doesn't.
+ * @param a First point
+ * @param b Second point
+ * @param c Third point
+ * @return Position of circle center
+ */
 PVector circleCenter(PVector a, PVector b, PVector c) {
   float h = calculateH(a.x, a.y, b.x, b.y, c.x, c.y);
   float k = calculateK(a.x, a.y, b.x, b.y, c.x, c.y);
@@ -761,6 +826,7 @@ float calculateH(float x1, float y1, float x2, float y2, float x3, float y3) {
     denominator *= 2;
     return numerator / denominator;
 }
+
 float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
     float numerator = x2*(x3*x3+y3*y3) - x3*(x2*x2+y2*y2) -
                       (x1*(x3*x3+y3*y3) - x3*(x1*x1+y1*y1)) +
@@ -774,9 +840,13 @@ float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
 
 
 
-// return true when done
+/**
+ * Executes a program. Returns true when done.
+ * @param program Program to execute
+ * @param model Arm model to use
+ * @return Finished yet (false=no, true=yes)
+ */
 boolean executeProgram(Program program, ArmModel model) {
-println("executeProgram start");
   if (program == null || currentInstruction >= program.getInstructions().size())
     return true;
   Instruction ins = program.getInstructions().get(currentInstruction);
@@ -787,7 +857,6 @@ println("executeProgram start");
       return true;
     }
     if (!executingInstruction) { // start executing new instruction
-println("executeProgram end1");
       if (setUpInstruction(program, model, instruction)) return true;
       executingInstruction = true;
       
@@ -813,12 +882,15 @@ println("executeProgram end1");
     currentInstruction++;
     if (currentInstruction >= program.getInstructions().size()) return true;
   } // end of instruction type check
-println("executeProgram end2");
   return false;
 } // end executeProgram
 
 
-// return true when done
+/**
+ * Executes a single instruction. Returns true when done.
+ * @param ins Instruction to execute.
+ * @return Finished yet (false=no, true=yes)
+ */
 boolean executeSingleInstruction(Instruction ins) {
   if (ins instanceof MotionInstruction) {
     MotionInstruction instruction = (MotionInstruction)ins;
@@ -841,20 +913,21 @@ boolean executeSingleInstruction(Instruction ins) {
   return true;
 }
 
-
+/**
+ * Sets up an instruction for execution.
+ * @param program Program that the instruction belongs to
+ * @param model Arm model to use
+ * @param instruction The instruction to execute
+ * @return Returns true on failure (invalid instruction), false on success
+ */
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
-      pushMatrix();
-      //applyCamera();
       PVector start = calculateEndEffectorPosition(model, false);
-      popMatrix();
       if (instruction.getMotionType() == MTYPE_JOINT) {
         float[] j = instruction.getVector(program).j;
         for (int n = 0; n < j.length; n++) {
           for (int r = 0; r < 3; r++) {
-            println("execution check G");
             if (model.segments.get(n).rotations[r])
               model.segments.get(n).targetRotations[r] = j[n];
-            println("execution check H");
           }
         }
         // calculate whether it's faster to turn CW or CCW

@@ -4,11 +4,11 @@ import java.nio.charset.Charset;
  * This method saves the program state.
  */
 void saveState() {
-  println("Called save state");
   try{
        Path p1 = Paths.get(sketchPath("tmp/programs.ser")); 
        Path p2 = Paths.get(sketchPath("tmp/currentProgram.ser"));
        Path p3 = Paths.get(sketchPath("tmp/singleInstruction.ser"));
+       println("Path: " + Paths.get(sketchPath("tmp/programs.ser")).toString());
        if (Files.exists(p1)) Files.delete(p1);
        if (Files.exists(p2)) Files.delete(p2);
        if (Files.exists(p3)) Files.delete(p3);
@@ -62,6 +62,7 @@ int loadState() {
   if(loadPrograms(p1)==0) return 0;
   return 1;
 }
+
 /**
  * This method loads built-in programs and user-defined programs 
  *
@@ -112,7 +113,6 @@ int loadPrograms(Path path){
                   }else{ // has scanned </Program>
                      // that's the end of program
                      programs.add(aProgram);
-                     println("load the program of "+aProgram.getName());
                      break;
                      
                   }
